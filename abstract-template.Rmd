@@ -1,0 +1,23 @@
+# Abstract
+The abstract should include the following sections (max 500 words):
+
+## Title
+Give a short descriptive title. Please refer to the STROBE statement for inspiration, https://www.strobe-statement.org/fileadmin/Strobe/uploads/checklists/STROBE_checklist_v4_combined.pdf.
+
+## Introduction 
+Briefly outline the scope of the issue, what is known about the topic and what the knowledge gap is.
+
+## Aim
+Give a short aim.
+
+## Design
+Give the study design.
+
+## Methods
+Briefly describe the methods that you have used.
+
+## Results
+Summarize your results. Give the number of observations in the study sample. Give summary statistics. Include a table that describes your sample, commonly referred to as Table 1.
+
+## Conclusion
+Give a short answer to your aim.
