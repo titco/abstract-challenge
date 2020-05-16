@@ -1,0 +1,48 @@
+---
+title: Profile of patients triaged green in the Emergency Department (ED) of a secondary care hospital in Mumbai
+author: "Anna"
+date: "12/05/2020"
+output:
+  word_document: default
+  html_document: 
+    fig_caption: yes
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r setup, include=FALSE, results='asis'}
+library(knitr)
+opts_chunk$set(echo = FALSE)
+```
+
+# Abstract
+
+## Introduction
+
+Injuries are one of the leading causes of Emergency Department (ED) visits. Phisicians use localized screening methods to triage patients into Red (requires immediate attention), Orange (urgent), Yellow (less urgent) and Green (not urgent). This depends on various factors, such as, physiological parameters of the patient, injury severity, anticipated use and availability of resources (incase of mass casualty). The proportion of patients with life-threatning injuries or injuries that require urgent attention is far less in comparison to patients that are triaged green. While, retrospectively considering management of injuried patients, most attention is given to patients that have injuries which may require hospitalization. Thereby disregarding the pool of patients where most of the ED resorurces are spent. Understanding the characteristic of these patients might give us an insight in managing them, inadvertently making effective use of the resources without affecting the quality of care provided.
+
+## Aim
+
+The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
+
+## Methods
+
+A total of 4759 patient records were extracted from the Trauma Triage Study in India (TTRIS) dataset. A retrospective univariate analysis of the data was performed using Rstudio. 
+
+## Results
+
+92% of the patients were below 57 years of age. Patients with history of assualt were the highest followed by transport accidents. Injury due to animal bites were significantly high. Almost all patients that had injuries due to Assualt, Inanimate forces, and Animal bites; had a GCS of 15, RTS score of less than 11 and an ISS score of 1. 
+
+```{r}
+g <- read.csv("C:/Users/annan/OneDrive/Documents/Book1.csv")
+h <- subset(x=g,subset = g$tc == 0)
+h$GCS <- h$egcs + h$vgcs + h$mgcs
+h$GCS <- replace(h$GCS, h$GCS > 15, NA)
+Table1 <- xtabs(~moi2+GCS, data = h)
+kable(Table1, caption = "GCS of patients with the following Mechanism of Injuries")
+```
+
+## Conclusion
+
+The unpredictable nature of injuries often creates a state of panic in patients. Due to which many patients come to an ED with superficial injuries and sometimes with no injuries at all. However, which one is a more brooding issue that requires to be addressed- the overburdening of an overcrowded ED or the unpredictibility of injuries, is a question yet to be answered.
