@@ -19,30 +19,25 @@ opts_chunk$set(echo = FALSE)
 # Abstract
 
 ## Introduction
-
-Injuries are one of the leading causes of Emergency Department (ED) visits. Phisicians use localized screening methods to triage patients into Red (requires immediate attention), Orange (urgent), Yellow (less urgent) and Green (not urgent). This depends on various factors, such as, physiological parameters of the patient, injury severity, anticipated use and availability of resources (incase of mass casualty). The proportion of patients with life-threatning injuries or injuries that require urgent attention is far less in comparison to patients that are triaged green. While, retrospectively considering management of injuried patients, most attention is given to patients that have injuries which may require hospitalization. Thereby disregarding the pool of patients where most of the ED resorurces are spent. Understanding the characteristic of these patients might give us an insight in managing them, inadvertently making effective use of the resources without affecting the quality of care provided.
+Injuries are one of the leading causes of Emergency Department (ED) visits<!-- Although ED is a quite common abbreviation, consider if you really need to abbreviate Emergeny Department in an abstract like this. Abbreviations slow the reader down -->. Physicians use localized screening methods<!-- What is a localized screening method?--> to triage patients into Red (requires immediate attention), Orange (urgent), Yellow (less urgent) and Green (not urgent)<!-- Think about if there are ways you could express this in a more succinct and way, maybe "into red, orange, yellow, and green, from most to least urgent"-->. This<!-- What does "This" refer to here?--> depends on various factors, such as, physiological parameters of the patient, injury severity, anticipated use and availability of resources (incase of mass casualty)<!-- I'm not sure if you need this sentence at all, what does it add?-->. The proportion of patients with life-threatning injuries or injuries that require urgent attention is far less in comparison to patients that are triaged green. While, retrospectively considering management of injuried patients, most attention is given to patients that have injuries which may require hospitalization. Thereby disregarding the pool of patients where most of the ED resorurces are spent. Understanding the characteristic of these patients might give us an insight in managing them, inadvertently making effective use of the resources without affecting the quality of care provided<!-- I think you can condense these last sentences to bring the main message out more clearly. You want to say that the majority of patients are green and many of thoe maybe could be managed differently so that resources can be targeted to the serious patients, right?-->.
 
 ## Aim
-
-The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
+The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.<!-- Nice! -->
 
 ## Methods
-
-A total of 4759 patient records were extracted from the Trauma Triage Study in India (TTRIS) dataset. A retrospective univariate analysis of the data was performed using Rstudio. 
+A total of 4759<!-- There are different conventions but I think that the size of the final sample is a result rather than part of methods. Here you should write about the study design and what analyses you conducted-->  patient records were extracted from the Trauma Triage Study in India (TTRIS) dataset. A retrospective univariate<!-- Do you need univariate here--> analysis of the data was performed using Rstudio<!-- RStudio is the so called IDE, R is the language. I suggest you say just R-->. 
 
 ## Results
-
-92% of the patients were below 57 years of age. Patients with history of assualt were the highest followed by transport accidents. Injury due to animal bites were significantly high. Almost all patients that had injuries due to Assualt, Inanimate forces, and Animal bites; had a GCS of 15, RTS score of less than 11 and an ISS score of 1. 
+<!-- I would start by stating the size of the complete cohort and then state how many were green and were included. Then state how many were excluded because of missing data. -->92% of the patients were below 57<!-- Why 57? Seems like an odd cutoff. --> years of age<!-- What was the gender distribution?-->. Patients with history of assualt were the highest followed by transport accidents<!-- Do you mean that assault was the most common mechanism of injury?-->. Injury due to animal bites were significantly high<!-- The use of "high" here is a bit odd. Why not "common", and then state how common?-->. Almost all patients that had injuries due to Assualt, Inanimate forces, and Animal bites<!-- This is repetition, I suggest you remove this list-->; had a GCS of 15, RTS score of less than 11 and an ISS score of 1. 
 
 ```{r}
-g <- read.csv("C:/Users/annan/OneDrive/Documents/Book1.csv")
+g <- read.csv("C:/Users/annan/OneDrive/Documents/Book1.csv") # Have you manipulated data outside of R? I suggest you read in your database directly, because it's already a csv file, and then do all data mangling in R.
 h <- subset(x=g,subset = g$tc == 0)
 h$GCS <- h$egcs + h$vgcs + h$mgcs
 h$GCS <- replace(h$GCS, h$GCS > 15, NA)
-Table1 <- xtabs(~moi2+GCS, data = h)
+Table1 <- xtabs(~moi2+GCS, data = h) 
 kable(Table1, caption = "GCS of patients with the following Mechanism of Injuries")
 ```
 
 ## Conclusion
-
-The unpredictable nature of injuries often creates a state of panic in patients. Due to which many patients come to an ED with superficial injuries and sometimes with no injuries at all. However, which one is a more brooding issue that requires to be addressed- the overburdening of an overcrowded ED or the unpredictibility of injuries, is a question yet to be answered.
+The unpredictable nature of injuries often creates a state of panic in patients<!-- This does not align with your aim and does not follow from your analyis, remove-->. Due to which many patients come to an ED with superficial injuries and sometimes with no injuries at all<!-- Same as previous comment -->. However, which one is a more brooding issue that requires to be addressed- the overburdening of an overcrowded ED or the unpredictibility of injuries, is a question yet to be answered<!-- I suggest removing all of your current conclusion and revise so that it corresponds to your aim-->.
