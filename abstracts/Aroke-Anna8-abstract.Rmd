@@ -40,13 +40,19 @@ Data of patients triaged green were extracted from the Trauma Triage Study in In
 
 g <- import("C:\\Users\\annan\\OneDrive\\Documents\\Projects\\PGTP\\ttris-dataset-with-iss-8317-20190708120045.csv")
 
-# Created a dataframe of triage category green
+## You could also use
+g <- data.table::fread("C:\\Users\\annan\\OneDrive\\Documents\\Projects\\PGTP\\ttris-dataset-with-iss-8317-20190708120045.csv")
 
+## Or better, if you open this file by
+data.dir <- "C:\\Users\\annan\\OneDrive\\Documents\\Projects\\PGTP\\"
+g <- data.table::fread(file.path(data.dir, "ttris-dataset-with-iss-8317-20190708120045.csv"))
+
+# Created a dataframe of triage category green
 kbbh <- subset(x=g,subset = g$tc == 0)
 ```
 
 ```{r}
-
+## How come you keep this as a separate chunk, instead of having it in the chunk above?
 pts <- as.numeric(nrow(kbbh))
 
 kbbh$age <- replace(kbbh$age, kbbh$age == 999, NA)
@@ -58,7 +64,7 @@ stddev_age <- round(sd(kbbh$age, na.rm = TRUE),2)
 ```
 
 
-In the TTRIS dataset, `r pts` patients were triaged green. Mean age of these patients was `r mean_age` (+-`r stddev_age`). 97% of the patients were below 65 years of age. 76.7% patients were male, while 23.3% patients were female. 98.5% patients had blunt injuries.Most common mode of arrival to the ED was through private vehicles (80.1%). 13.6% patients came to the ED on foot.
+In the TTRIS dataset, `r pts` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). 97%<!-- How come you don't get these figures using inline r as well?--> of the patients were below 65 years of age. 76.7% patients were male, while 23.3% patients were female. 98.5% patients had blunt injuries.Most common mode of arrival to the ED was through private vehicles (80.1%). 13.6% patients came to the ED on foot.
 Patients with history of assualt were the highest followed by transport accidents. Injury due to animal bites were significantly high. 
 
 ```{r}
@@ -67,11 +73,11 @@ Patients with history of assualt were the highest followed by transport accident
 
 kbbh$isspv[kbbh$iss >= 9 & kbbh$iss <= 15] = 'Moderate'
 kbbh$isspv[kbbh$iss == 1 & kbbh$iss <= 8] = 'Minor'
-kbbh$isspv[is.na(kbbh$iss)] = 'No Injuries defined'
+kbbh$isspv[is.na(kbbh$iss)] = 'No injuries defined'
 
 Table1 <- xtabs(~kbbh$isspv, data = kbbh)
 kable(Table1, 
-      caption = "Table1. ISS Score of patients",
+      caption = "Table 1. ISS Score of patients"
 )
 
 ```
@@ -81,15 +87,19 @@ kable(Table1,
 
 ## Append a new variable 'GCS' to the dataset
 
-kbbh$GCS <- kbbh$egcs + kbbh$vgcs + kbbh$mgcs
+## I've revised gcs to save you some typing, you can do the same for
+## rr and sbp
 
-kbbh$GCS <- replace(kbbh$GCS, kbbh$GCS > 15, NA)
+gcs <-  with(kbbh, egcs + vgcs + mgcs)
 
-kbbh$GCSpv[kbbh$GCS==15|kbbh$GCS==14|kbbh$GCS==13] = 4
-kbbh$GCSpv[kbbh$GCS==12|kbbh$GCS==11|kbbh$GCS==10|kbbh$GCS==9] = 3
-kbbh$GCSpv[kbbh$GCS==8|kbbh$GCS==7|kbbh$GCS==6] = 2
-kbbh$GCSpv[kbbh$GCS==5|kbbh$GCS==4] = 1
-kbbh$GCSpv[kbbh$GCS<4] = 0
+gcs <- replace(gcs, gcs > 15, NA)
+
+gcspv <- gcs
+gcspv[gcs >= 13] <- 4
+gcspv[gcs >= 9 & gcs < 13] <- 3
+gcspv[gcs >= 6 & gcs < 9] <- 2
+gcspv[gcs >= 4 & gcs < 6] <- 1
+gcspv[gcs < 4] <- 0
 
 ## RR parameter value for calculating RTS
 
@@ -113,16 +123,18 @@ kbbh$sbppv[kbbh$sbp == 0] = 0
 
 ## Formula for calculating RTS
 
-kbbh$RTS = round(0.9368*as.numeric(kbbh$GCSpv) + 
-                   0.7326*as.numeric(kbbh$sbppv) + 
-                   0.2908*as.numeric(kbbh$rrpv), digits = 0)
+## Why do you want to round it using 0 digits?
+
+kbbh$RTS = round(0.9368*as.numeric(gcspv) + 
+                 0.7326*as.numeric(kbbh$sbppv) + 
+                 0.2908*as.numeric(kbbh$rrpv), digits = 0)
 
 ```
 
 ```{r}
 Table2 <- xtabs(~kbbh$isspv+kbbh$RTS, data = kbbh)
 kable(Table2, 
-      caption = "Table2. ISS and RTS of patients",
+      caption = "Table 2. ISS and RTS of patients",
 )
 ```
 
@@ -183,8 +195,50 @@ tab1(kbbh$RTS, main = "Distribution of RTS")
 ### 1
 ```{r}
 
-library(dplyr)
+## So, any V will be a transport accident
+moi.collapsed <- moi <- as.character(kbbh$moi)
+moi.collapsed[grep("^V[0-9]*$", moi)] <- "Transport accident"
+## W00 to W19 are falls
+icd.range <- paste0(paste0("^W", stringr::str_pad(0:19, 2, pad = "0"), "$"), collapse = "|")
+moi.collapsed[grep(icd.range, moi)] <- "Fall"
+## You can probably see how you could create a function to do some work for you
+get_icd_range <- function(first.char, start.number, end.number) {
+    icd.range <- paste0(
+        paste0(
+            "^",
+            first.char,
+            stringr::str_pad(start.number:end.number, 2, pad = "0"),
+            "[0-9]?$"),
+        collapse = "|")
+    return (icd.range)
+}
+## X85 to X99 and Y00 to Y09 are assault
+icd.range <- paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))
+moi.collapsed[grep(icd.range, moi)] <- "Assault"
+## By now you notice that you repeat moi.collapsed[grep(icd.range,
+## moi)] multiple times. You can do better with a loop.
+icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+moi.collapsed2 <- moi ## Just for fun, so that we can compare moi.collapsed and moi.collapsed2
+for(icd.range in icd.ranges) moi.collapsed2[grep(icd.range, moi)] <- names(icd.range)
+## Check that moi.collapsed and moi.collapsed2 are identical
+identical(moi.collapsed, moi.collapsed2) # Should return TRUE
+## This means that you can use the function defined as get_icd_range
+## together with a list to assign the new values. If you want to
+## define all that are not in the list as for example "Other" then you
+## can do:
+moi.collapsed2[!(moi.collapsed2 %in% sapply(icd.ranges, attr, "names"))] <- "Other"
+## And if you want to put this back into the data as a factor then:
+kbbh$moi2 <- as.factor(moi.collapsed2)
 
+
+
+
+
+
+
+library(dplyr)
 kbbh$moi2 <- mutate(kbbh,
                     moi = case_when(
                       moi %in% V010:V99 ~ "Transport Accidents"))
