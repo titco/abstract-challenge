@@ -13,6 +13,10 @@ output:
 
 ```{r setup, include=FALSE, results='asis'}
 library(knitr)
+library(psych)
+library(rio)
+library(data.table)
+library(epiDisplay)
 opts_chunk$set(echo = FALSE)
 ```
 
@@ -20,7 +24,7 @@ opts_chunk$set(echo = FALSE)
 
 ## Introduction
 
-Injuries are one of the leading causes of Emergency Department (ED) visits. Phisicians use localized screening methods to triage patients into Red (requires immediate attention), Orange (urgent), Yellow (less urgent) and Green (not urgent). This depends on various factors, such as, physiological parameters of the patient, injury severity, anticipated use and availability of resources (incase of mass casualty). The proportion of patients with life-threatning injuries or injuries that require urgent attention is far less in comparison to patients that are triaged green. While, retrospectively considering management of injuried patients, most attention is given to patients that have injuries which may require hospitalization. Thereby disregarding the pool of patients where most of the ED resorurces are spent. Understanding the characteristic of these patients might give us an insight in managing them, inadvertently making effective use of the resources without affecting the quality of care provided.
+Injuries are one of the leading causes of Emergency Department visits. Physicians use localized screening methods to triage patients into Red, Orange, Yellow and Green, from most to least urgent. Screening methods depend on various factors, such as, physiological parameters of the patient, injury severity, anticipated use and availability of resources (incase of mass casualty). The proportion of patients with life-threatning injuries or injuries that require urgent attention is far less in comparison to patients that are triaged green. While, retrospectively considering management of injuried patients, most attention is given to patients that have injuries which may require hospitalization. Thereby disregarding the pool of patients where most of the ED resorurces are spent. Understanding the characteristic of these patients might give us an insight in managing them, inadvertently making effective use of the resources without affecting the quality of care provided.
 
 ## Aim
 
@@ -28,21 +32,214 @@ The aim of this study is to describe the demographic, physiological and injury c
 
 ## Methods
 
-A total of 4759 patient records were extracted from the Trauma Triage Study in India (TTRIS) dataset. A retrospective univariate analysis of the data was performed using Rstudio. 
+Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective analysis of the data was performed using R. 
 
 ## Results
+```{r}
+# read the original csv file
 
-92% of the patients were below 57 years of age. Patients with history of assualt were the highest followed by transport accidents. Injury due to animal bites were significantly high. Almost all patients that had injuries due to Assualt, Inanimate forces, and Animal bites; had a GCS of 15, RTS score of less than 11 and an ISS score of 1. 
+g <- import("C:\\Users\\annan\\OneDrive\\Documents\\Projects\\PGTP\\ttris-dataset-with-iss-8317-20190708120045.csv")
+
+# Created a dataframe of triage category green
+
+kbbh <- subset(x=g,subset = g$tc == 0)
+```
 
 ```{r}
-g <- read.csv("C:/Users/annan/OneDrive/Documents/Book1.csv")
-h <- subset(x=g,subset = g$tc == 0)
-h$GCS <- h$egcs + h$vgcs + h$mgcs
-h$GCS <- replace(h$GCS, h$GCS > 15, NA)
-Table1 <- xtabs(~moi2+GCS, data = h)
-kable(Table1, caption = "GCS of patients with the following Mechanism of Injuries")
+
+pts <- as.numeric(nrow(kbbh))
+
+kbbh$age <- replace(kbbh$age, kbbh$age == 999, NA)
+
+mean_age <- round(mean(kbbh$age, na.rm = TRUE),2)
+
+stddev_age <- round(sd(kbbh$age, na.rm = TRUE),2)
+
+```
+
+
+In the TTRIS dataset, `r pts` patients were triaged green. Mean age of these patients was `r mean_age` (+-`r stddev_age`). 97% of the patients were below 65 years of age. 76.7% patients were male, while 23.3% patients were female. 98.5% patients had blunt injuries.Most common mode of arrival to the ED was through private vehicles (80.1%). 13.6% patients came to the ED on foot.
+Patients with history of assualt were the highest followed by transport accidents. Injury due to animal bites were significantly high. 
+
+```{r}
+
+# Categorizing ISS Score
+
+kbbh$isspv[kbbh$iss >= 9 & kbbh$iss <= 15] = 'Moderate'
+kbbh$isspv[kbbh$iss == 1 & kbbh$iss <= 8] = 'Minor'
+kbbh$isspv[is.na(kbbh$iss)] = 'No Injuries defined'
+
+Table1 <- xtabs(~kbbh$isspv, data = kbbh)
+kable(Table1, 
+      caption = "Table1. ISS Score of patients",
+)
+
+```
+
+```{r}
+# For calculating RTS
+
+## Append a new variable 'GCS' to the dataset
+
+kbbh$GCS <- kbbh$egcs + kbbh$vgcs + kbbh$mgcs
+
+kbbh$GCS <- replace(kbbh$GCS, kbbh$GCS > 15, NA)
+
+kbbh$GCSpv[kbbh$GCS==15|kbbh$GCS==14|kbbh$GCS==13] = 4
+kbbh$GCSpv[kbbh$GCS==12|kbbh$GCS==11|kbbh$GCS==10|kbbh$GCS==9] = 3
+kbbh$GCSpv[kbbh$GCS==8|kbbh$GCS==7|kbbh$GCS==6] = 2
+kbbh$GCSpv[kbbh$GCS==5|kbbh$GCS==4] = 1
+kbbh$GCSpv[kbbh$GCS<4] = 0
+
+## RR parameter value for calculating RTS
+
+kbbh$rr <- replace(kbbh$rr, kbbh$rr == 999, NA)
+
+kbbh$rrpv[kbbh$rr >= 10 & kbbh$rr <= 29] = 4
+kbbh$rrpv[kbbh$rr > 29] = 3
+kbbh$rrpv[kbbh$rr >= 6 & kbbh$rr <= 9] = 2
+kbbh$rrpv[kbbh$rr >= 1 & kbbh$rr <= 5] = 1
+kbbh$rrpv[kbbh$rr == 0] = 0
+
+## SBP parameter value for calculating RTS
+
+kbbh$sbp <- replace(kbbh$sbp, kbbh$sbp == 999, NA)
+
+kbbh$sbppv[kbbh$sbp > 89] = 4
+kbbh$sbppv[kbbh$sbp >= 76 & kbbh$sbp <= 89] = 3
+kbbh$sbppv[kbbh$sbp >= 50 & kbbh$sbp <= 75] = 2
+kbbh$sbppv[kbbh$sbp >= 1 & kbbh$sbp <= 49] = 1
+kbbh$sbppv[kbbh$sbp == 0] = 0
+
+## Formula for calculating RTS
+
+kbbh$RTS = round(0.9368*as.numeric(kbbh$GCSpv) + 
+                   0.7326*as.numeric(kbbh$sbppv) + 
+                   0.2908*as.numeric(kbbh$rrpv), digits = 0)
+
+```
+
+```{r}
+Table2 <- xtabs(~kbbh$isspv+kbbh$RTS, data = kbbh)
+kable(Table2, 
+      caption = "Table2. ISS and RTS of patients",
+)
 ```
 
 ## Conclusion
 
-The unpredictable nature of injuries often creates a state of panic in patients. Due to which many patients come to an ED with superficial injuries and sometimes with no injuries at all. However, which one is a more brooding issue that requires to be addressed- the overburdening of an overcrowded ED or the unpredictibility of injuries, is a question yet to be answered.
+Among the patients triaged green, injury due to assualt and transport accidents were predominant.More than half of the patients had no injuries defined with an RTS score of 8. 
+
+## Analysis
+
+```{r}
+# Cateogrising Age
+
+## Create age groups
+agebreaks <- c(17,25,45,65,98)
+agelabels <- c("18-24","25-44","45-64","65+")
+setDT(kbbh)[,agegrp := cut(kbbh$age,
+                           breaks = agebreaks,
+                           right = FALSE,
+                           labels = agelabels)]
+
+## Table of age group
+tab1(kbbh$agegrp, main = "Distribution of patients by Age")
+
+```
+
+```{r}
+
+# Table of Sex
+
+kbbh$sex <- replace(kbbh$sex, kbbh$sex == 999, NA)
+
+tab1(kbbh$sex, main = "Distribution of patients by Gender")
+
+```
+
+```{r}
+kbbh$tyi <- replace(kbbh$tyi, kbbh$tyi == 999, NA)
+
+tab1(kbbh$tyi, main = "Distribution of type of injury")
+
+```
+
+```{r}
+kbbh$mot <- replace(kbbh$mot, kbbh$mot == 999, NA)
+
+tab1(kbbh$mot, main = "Distribution of Mode of transport")
+
+```
+
+```{r}
+
+tab1(kbbh$RTS, main = "Distribution of RTS")
+
+```
+
+## Categorizing moi
+
+### 1
+```{r}
+
+library(dplyr)
+
+kbbh$moi2 <- mutate(kbbh,
+                    moi = case_when(
+                      moi %in% V010:V99 ~ "Transport Accidents"))
+
+     
+table(kbbh$moi)
+```
+
+```{r}
+### 2
+
+library(tidyverse)
+library(stringr)
+library(forcats)
+
+assign_moi  <- function(code){
+  if(str_sub(code, 2) %in% as.factor(c(
+    "V1","V2","V3","V4","V5","V6","V7","V8","V9")){
+    "Transport Accidents"
+  } else {
+      code
+  }
+}
+
+kbbh %>% mutate(moi = fct_relabel(moi, assign_moi))
+
+class(kbbh$moi)
+```
+
+```{r}
+
+### 3
+
+ifelse(kbbh$moi %in% c("V01","V010","V011","V019","V02",
+                  "V020","V021","V029","V03","V030","V031","V039",
+                  "V099"), return("Accidents"),return("YTBD"))
+
+
+```
+
+
+
+```{r}
+### 4
+
+accidents <- c("V01","V010","V011","V019","V02",
+               "V020","V021","V029","V03","V030","V031","V039",
+               "V099")
+
+moi <- transform(kbbh$moi, newcat = 
+                   ifelse(
+                     moi %in% accidents,
+                     "yes!",
+                     "no"
+                   ))
+
+```
+
