@@ -9,3 +9,11 @@ Provide a rough draft of the complete abstract.
 
 ### Week 2
 Write code for the results section.
+
+### Week 3
+Submit your abstract as a R markdown file in a pull request to this repository.
+
+1. Create a GitHub account
+2. Fork this repository
+3. Upload your abstract to abstracts/ in your fork
+4. Create a pull request
