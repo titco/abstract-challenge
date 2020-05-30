@@ -1,0 +1,134 @@
+---
+title: "An observational study of female adult trauma patients at a tertiary care centre in Bengaluru"
+author: "Dr. Manjula Ranagatti"
+date: "May 27, 2020"
+output: html_document
+---
+
+# Abstract
+
+# Title
+An observational study of female adult trauma patients at a tertiary care centre in Bengaluru
+
+# Introduction
+Trauma is a major cause of morbidity and mortality in both developed and developing countries. The usual causes are road traffic accidents (RTAs), fall from height, occupational injuries, burns and assault.Generally, the incidence of traumatic injuries is disproportionately high in males. Trauma is prevalent in the lives of women and the emotional, physical, social and financial costs are often enduring and pervasive.
+
+# Aim
+To study demographic variables and outcome of different mechanisms and types of traumatic injuries in females.
+
+# Design
+A prospective observational study was conducted on 94 female patients came with history of trauma to emergency department.
+
+# Methods
+This was an observational study of all adult female trauma patients more than 18 year old presenting to adult emergency department of St.Johns Medical College Hospital, Bengaluru. Details of the incident, injuries, and outcome were noted. The inclusion criteria were all patients who had sustained trauma through RTA, fall from height or level ground, burns, work place injuries and trauma related to assault, sports and animals. Patients aged below 18 presenting with trauma and adult patients who were dead on arrival were excluded from the study. Details of history and vital parameters of all patients were recorded on a standard data collection sheet. The following were extracted: Demographics, mechanism and type of injury, date and time of injury, date and time of arrival to emergency, transportation, pre-hospital history, WHO trauma care checklist, GCS score and injuries etc.
+
+# Results
+We have enrolled total 535 patients includes both male and female during the study period. The gender distribution was 82.5% males and 17.5% females.The median age was 41 years. The frequency of trauma in males was higher than in females.The mode of transport of arrival to emergency was through private vehicles(72%) followed by ambulance (26%) and  brought by police(2%). 70% of patients were referred from other hospital and 30% patients came directly to the hospital. The most common mechanism of injuries are Road Traffic Accidents (48%), Falls 26% (height, bed, stairs, same level fall, accidental fall), Burns (14%), Exposure to inanimate mechanical forces (12%). The most common type of injuries was blunt injuries (97%). Among all the enrolled (admitted) patients 90% were discharged home, 2% were discharged against medical advice, 8% were died in the hospital and 70% patients undergone for surgery.
+
+ 
+
+```{r}
+FD <- read.csv("C:/Users/Rajeeva/Desktop/FD.csv")
+summary(FD)
+```
+
+
+```{r}
+summary(FD$age)
+```
+
+```{r}
+summary(FD$mot)
+```
+
+```{r}
+hist(FD$age,col='blue')
+```
+
+```{r}
+hist(FD$mot,col='red')
+```
+
+```{r}
+hist(FD$tran,col='yellow')
+```
+
+```{r}
+summary(FD$hr1)
+```
+
+```{r}
+hist(FD$rr1,col='green')
+```
+
+
+
+
+FD <- import("C:\\Users\\Rajeeva\\Desktop\\FD.csv")
+summary(FD$age)
+
+
+hist(FD$age)
+
+barplot(FD$age)
+
+table(FD$age)
+
+summary(FD$mot)
+
+hist(FD$mot)
+
+hist(FD$mot,col='red')
+
+summary(FD$rr1)
+
+summary(FD$hr1)
+
+summary(FD$tran)
+
+hist(FD$rr2,col='blue')
+
+summary(FD$tran)
+
+hist(FD$tran)
+
+```{r}
+FD$sbp1 <- replace(FD$sbp1, FD$sbp1 == 999, NA)
+```
+
+```{r}
+hist(FD$age, main = "Distribution of patients by Age")
+```
+
+```{r}
+hist(FD$mot, main = "Distribution of Mode of transport")
+```
+
+```{r}
+ggplot(FD, aes(x= age)) + geom_bar()
+```
+
+```{r}
+prop.table(table (FD$age))
+```
+
+```{r}
+data.table(FD)
+```
+
+
+```{r}
+print(seq(1,50))
+```
+
+```{r}
+colnames(FD)
+```
+
+```{r}
+mystring <- "this is my output for analysis"
+print(mystring)
+```
+
+# Conclusion
+The road traffic accidents are the major cause of trauma. Elderly women is highly associated with fall-related fractures.The majority of fractures are caused by falls.In almost all types and mechanism of injuries, the frequency of male gender is disproportionately high and masks the impact of trauma in female population.So, there is a need of extensive research for evaluation of exact magnitude of traumatic injuries in women together with effective implementation of community based preventive interventional programs.
