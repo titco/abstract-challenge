@@ -1,0 +1,83 @@
+---
+title: "Profile of patients Triaged Orange"
+author: "Surbhi Chauhan"
+date: "5/14/2020"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+# Abstract
+
+## Title
+Profile of patients triaged orange in emergency department of a tertiary referral hospital in India.
+
+## Introduction
+Trauma is a major cause of increasing death rates in India and a very important component of trauma care is prioritizing the patients on the basis of their level of sickness/injuries. Most common traumas are Road Traffic Accidents, falls, Occupational injuries and Assaults. Most of the deaths are occur in **golden hour** of trauma. So, its important to quickly assess the severity of injury accurately.
+In Trauma care, how patients are prioritize so that patients are in need of care are seen first. This whole process of prioritizing the patients is called Triage and these priorities are coded using colors, e.g. **red, orange, yellow and green**, where red assigned to the most urgent patients and green to least urgent patients and orange and yellow comes in between red and green. After red, orange comes and then yellow and then green.
+
+Trauma triaging is the use of trauma assessment prioritizing of patients for treatment according to their severity of injury and we use physiological variebles such as **Blood pressure, respiratory rate, oxygen saturation level and GCS** to assess the level severity injuries of patients in our hospital.
+
+## Aim
+To study the different variables of patient with the history of trauma and patient codded as orange during triaging.
+
+## Design
+Prospective observational study was done on 523 patients came with the history of trauma in the emergency department of a public hospital. Out of these patients, some come directly and some are referred from the other hospital.
+
+## Methods
+This was a prospective observational study of trauma patient ≥ 18 years coming to emergency department of LoK Nayak Jai Prakash Hoaspital, Delhi. Mechanism of injury, Details of incident, history, injuries were noted and vital signs were taken.
+
+## Results
+We recorded total 3436 patients during the study period with 15.22% of triaged orange. The gender distribution was 78.9% males and 21.2% females. The mean age was 34.6 years. Road Traffic Accident (RTA ) 48.6% was the most common mechanism of injury, followed by Assault (26.2%), fall on ground (11.5%), fall from stairs (11%), fall from height (3.2%), work place injuries (1%). Brain injury was seen in (2.1%).Patients comes directly (87.4%) and 12.4% are referred from other hospital.
+Majority of the patients 98.8% with mild head injury GCS (13-15), 0.6% had moderate head injury (9-12) and 0.6% had severe head injury. Median of SBP and DBP (80,120), Median of HR 84bpm, median RR was 19.
+1 patient(0.2%) was intubated in our ED. Upper and lower limb were the most common injuries seen (50.7%) of patients followed by facial and head injuries (37.3%), Thoracic injuries(2.7%), Back injuries(2.7%), Abdominal injuries(1.1%) and others (8%).
+Among all the adult trauma patients came in ED, 95.5% were discharged in stable condition, 4.2% were discharged against medical advice, 0.6% were transferred to other hospital, Only 1 patient(0.2%) died within the first 24 hour of trauma and the remaining (1.3%) were admitted in the hospital for surgical interventions or conservative management.
+
+```{r}
+s= read.csv("triage_orange.csv")
+```
+
+
+```{r}
+summary(s$sex)
+round(prop.table(table(s$sex)),2)*100     # Give percentages w/o decimal places
+hist(s$sex, col='grey', xlab='sex', main='Sex distribution')
+```
+Comments:- In This histogram, 0= **Female** and 1= **Male**
+
+```{r}
+summary(s$age)
+hist(s$age, col='grey',xlab='Age', main='Age of patients')
+```
+
+```{r}
+s %>% select(sbp,dbp,rr,spo2,hr)
+bp=s %>% select(sbp,dbp,rr,spo2,hr)
+summary(bp)
+```
+
+```{r}
+round(prop.table(table(s$moi)),2)*100     # Give percentages w/o decimal places
+```
+
+```{r}
+round(prop.table(table(s$egcs)),2)*100     # Give percentages w/o decimal places
+round(prop.table(table(s$vgcs)),2)*100     # Give percentages w/o decimal places
+round(prop.table(table(s$mgcs)),2)*100     # Give percentages w/o decimal places
+```
+
+```{r}
+hist(s$tyi, xlab='Injury', ylab='Frequency', main='Type of injury')
+round(prop.table(table(s$tyi)),2)*100     # Give percentages w/o decimal places
+```
+
+```{r}
+summary(s$hd)
+round(prop.table(table(s$hd)),2)*100     # Give percentages w/o decimal places
+```
+
+Where 0= Blunt Injuries and 1= Penetrating Injuries.
+
+## Conclusion
+Road Traffic Accident and falls are the major causes of trauma. Increasing awareness, early management and proper training of trauma care team and physicians are the need of today`s time. So that, the right patient gets right treatment in shortest duration.
