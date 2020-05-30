@@ -1,0 +1,68 @@
+---
+title: "Profile of patients with RTI"
+author: "Chandrika Verma"
+date: "17/05/2020"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+library(knitr)
+library(psych)
+library(data.table)
+library(tidyverse)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+# Title
+An observational study of adult trauma patients with the history of road traffic injuries in urban India
+
+# Introduction 
+Increasing road traffic injuries have been a major challenge issue to public health in India. Numbers of vehicles for transportation have been increasing every year. Age has been playing major role in road accidents. Though a road accident does not harm only physical body of human, it has impact on social, mental and economic impact. 
+
+# Aim
+To study the demographic analysis of road accidents presented at tertiary care hospital in Delhi.
+
+# Method
+
+## Research Desigh
+ Proposed research is based on quantitative approach. Proposed study also would be descriptive in nature.
+
+## Study Setting
+Tertiary care hospital emergency department is the site of this study. Participants aged 18 or above have been enrolled for the study those had history of road traffic accidents presented to emergency department.
+
+
+## analysis of data
+Data of 248 patients have been analyse with the help of R. Some of the basic information has been withdrawn fron the current dataset.Some graphical repesentation has been done.
+
+```{r}
+
+taftset <- read.csv("C:/Users/AMBIKA/Desktop/TAFT Analysis/taftset.csv")
+
+summary(taftset$sex) 
+
+prop.table(table(taftset$sex)) # It shows 79 percent are male and 21 percent female patients out of 248 patients.
+
+hist(taftset$"sex", main = "Sex Distribution of Patients", xlab = "Sex", border = "blue", col="green", las=2, breaks =6)
+
+
+hist(taftset$"age", main = "Age Distribution of Patients", xlab = "Age group", border = "blue",col="green", xlim=c(18,100), las=1, breaks =5)
+
+
+counts<- table(taftset$tyi)
+
+barplot(counts, main = "Type of Injury Distribution",
+        xlab = "Type of Injury") # Majority of injury reported as blunt and a very less proportion reported penetrating.
+
+
+```
+
+# Result 
+Based on data analysis result would be explained here though analysis has not been completed once this section would be complete discription will be given.
+
+# Conclusion 
+Conclusion would be drawn with the help of result.
