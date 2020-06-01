@@ -1,0 +1,62 @@
+---
+title: Profile of Patients with Thoracic Trauma at Tertiary Care Hospital in Delhi
+author: "Deepak Kumar"
+date: "17/05/2020"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+# Introduction 
+  A chest injury, also known as chest trauma, is any form of physical injury to the chest including the heart, ribs and lungs. Chest injuries account for 25% of all deaths from traumatic injury. Typically chest injuries are caused by blunt mechanisms such as road traffic accidents or penetrating mechanisms such as stabbing. Blunt trauma refers to mechanisms causing increased in thoracic pressure such as injuries most common cause of thoracic trauma), falls and other causes of road traffic injuries.In the current study only thoracic trauma patients will be include. 
+
+# Aim
+     To study the a demographic factors associated inthe thoracic trauma patients and their outcomes.
+
+# Design
+In our study 18 & above age group persons are enrolled.
+
+# Method
+ Present study would be quantitative in nature.
+```{r}
+TAFTDATA <- read.csv("D:/taft r/TAFTDATA.csv")
+summary(TAFTDATA$age)
+```
+```{r}
+hist(TAFTDATA$tyi,col = 'blue')
+```
+```{r}
+ggplot(TAFTDATA, aes(x= age)) + geom_bar()
+
+```
+```{r}
+prop.table(table (TAFTDATA$)
+```
+```{r}
+print(seq(1,20))
+
+
+
+```
+
+```{r}
+mystring<- "this is my output for analysis"
+print(mystring)
+```
+ 
+
+
+  * ** This histogram shows type of injury.(0=Blunt, 1= Penetrating)**
+  
+# Result
+  The TAFT study data analysis of 249 patients at Lok Nayak Hospital, New Delhi shows around 99% patients having blunt injury, most of these patients are injured in road accidents. Its shows the main reason of thoracic injury is blunt trauma.
+    
+# Conclusion
+The Present study has concluded majority of thoracic trauma is due blunt injury among road accident patients.
