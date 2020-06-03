@@ -25,6 +25,8 @@ To study the different variables of patient with the history of trauma and patie
 ## Design
 Prospective observational study was done on 523 patients came with the history of trauma in the emergency department of a public hospital. Out of these patients, some come directly and some are referred from the other hospital.
 
+
+
 ## Methods
 This was a prospective observational study of trauma patient ≥ 18 years coming to emergency department of LoK Nayak Jai Prakash Hoaspital, Delhi. Mechanism of injury, Details of incident, history, injuries were noted and vital signs were taken.
 
@@ -80,4 +82,6 @@ round(prop.table(table(s$hd)),2)*100     # Give percentages w/o decimal places
 Where 0= Blunt Injuries and 1= Penetrating Injuries.
 
 ## Conclusion
-Road Traffic Accident and falls are the major causes of trauma. Increasing awareness, early management and proper training of trauma care team and physicians are the need of today`s time. So that, the right patient gets right treatment in shortest duration.
+Road Traffic Accident and falls are the major causes of trauma. Most of the patients in this category are between the age of 18-30 (49%). RTA is the most common mechanism of injury (48%). Mortality range of ornage triaged patiens are less than 1% (0.2%).
+
+Increasing awareness, early management and proper training of trauma care team and physicians are the need of today`s time. So that, the right patient gets right treatment in shortest duration.
