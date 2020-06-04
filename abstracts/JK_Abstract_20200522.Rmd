@@ -1,0 +1,41 @@
+---
+title: 'Epidemiolgy of falls among older adults : A single centre study from Mumbai'(As majority of old patients are from fall category (38/56).So my study title is like this)
+author: "Jyoti Kamble"
+date: "18/05/2020"
+output:
+  word_document: default
+  html_document: default
+---
+#Introduction :  Fall is an important cause and second leading cause  of injury morbidity and mortality in older adults world wide [1]. The 2010 Global Burden of Disease and Injury Study estimated that 12% of all unintentional injury deaths are due to falls [2]. However, epidemiological information on fall is limited in low and middle income countries like India. High mortality due to fall injury amongst older ages is indicative of the need for a public health response to the issue.
+##Aim: To investigate the pattern, characteristics and the context(This study is coding injuries as per ICD 10 so the reason for fall will be clear. This study uses time, activity(as per ICD 10) and the injury that will define context.) of falls in Mumbai based on ICD -10 coding.
+
+###Design : This is a single centre retrospective study. The data collection for TAFT(Trauma Audit Filter Trial) study  is carried out from Dec 2017 - Mar 2018, Mumbai after obtaining approval from the Institute Ethics Committee. Data of 56 patients is taken from a trauma audit trial data set. Inclusion criteria is all trauma patients visiting hospital in my working hours whose age is >/= 60 years and with history of Fall. Data is collected by project officers in a rotating shifts. Informed consent is taken from all patients included in study. This study uses convenience sampling fall patients sample is taken from trauma population.(Convenience sampling is a type of non-probality sampling that involves the sample being drawn from that part of population that is close to hand.) Data collection instrument is used for data entry and R analysis, ver 4.0 is used for data analysis. Variables like demographic profile (age, sex), vitals (Blood pressure, oyxgen saturation, pulse rate, respiratory rate, GCS within one hour of arrival to hospital), CT , X-ray, surgery will be used.Mechanism of injury and injuries related to patients are coded as per ICD - 10 and will be used. 
+###Methods: This study has used simple methods like logistic regression. For  assessment of the associations of the characteristics of respondents with falls, Odd Ratio (OR) with 95 % confidence interval were estimated.
+#####Results
+Out of which 456 trauma patients, 64 were above 60 years and 396 were below 60 years. The  status was pending for 8 patients so they are excluded and hence the study sample is for 56 patients. My dataset in R studio shows 56 observations and 132 variables.  Out of 56 patients, 38 comes under fall, 12 were transport accidents and 6 comes under Event of undetermined intent. Summarize your results. Give the number of observations in the study sample. Give summary statistics. Include a table that describes your sample, commonly referred to as Table 1. (This section will have a missing numbers as you have not yet started analyzing the data)
+ ######Conclusion
+Give a short answer to your aim.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+view(taft_dataset_Geriatric)
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
