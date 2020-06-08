@@ -378,6 +378,8 @@ tab1(kbbh$RTS, main = "Distribution of RTS")
 
 tab1(kbbh$hd, main = "Distribution of hospital disposition")
 
+#extra
+
 ```
 
 
