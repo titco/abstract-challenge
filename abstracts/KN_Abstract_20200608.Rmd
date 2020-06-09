@@ -1,0 +1,54 @@
+---
+title: "ABDOMINAL TRAUMA AND SURVIVAL"
+author: "KUNAL NATH"
+date: "June 2, 2020"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# INTRODUCTION
+
+ Abdominal injuries are common, costly, deadly, and a source of considerable uncertainty common in adult  trauma. In some circumstances, laparoscopy offers a diagnostic and therapeutic alternative with less morbidity than standard exploration, but in some specific cases morbidity is high .
+ 
+# AIM
+
+TO check the survival rate of abdominal trauma cases.
+
+# Desing
+
+Most of the paitent with polytrauma less chance of having abdominal trauma.
+
+1.so selection is very much requered.
+
+2.finding proper history
+
+3.specify injury from medical record
+
+ 
+# Methods
+
+Most of the abdominal trauma paitent having polytrauma.
+paitent inclution critriea 18 to 100 (age) so adult paitent only involve in this study.
+
+Selection by mechanism of injuri.with medical record
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
