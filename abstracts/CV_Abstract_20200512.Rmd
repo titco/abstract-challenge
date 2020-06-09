@@ -37,23 +37,24 @@ Tertiary care hospital emergency department is the site of this study. Participa
 
 
 ## analysis of data
-Data of 248 patients have been analyse with the help of R. Some of the basic information has been withdrawn fron the current dataset.Some graphical repesentation has been done.
+Data of 248 patients have been analyse with the help of R. Some of the basic information has been withdrawn from the current dataset.Some graphical representation has been done.
 
 ```{r}
 
-taft <- read.csv("C:/Users/AMBIKA/Desktop/TAFT Analysis/taft.csv")
-
-summary(taft$sex) 
-
-prop.table(table(taft$sex)) # It shows 79 percent are male and 21 percent female patients out of 248 patients.
-
-hist(taft$"sex", main = "Sex Distribution of Patients", xlab = "Sex", border = "blue", col="green", las=2, breaks =6)
+taft.dataset.9825.20200608232208 <- read.csv("C:/Users/AMBIKA/Desktop/TAFT Analysis/taft-dataset-9825-20200608232208.csv")
 
 
-hist(taft$"age", main = "Age Distribution of Patients", xlab = "Age group", border = "blue",col="green", xlim=c(18,100), las=1, breaks =5)
+summary(taft.dataset.9825.20200608232208$sex) 
+
+prop.table(table(taft.dataset.9825.20200608232208$sex)) # It shows 79 percent are male and 21 percent female patients out of 248 patients.
+
+hist(taft.dataset.9825.20200608232208$"sex", main = "Sex Distribution of Patients", xlab = "Sex", border = "blue", col="green", las=2, breaks =6)
 
 
-counts<- table(taft$tyi)
+hist(taft.dataset.9825.20200608232208$"age", main = "Age Distribution of Patients", xlab = "Age group", border = "blue",col="green", xlim=c(18,100), las=1, breaks =5)
+
+
+counts<- table(taft.dataset.9825.20200608232208$tyi)
 
 barplot(counts, main = "Type of Injury Distribution",
         xlab = "Type of Injury") # Majority of injury reported as blunt and a very less proportion reported penetrating.
