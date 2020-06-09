@@ -1,0 +1,65 @@
+---
+title: Profile of Patients with Thoracic Trauma at Tertiary Care Hospital in Delhi
+author: "Deepak Kumar"
+date: "17/05/2020"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+# Introduction 
+A chest injury, also known as chest trauma, is any form of physical injury to the chest including the heart, ribs and lungs. Chest injuries account for 25% of all deaths from traumatic injury. Typically chest injuries are caused by blunt mechanisms such as road traffic accidents or penetrating mechanisms such as stabbing. Blunt trauma refers to mechanisms causing increased in thoracic pressure such as injuries <!-- Did you miss a ( here?-->most common cause of thoracic trauma), falls and other causes of road traffic injuries<!-- I don't think you need this sentence in an abstract. You can keep it for a full paper -->. In the current study only thoracic trauma patients will be include.<!-- This last sentence is methods rather than introduction. Move it there-->
+
+<!-- I miss a sentence on why it's important to do this study-->
+
+# Aim
+To study the a demographic factors associated inthe thoracic trauma patients and their outcomes<!-- You typically want to do more than just study something, as "study" is a very generic verb in this context. Can you think of other verbs that are more specific? Perhaps assess, determine etc.-->.
+
+# Design
+In our study 18 & above age group persons are enrolled.
+
+# Method
+ Present study would be quantitative in nature.<!-- Use the active voice and be more specific. What design was it exactly? A cohort? Maybe you can write: "We conducted a prospective cohort study"-->
+ 
+```{r}
+TAFTDATA <- read.csv("D:/taft r/TAFTDATA.csv") # You need to use the actual file name, not this renamed file.
+summary(TAFTDATA$age)
+```
+```{r}
+hist(TAFTDATA$tyi,col = 'blue')
+```
+```{r}
+ggplot(TAFTDATA, aes(x= age)) + geom_bar()
+
+```
+```{r}
+prop.table(table (TAFTDATA$)
+```
+```{r}
+print(seq(1,20))
+
+
+
+```
+
+```{r}
+mystring<- "this is my output for analysis"
+print(mystring)
+```
+ 
+
+
+  * ** This histogram shows type of injury.(0=Blunt, 1= Penetrating)**
+  
+# Result
+  The TAFT study data analysis of 249 patients at Lok Nayak Hospital<!-- You have not mentioned TAFT before here, so the reader won't know what it is. I suggest you write about that in methods-->, New Delhi shows around 99% patients having blunt injury, most of these patients are injured in road accidents. Its shows the main reason of thoracic injury is blunt trauma.<!-- How about age, gender distribution, vital signs and outcomes?-->
+    
+# Conclusion
+The Present study has concluded<!-- This first part of the conclusion is not needed, remove-->. A majority of thoracic trauma is due blunt injury among road accident patients.

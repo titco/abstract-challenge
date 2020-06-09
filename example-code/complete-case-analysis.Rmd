@@ -1,0 +1,79 @@
+---
+output: pdf_document
+---
+
+```{r create-example-data, echo = FALSE, include = FALSE}
+## These first lines are just to create some example data. You don't
+## have to do this when you have your own data
+data(mtcars)
+mtcars[1, 4] <- NA
+mtcars[3, 2] <- NA
+mtcars[7, 4] <- NA
+mtcars[20, 6] <- NA
+mtcars[31, 8] <- NA
+study.data <- mtcars
+```
+
+
+Results
+=======
+```{r load-packages, echo = FALSE, include = FALSE}
+library(rmarkdown)
+library(tableone)
+```
+
+```{r summarize-missing-data, echo = FALSE, include = FALSE}
+## If you are going to do a complete case analysis it makes sense to
+## implement it as early as possible. But first you probably want a
+## table that shows how much missing you have in each variable
+missing.data.list <- lapply(study.data, function(column) {
+    n.na <- sum(is.na(column))
+    p.na <- round((n.na/length(column)) * 100)
+    missing <- data.frame("Count" = n.na, "Percentage" = p.na)
+    return (missing)
+})
+missing.data <- do.call(rbind, missing.data.list)
+## You can then use this table to identify which variable had the most
+## missing data
+maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data$Count)]
+## Now let's assign the number and percentages of incomplete cases to
+## an object
+complete.index <- complete.cases(study.data)
+n.incomplete <- sum(!complete.index) # Note the use of the exclamation mark !
+p.incomplete <- round((n.incomplete/nrow(study.data)) * 100)
+```
+
+There was `r nrow(study.data)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete. Table 1 shows how the missing data was distributed. The variable with most missing values was `r maximum.missing` with `r missing.data[maximum.missing, "Count"]` (`r missing.data[maximum.missing, "Percentage"]` %) values missing.
+
+```{r missing-data-table, echo = FALSE}
+knitr::kable(missing.data, caption = "Count and percentage of missing values per variable")
+```
+
+After excluding the observations with missing values the study sample included `r nrow(study.data) - n.incomplete` observations. The supplementary material includes a comparisons of complete and incomplete cases.
+
+```{r create-study-sample, echo = FALSE, include = FALSE}
+## Remove incomplete observations
+study.sample <- study.data[complete.index, ]
+## Then you go on to summarize your study sample here
+```
+
+Supplementary material
+======================
+
+```{r complete-incomplete-comparison, echo = FALSE, include = FALSE}
+## Let's create a table that contrasts complete and incomplete observations
+study.data$complete <- factor(complete.index,
+                              levels = c(FALSE, TRUE),
+                              labels = c("Incomplete", "Complete"))
+variables <- colnames(study.data)[-grep("complete", colnames(study.data))]
+comparison.table <- tableone:::print.TableOne(CreateTableOne(vars = variables,
+                                         data = study.data,
+                                         strata = "complete",
+                                         test = FALSE),
+                                         printToggle = FALSE)
+```
+
+```{r comparison-table, echo = FALSE}
+knitr::kable(comparison.table, caption = "Comparison of complete and incomplete observations")
+```
+

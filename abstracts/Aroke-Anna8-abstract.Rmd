@@ -26,8 +26,7 @@ opts_chunk$set(echo = FALSE)
 
 ## Introduction
 
-Injuries are one of the leading causes of Emergency Department visits.
-Physicians triage patients into Red, Orange, Yellow and Green, from most to least urgent based on injruy severity and physiological parameters. The proportion of patients that are triaged green is more in comparison to patients with life-threatning injuries and injuries that require urgent attention. It is important to understand the characteristics of these patients to know if there is a need for them to be managed differently so that the manpower and resources of the emergency department can be directed towards serious patients.
+Injuries are one of the leading causes of Emergency Department visits. Physicians triage patients into red, orange, yellow and green, from most to least urgent based on injruy severity and physiological parameters. The proportion of patients that are triaged green is larger compared with patients with life-threatning injuries and injuries that require urgent attention<!-- This sentence is a bit awkward. Do you mean that more patients are triage green compared with red?-->. It is important to understand the characteristics of these patients <!-- It's not obvious that "these patients" here refers to the patients triaged green. Try to make that clearer.-->to know if there is a need for them to be managed differently so that the manpower and resources of the emergency department can be directed towards serious patients<!-- This sentence is a bit long. Try to be more direct: "... to understand how they should be managed to allow resources to be directed towards serios patients", or something like that.-->
 
 ## Aim
 
@@ -42,12 +41,20 @@ Data of patients triaged green were extracted from the Trauma Triage Study in In
 
 # read the original csv file
 
+## Now let's take this one level further. You ideally don't want to
+## specify any file paths here, because that means that the next
+## person, like me, have to change the file path directly here to get
+## it to work. Let's add a call to options instead.
+
+## Get data directory
+data.dir <- getOption("data.dir")
+if (is.null(data.dir))
+    stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
+
 ## datatable with ISS
-data.dir <- "C:\\Users\\annan\\OneDrive\\Documents\\Projects\\PGTP\\"
 g <- data.table::fread(file.path(data.dir, "ttris-dataset-with-iss-8317-20190708120045.csv"))
 
 ## datatable without ISS
-data.dir <- "C:\\Users\\annan\\OneDrive\\Documents\\Projects\\PGTP\\"
 h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 
 #h$iss <- NA
@@ -61,8 +68,10 @@ h$pid <- as.integer(h$pid)
 
 merged <- merge(g, h, by = "pid")
 
-## Changed column names
+## Note that you have a number of duplicate pids in your merged data
+merged$pid[duplicated(merged$pid)]
 
+## Changed column names
 names(merged)[names(merged) == "iss.y"] <- "delcolumn.x"
 names(merged)[names(merged) == "iss.x"] <- "iss.y"
 
@@ -74,7 +83,7 @@ dt[, (drop.cols) := NULL]
 ## Removed .y from the coulmn names
 
 names(dt) <- sub(".y$", "", names(dt))
-make.names(names(dt))
+make.names(names(dt)) # What are you trying to achieve here? This will only print the output to the console, but maybe that's what you're after?
 
 ```
 
@@ -88,17 +97,12 @@ kbbh <- subset(x=dt,subset = dt$tc == 0)
 dm <- as.numeric(nrow(kbbh))
 
 # Age
-
 kbbh$age <- as.numeric(kbbh$age)
-
 kbbh$age <- replace(kbbh$age, kbbh$age == 999, NA)
-
 mean_age <- round(mean(kbbh$age, na.rm = TRUE),2)
-
 stddev_age <- round(sd(kbbh$age, na.rm = TRUE),2)
 
 ## Creating age groups
-
 agebreaks <- c(17,25,45,65,98)
 agelabels <- c("18-24","25-44","45-64","65+")
 setDT(kbbh)[,agegrp := cut(kbbh$age,
@@ -112,11 +116,13 @@ setDT(kbbh)[,agegrp := cut(kbbh$age,
 
 age_below65 <- dplyr::filter(kbbh, kbbh$agegrp != "65+") 
 nm_age <- nrow(age_below65) # neumerator
+percent_agebelow65 <- round((nm_age/ dm) * 100, 2) ## This includes those with missing age in the denominator. Is that intentional? 
 
-percent_agebelow65 <- round((nm_age/ dm) * 100, 2)
+## The above could have been achieved with
+nm_age <- sum(kbbh$agegrp != "65+", na.rm = TRUE)
+percent_agebelow65 <- round(mean(kbbh$agegrp != "65+", na.rm = TRUE) * 100, 2)
 
 # Sex
-
 #dm_sex <- nrow(subset(kbbh, !is.na(sex))) # denominator if excluding NA
 
 kbbh$sex <- as.numeric(kbbh$sex)
@@ -159,26 +165,9 @@ percent_mot_onfoot <- round((nm_onfoot/ dm) * 100,2)
 ```{r, results='hide'}
 
 # Mechanism of Injury
-
 moi.collapsed <- moi <- as.character(kbbh$moi)
 
-## Method 1
-
-### So, any V will be a transport accident
-
-moi.collapsed[grep("^V[0-9]*$", moi)] <- "Transport accident"
-
-### W00 to W19 are falls
-icd.range <- paste0(paste0("^W", stringr::str_pad(0:19, 2, pad = "0"), "$"), collapse = "|")
-moi.collapsed[grep(icd.range, moi)] <- "Fall"
-
-### W50 to W64 are animal bites
-
-icd.range <- paste0(paste0("^W", stringr::str_pad(50:64, 2, pad = "0"), "$"), collapse = "|")
-moi.collapsed[grep(icd.range, moi)] <- "Animal bite"
-
 ## Method 2
-
 ## You can probably see how you could create a function to do some work for you
 get_icd_range <- function(first.char, start.number, end.number) {
     icd.range <- paste0(
@@ -191,57 +180,53 @@ get_icd_range <- function(first.char, start.number, end.number) {
     return (icd.range)
 }
 
-## X85 to X99 and Y00 to Y09 are assault - by using the function created.
-
-icd.range <- paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))
-moi.collapsed[grep(icd.range, moi)] <- "Assault"
-
-## By now you notice that you repeat moi.collapsed[grep(icd.range,
-## moi)] multiple times. You can do better with a loop.
-
 icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
                    c("Fall" = get_icd_range("W", 0, 19)),
                    c("Animal bite" = get_icd_range("W", 50, 64)),
                    c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
 
-moi.collapsed2 <- moi ## Just for fun, so that we can compare moi.collapsed and moi.collapsed2
-
-for(icd.range in icd.ranges) moi.collapsed2[grep(icd.range, moi)] <- names(icd.range)
-
-## Check that moi.collapsed and moi.collapsed2 are identical
-identical(moi.collapsed, moi.collapsed2) # Should return TRUE
-## This means that you can use the function defined as get_icd_range
-## together with a list to assign the new values. If you want to
-## define all that are not in the list as for example "Other" then you
-## can do:
-
-moi.collapsed2[!(moi.collapsed2 %in% sapply(icd.ranges, attr, "names"))] <- "Other"
+for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
+moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
 
 ## And if you want to put this back into the data as a factor then:
-kbbh$moi2 <- as.factor(moi.collapsed2)
+kbbh$moi.collapsed <- as.factor(moi.collapsed)
 
-moi_assualt <- dplyr::filter(kbbh, kbbh$moi2 == "Assault") # neumerator
+moi_assualt <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Assault") # neumerator
 nm_moi_assualt <- nrow(moi_assualt)
 percent_moi_assualt <- round((nm_moi_assualt/ dm) * 100,2)
 
-moi_tra <- dplyr::filter(kbbh, kbbh$moi2 == "Transport accident") # neumerator
+moi_tra <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Transport accident") # neumerator
 nm_moi_tra <- nrow(moi_tra)
 percent_moi_tra <- round((nm_moi_tra/ dm) * 100,2)
 
-moi_fall <- dplyr::filter(kbbh, kbbh$moi2 == "Fall") # neumerator
+moi_fall <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Fall") # neumerator
 nm_moi_fall <- nrow(moi_fall)
 percent_moi_fall <- round((nm_moi_fall/ dm) * 100,2)
 
-moi_anb <- dplyr::filter(kbbh, kbbh$moi2 == "Animal bite") # neumerator
+moi_anb <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Animal bite") # neumerator
 nm_moi_anb <- nrow(moi_anb)
 percent_moi_anb <- round((nm_moi_anb/ dm) * 100,2)
 
-moi_other <- dplyr::filter(kbbh, kbbh$moi2 == "Other") # neumerator
+moi_other <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Other") # neumerator
 nm_moi_other <- nrow(moi_other)
 percent_moi_other <- round((nm_moi_other/ dm) * 100,2)
 
-# Trauma outcomes
+## Note that your performing similar operations many time
+## above. That's usually a good indication that you can make your code
+## more efficient and less prone to errors if you turn it into a loop
+## of some sort
 
+calculate_n_p_moi <- function(level.name) {
+    moi.level <- dplyr::filter(kbbh, kbbh$moi.collapsed == level.name) # neumerator
+    nm <- nrow(moi.level)
+    percent <- round((nm/dm) * 100,2)
+    return.list <- list(nm = nm, percent = percent)
+    return (return.list)
+}
+moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p_moi)
+
+
+# Trauma outcomes
 kbbh$s24h <- as.numeric(kbbh$s24h)
 kbbh$s30d <- as.numeric(kbbh$s30d)
 kbbh$s6m <- as.numeric(kbbh$s6m)
@@ -266,12 +251,15 @@ outcome_d <- dplyr::filter(kbbh, kbbh$s6m == "1") # neumerator
 nm_outcome_d <- nrow(outcome_d)
 percent_outcome_d <- round((nm_outcome_d/ dm) * 100,2)
 
+## See if you can apply the same function for calculating n and p that
+## I defined above to make the outcome calculations more efficient
+
 ## Successful Followups
 percent_followup <- percent_outcome_a+percent_outcome_d
 
 ```
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`%). `r percent_mot_onfoot`% patients came to the ED on foot. Assualt were the most common cause of injury `r percent_moi_assualt`% followed by transport accidents `r percent_moi_tra`% and fall `r percent_moi_fall`. Injury due to animal bites were `r percent_moi_anb`%.`r percent_followup`% patients were successfully followed up at 6months, of which `r nm_outcome_d` patients were reported dead. 
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles<!-- Think about how you can get the name of this level without having to spell it out here --> (`r percent_mot_pvt`%). `r percent_mot_onfoot`% patients came to the ED on foot. Assualt<!-- You don't want to spell that out, you want to get that progamatically--> were the most common cause of injury `r percent_moi_assualt`% followed by transport accidents `r percent_moi_tra`% and fall `r percent_moi_fall`. Injury due to animal bites were `r percent_moi_anb`%.`r percent_followup`% patients were successfully followed up at 6months, of which `r nm_outcome_d` patients were reported dead. 
 
 ```{r}
 
@@ -283,7 +271,7 @@ kbbh$isspv[kbbh$iss >= 9 & kbbh$iss <= 15] = 'Moderate'
 kbbh$isspv[kbbh$iss == 1 & kbbh$iss <= 8] = 'Minor'
 kbbh$isspv[is.na(kbbh$iss)] = 'No injuries defined'
 
-Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi2, data = kbbh))
+Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
 kable(Table2, 
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
@@ -379,4 +367,3 @@ tab1(kbbh$RTS, main = "Distribution of RTS")
 tab1(kbbh$hd, main = "Distribution of hospital disposition")
 
 ```
-
