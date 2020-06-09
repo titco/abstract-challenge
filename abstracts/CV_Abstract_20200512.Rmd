@@ -41,19 +41,19 @@ Data of 248 patients have been analyse with the help of R. Some of the basic inf
 
 ```{r}
 
-taftset <- read.csv("C:/Users/AMBIKA/Desktop/TAFT Analysis/taftset.csv")
+taft <- read.csv("C:/Users/AMBIKA/Desktop/TAFT Analysis/taft.csv")
 
-summary(taftset$sex) 
+summary(taft$sex) 
 
-prop.table(table(taftset$sex)) # It shows 79 percent are male and 21 percent female patients out of 248 patients.
+prop.table(table(taft$sex)) # It shows 79 percent are male and 21 percent female patients out of 248 patients.
 
-hist(taftset$"sex", main = "Sex Distribution of Patients", xlab = "Sex", border = "blue", col="green", las=2, breaks =6)
-
-
-hist(taftset$"age", main = "Age Distribution of Patients", xlab = "Age group", border = "blue",col="green", xlim=c(18,100), las=1, breaks =5)
+hist(taft$"sex", main = "Sex Distribution of Patients", xlab = "Sex", border = "blue", col="green", las=2, breaks =6)
 
 
-counts<- table(taftset$tyi)
+hist(taft$"age", main = "Age Distribution of Patients", xlab = "Age group", border = "blue",col="green", xlim=c(18,100), las=1, breaks =5)
+
+
+counts<- table(taft$tyi)
 
 barplot(counts, main = "Type of Injury Distribution",
         xlab = "Type of Injury") # Majority of injury reported as blunt and a very less proportion reported penetrating.
