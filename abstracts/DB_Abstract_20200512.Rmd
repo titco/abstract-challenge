@@ -7,51 +7,44 @@ output: word_document
 ---
 
 # Abstract
-Trauma is one of the leading causes of death in India. Road traffic accidents cause about 60% of all Traumatic Brain Injury (TBI) in India.[1] According to an estimate 50% of trauma deaths in India is caused by Traumatic Brain Injury (TBI). [2]  The Purpose of this study is to access the prevalence, severity, cause, outcome of TBI patients.
+Trauma is one of the leading causes of death in India. Road traffic accidents cause about 60% of all traumatic brain injuries (TBI) in India. [1] <!-- There shouldn't be any references in an abstract, please remove those -->According to an estimate 50% of trauma deaths in India is caused by Traumatic Brain Injury (TBI)<!-- You've already abbreviated TBI, no need to do it twice -->. [2]  The purpose of this study is to assess the prevalence, severity, cause, and outcome of admitted TBI patients.
 
 ## Method:
-For this study we will use data from a prospective observational cohort study called Trauma Audit Filter Trial (TAFT): The data was collected from Seth Sukhlal Karnani Memorial Hospital (SSKM) also known as Institute of Post Graduate Medical Education and Research (IPGME&R) which is a tertiary care centre in Kolkata, West Bengal. Data collection period: October, 2017 to Jan, 2020. In this hospital, one project officer was appointed to collect data prospectively for eight hours per day in the emergency room. Vital signs i.e. blood pressure, heart rate, respiratory rate, spo2, Glasgow coma scale (GCS), AVPU was measured at the emergency by data collector. For measurement of blood pressure, heart rate, Spo2 calibrated electronic bp-machine and Spo2 machine was provided. Data collector was trained to measure vitals at the start of the study. The project officer’s duty was divided into morning, evening and night shifts. Patient’s outcome was recorded from patients file till discharge or death. Data was uploaded in data server on weekly basis and data review was conducted. Audit of data collection and vital sign measurement was done quarterly. In addition to audit, project officer at quarterly interval was made to collect vitals of 10 patients with the Investigator on site to ensure that data quality and data integrity is maintained. For this study any adult (age: 18 years and above) TBI patient presenting to the emergency department (ED) and was admitted was enrolled for this study.
+We will retrospectively analyse data from the Trauma Audit Filter Trial (TAFT). The data was collected from the tertiary care centre Seth Sukhlal Karnani Memorial Hospital (SSKM), Kolkata, West Bengal. The data collection period was October 2017 to January 2020. One project officer was appointed to collect data prospectively for eight hours per day in the emergency room. Vital signs i.e. blood pressure, heart rate, respiratory rate, spo2, Glasgow coma scale (GCS), and AVPU were measured in the emergency department. For measurement of blood pressure, heart rate, Spo2 calibrated electronic bp-machine and Spo2 machine was provided<!-- No need to be this detailed in the abstract -->. Data collector was trained to measure vitals at the start of the study. The project officer’s duty was divided into morning, evening and night shifts. Patient’s outcome was recorded from patients file till discharge or death. Data was uploaded in data server on weekly basis and data review was conducted. Audit of data collection and vital sign measurement was done quarterly. In addition to audit, project officer at quarterly interval was made to collect vitals of 10 patients with the Investigator on site to ensure that data quality and data integrity is maintained<!-- Same here, everything between the last comment and this one can be removed and kept for a full paper -->. We included all patients who were 18 years or older and presented to the emergency department (ED) and was admitted for TBI.
 
 ## Results:
-A total of 776 TBI patient along with associated injuries were admitted during the period of our study of which 609 (78%) were male. Median age of patients was 40 (IQR: 30 to 54; range: 18 to 85).There were 369(47.6%) Of all the TBI patients 655(84.4%) were transferred from other hospitals. Almost 741(95%) patients were brought to SSKM via ambulance. Mean arterial pressure among them were 84.5 (IQR: 81.17 to 88.88; range: 53.17 to 139.67).  340(44%) patients had GCS within range of 14-15 and 434 (56%) patients were Alert (A). Among 336 (43%) patients operative intervention was needed. Road traffic accident (RTA) accounts for majority of TBIs 430 (55.35%) followed by fall 177(22.81%). Of all the RTA’s, two wheeler accident consist of 335(43.19%). Mortality was 29.8% among these patients.  
 
-###loading the csv file
+```{r}
+## Always start by loading the packages you use
+library(rio)
+library(tidyr)
+library(dplyr)
+library(stringr)
 
-data_taft <- read.csv(file= "C:/Users/Debojit/Desktop/corsera/taft-dataset-2736-20200525172700.csv", header = TRUE)
+## Loading the csv file
+data.dir <- getOption("data.dir")
+if (is.null(data.dir))
+    stop ("Please set the data directory using options(data.dir = \"<path to data>\").")
+data_taft <- import(file.path(data.dir, "taft-dataset-2736-20200525172700.csv")) %>% as_tibble()
 
-###sorting file based on PID from smallest to largest
+## Make sure injury and icd columns are character
+data_taft <- data_taft %>% mutate(across(contains("inj"), ~as.character(.x)))
 
+## Sorting file based on PID from smallest to largestx
 PID_order <- order(data_taft$pid)
 a <- data_taft[PID_order,]
 
-###applying filter to find all TBI patients in dataset using ICD 10 codes
-library(dplyr)
+## Apply filter to find all TBI patients in dataset using ICD 10 codes
+icd.codes <- c("S065", "S063", "S020", "S008", "S021","S026", "S032", "S053",
+               "S056", "S061", "S062", "S064", "S066", "S068", "S035")
+pattern <- str_c(icd.codes, collapse = "|")
+a <- unite(a, allinj, contains("icd"), sep = ",", remove = FALSE)
+tbi <- filter(a, str_detect(allinj, pattern))
 
-tbi <- filter(a, a$ctinj1icd %in% c ( "S065", "S063", "S020" , "S008" , "S021" ,"S026" , "S032", "S053" , "S056" , "S061" , "S062" , "S0064" , "S066" , "S068", "S035"))
-
-
-###to find the sample size
-
-dim(tbi)
-
-nrow(tbi)
-
-###To find median of age
-age <- tbi[,7]
-summary(age)
-
-
-###to find no of male female and there percentage
-sex <- as.factor(tbi[,8]) 
-sex_1 <-ifelse(sex == 0,"Female","Male")
-
-
-table_gender <- table(sex_1)
-table_gender
-
-###prop.table to see how much proportion in each gender & round used for rounding off here i choose 2 decimal place and multiplied with 100 for percent
-prop.table(table_gender) 
-table_gender_round <-round(prop.table(table_gender),2)*100
+## To find no of male female and there percentage
+males <- tbi$sex == 1
+n.male <- sum(males)
+p.male <- round(mean(males) * 100)
 
 ###replacing 999 with NA in column mortality
 
@@ -162,13 +155,6 @@ surgery <- tbi["surgeryfinal"] <- ifelse(surg == 999,"conservative","interventio
 table_surgery <- table(surgery)
 round(prop.table(table_surgery),2)*100
 
-
-
-## Conclusion:
-
-There has been a significant rise of trauma in India in last few decades of which TBI forms a major portion.  Prevention, Pre-hospital care and rehabilitation are the needs of the hour as the burden of TBI is increasing. Major developing economy like India faces a major challenge in these fields. 
-
-
 # Analysis
 
 ##crosstabulating map and mortality
@@ -228,12 +214,9 @@ round(prop.table(trans_mortality,1),2)*100
 surgery_mortality <- table(surgery,mortality1)
 #calculating row% to calculate mortality among intervention and conservative managements
 round(prop.table(surgery_mortality,1),2)*100
+```
 
+A total of `r nrow(tbi)` TBI patients were admitted during the period of our study. `r n.male` (`r p.male`%) were male. Median age of patients was 40 (IQR: 30 to 54; range: 18 to 85).There were 369(47.6%) Of all the TBI patients 655(84.4%) were transferred from other hospitals. Almost 741(95%) patients were brought to SSKM via ambulance. Mean arterial pressure among them were 84.5 (IQR: 81.17 to 88.88; range: 53.17 to 139.67).  340(44%) patients had GCS within range of 14-15 and 434 (56%) patients were Alert (A). Among 336 (43%) patients operative intervention was needed. Road traffic accident (RTA) accounts for majority of TBIs 430 (55.35%) followed by fall 177(22.81%). Of all the RTA’s, two wheeler accident consist of 335(43.19%). Mortality was 29.8% among these patients.  
 
-
-
-
-# Reference
-1)	Traumatic brain injury. (n.d). Retrieved from http://indianheadinjuryfoundation.org/traumatic-brain-injury/
-2)	Maas AI. Traumatic brain injury in India: A big problem in need of data. Neurol India 2017;65:257-8
-
+## Conclusion
+There has been a significant rise of trauma in India in last few decades of which TBI forms a major portion. Prevention, Pre-hospital care and rehabilitation are the needs of the hour as the burden of TBI is increasing. Major developing economy like India faces a major challenge in these fields. <!-- Altough true none of this relates to your aim. Remove and summarize your findings instead -->
