@@ -11,16 +11,16 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# INTRODUCTION
+# Introduction
 
- Abdominal injuries are common, costly, deadly, and a source of considerable uncertainty common in adult  trauma. In some circumstances, laparoscopy offers a diagnostic and therapeutic alternative with less morbidity than standard exploration, but in some specific cases morbidity is high .
+Abdominal injuries are common, costly, deadly, and a source of considerable uncerinitainty common in adult trauma<!-- Uncertainty with regards to what? Specify. Uncertainty regarding outcomes? -->. In some circumstances, laparoscopy offers a diagnostic and therapeutic alternative with less morbidity than standard exploration, but in some specific cases morbidity is high<!-- How come you jump directly to laprascopy? Is your project specifically about laprascopy in abdominal trauma? If so you will need to revise your title and aim --> .
  
-# AIM
+# Aim
 
-TO check the survival rate of abdominal trauma cases.
+To check the survival rate of abdominal trauma cases<!-- This does not correspond well with your introduction, where you write about laprascopy. I suggest you revise the last part of your introduction-->.
 
-# Desing
-
+# Design
+<!-- Here you should state the study design. I would assume that you're doing a retrospective analysis of a prospective cohort of trauma patients -->
 Most of the paitent with polytrauma less chance of having abdominal trauma.
 
 1.so selection is very much requered.
@@ -31,24 +31,8 @@ Most of the paitent with polytrauma less chance of having abdominal trauma.
 
  
 # Methods
-
+<!-- I see that you have a lot do to here so I won't comment further -->
 Most of the abdominal trauma paitent having polytrauma.
 paitent inclution critriea 18 to 100 (age) so adult paitent only involve in this study.
 
 Selection by mechanism of injuri.with medical record
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
