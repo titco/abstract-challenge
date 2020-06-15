@@ -4,8 +4,8 @@ author: "Chandrika Verma"
 date: "17/05/2020"
 output:
   word_document: default
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 library(knitr)
 library(psych)
@@ -30,18 +30,17 @@ To study the demographic analysis of road accidents presented at tertiary care h
 # Method
 
 ## Research Desigh
- Proposed research is based on quantitative approach. Proposed study also would be descriptive in nature.
-
-## Study Setting
-Tertiary care hospital emergency department is the site of this study. Participants aged 18 or above have been enrolled for the study those had history of road traffic accidents presented to emergency department.
+ Proposed research is based on quantitative approach and retrospective in nature.
+Tertiary care hospital emergency department Delhi is the site of this study. Participants aged 18 or above have been enrolled for the study those had history of road traffic accidents presented to emergency department.
 
 
 ## analysis of data
-Data of 248 patients have been analyse with the help of R. Some of the basic information has been withdrawn from the current dataset.Some graphical representation has been done.
+Data of 248 patients have been analyse with the help of R. Some of the basic information has been drawn.Some graphical representation has been done.
 
 ```{r}
 
-taft.dataset.9825.20200608232208 <- read.csv("C:/Users/AMBIKA/Desktop/TAFT Analysis/taft-dataset-9825-20200608232208.csv")
+taft.dataset.9825.20200608232208 <- read.csv("C:/Users/acer/Desktop/TAFT Analysis/taft-dataset-9825-20200608232208.csv")
+
 
 
 summary(taft.dataset.9825.20200608232208$sex) 
@@ -62,8 +61,10 @@ barplot(counts, main = "Type of Injury Distribution",
 
 ```
 
-# Result 
-Based on data analysis result would be explained here though analysis has not been completed once this section would be complete discription will be given.
+# Result
+The demography of the road accident victims 79 percent are male and rest 21 percent are female.According to their age distribution it shows majority of the road accident victims are among age-group 18-40 years and majority of them  presented emergency department with blunt trauma. 
+
+(Though I have not checked missing value if found some missing data from data set will try to explain my analysis on that basis after excluding missing items.  )
 
 # Conclusion 
 Conclusion would be drawn with the help of result.
