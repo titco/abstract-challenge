@@ -15,10 +15,13 @@ output:
 library(knitr)
 library(dplyr)
 library(psych)
-library(data.table)
+library(data.table) 
 library(tableone)
 library(epiDisplay)
 library(tigerstats)
+library(splitstackshape)
+library(tidyverse)
+library(tidyr)
 opts_chunk$set(echo = FALSE)
 ```
 
@@ -26,7 +29,7 @@ opts_chunk$set(echo = FALSE)
 
 ## Introduction
 
-Injuries are one of the leading causes of Emergency Department visits. Physicians triage patients into red, orange, yellow and green, from most to least urgent based on injruy severity and physiological parameters. The proportion of patients that are triaged green is larger compared with patients with life-threatning injuries and injuries that require urgent attention<!-- This sentence is a bit awkward. Do you mean that more patients are triage green compared with red?-->. It is important to understand the characteristics of these patients <!-- It's not obvious that "these patients" here refers to the patients triaged green. Try to make that clearer.-->to know if there is a need for them to be managed differently so that the manpower and resources of the emergency department can be directed towards serious patients<!-- This sentence is a bit long. Try to be more direct: "... to understand how they should be managed to allow resources to be directed towards serios patients", or something like that.-->
+Injuries are one of the leading causes of Emergency Department visits. Physicians triage patients into red, orange, yellow and green, from most to least urgent based on injruy severity and physiological parameters. The proportion of patients that are triaged green is larger compared with patients with life-threatning injuries and injuries that require urgent attention<!-- This sentence is a bit awkward. Do you mean that more patients are triage green compared with red?-->. It is important to understand the characteristics of the patients triaged green to understand how they should be managed to allow resources to be directed towards serious patients.
 
 ## Aim
 
@@ -37,16 +40,14 @@ The aim of this study is to describe the demographic, physiological and injury c
 Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective cohort analysis of the data was performed using R. 
 
 ## Results
-```{r, warning=FALSE, results='hide'}
+```{r Data_cleaning, warning=FALSE, results='hide'}
 
 # read the original csv file
 
-## Now let's take this one level further. You ideally don't want to
-## specify any file paths here, because that means that the next
-## person, like me, have to change the file path directly here to get
-## it to work. Let's add a call to options instead.
-
 ## Get data directory
+
+options(data.dir = "C:\\Users\\annan\\OneDrive\\Documents\\Projects\\PGTP")
+
 data.dir <- getOption("data.dir")
 if (is.null(data.dir))
     stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
@@ -57,19 +58,15 @@ g <- data.table::fread(file.path(data.dir, "ttris-dataset-with-iss-8317-20190708
 ## datatable without ISS
 h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 
-#h$iss <- NA
-
-#h[] <- mapply(FUN = as,h,sapply(g,class),SIMPLIFY = FALSE)
-
-
 ## Merged the two datatables
 
 h$pid <- as.integer(h$pid)
 
 merged <- merge(g, h, by = "pid")
 
-## Note that you have a number of duplicate pids in your merged data
+## Duplicated rows
 merged$pid[duplicated(merged$pid)]
+merged <- merged[!duplicated(merged$pid), ]
 
 ## Changed column names
 names(merged)[names(merged) == "iss.y"] <- "delcolumn.x"
@@ -80,15 +77,88 @@ dt <- data.table(merged)
 drop.cols <- grep(".x$", colnames(dt))
 dt[, (drop.cols) := NULL]
 
+## Rearranging columns
+dt <- dt[,c(17,1,20,18:19,21:33,36:45,47,46,34:35,48:129,142,2:15,130:141)]
+
+## Adding the extra columns to g
+extra_col <- dt[,130:141]
+
+g <- cbind(g,extra_col)
+
+## Changing class of the columns
+
+dt[] <- lapply(names(dt), function(name) {
+    column <- dt[, name]
+    correct.class <- class(g[, name])
+    if (correct.class == "factor") {
+        new.column <- factor(column, levels = levels(g[, name]))
+    } else {
+        new.column <- as(column, correct.class)
+    }
+    return (new.column)
+})
+
 ## Removed .y from the coulmn names
 
 names(dt) <- sub(".y$", "", names(dt))
-make.names(names(dt)) # What are you trying to achieve here? This will only print the output to the console, but maybe that's what you're after?
+
+dt <- as.tibble(dt)
+
+## Split clean column data
+
+ais <- dt %>% dplyr:: select(starts_with("clean_"))
+
+ais.list <- lapply(names(ais), function(x) cSplit(ais[, x], x, sep = ","))
+row_max <- function(x, na.rm = FALSE) {
+    if (all(is.na(x)))
+        return (NA)
+    max(x, na.rm = na.rm)
+}
+ais.max <- lapply(ais.list, function(x) apply(x, 1, row_max, na.rm = TRUE))
+get_top_3 <- function(x) {
+    x <- sort(x, decreasing = TRUE, na.last = TRUE)
+    i <- min(c(3, length(x)))
+    x[seq_len(i)]
+}
+calculate_iss <- function(x) {
+    top_3 <- get_top_3(x)
+    iss <- sum(x[1]^2, x[2]^2, x[3]^2, na.rm = TRUE)
+    iss
+}
+iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
+dt$iss <- iss
+
+## Converting all Injury 999 to Not Defined
+dt[,69:142] <- dt[,69:142] %>% 
+    mutate_all(funs(str_replace(., "999", "ND")))
+
+## Converting rest of the 999s to NA
+dt[,22:68] <- dt[,22:68] %>% 
+    mutate_all(funs(str_replace(., "999", 'NA')))
+
+missing.data.list <- lapply(dt, function(column) {
+    n.na <- sum(is.na(column))
+    p.na <- round((n.na/length(column)) * 100)
+    missing <- data.frame("Count" = n.na, "Percentage" = p.na)
+    return (missing)
+})
+
+missing.data <- do.call(rbind, missing.data.list)
+
+view(missing.data)
+
+maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data$Count)]
+
+complete.index <- complete.cases(dt)
+n.incomplete <- sum(!complete.index) # Note the use of the exclamation mark !
+p.incomplete <- round((n.incomplete/nrow(dt)) * 100)
+
+kbbh <- dt[complete.index, ]
 
 ```
 
 
-```{r}
+```{r age_sex_toi_mot}
 
 # Created a dataframe of triage category green
 kbbh <- subset(x=dt,subset = dt$tc == 0)
@@ -162,12 +232,12 @@ percent_mot_onfoot <- round((nm_onfoot/ dm) * 100,2)
 ```
 
 
-```{r, results='hide'}
+```{r moi_followups, results='hide'}
 
 # Mechanism of Injury
 moi.collapsed <- moi <- as.character(kbbh$moi)
 
-## Method 2
+
 ## You can probably see how you could create a function to do some work for you
 get_icd_range <- function(first.char, start.number, end.number) {
     icd.range <- paste0(
@@ -223,7 +293,10 @@ calculate_n_p_moi <- function(level.name) {
     return.list <- list(nm = nm, percent = percent)
     return (return.list)
 }
+
 moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p_moi)
+
+
 
 
 # Trauma outcomes
@@ -261,12 +334,13 @@ percent_followup <- percent_outcome_a+percent_outcome_d
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles<!-- Think about how you can get the name of this level without having to spell it out here --> (`r percent_mot_pvt`%). `r percent_mot_onfoot`% patients came to the ED on foot. Assualt<!-- You don't want to spell that out, you want to get that progamatically--> were the most common cause of injury `r percent_moi_assualt`% followed by transport accidents `r percent_moi_tra`% and fall `r percent_moi_fall`. Injury due to animal bites were `r percent_moi_anb`%.`r percent_followup`% patients were successfully followed up at 6months, of which `r nm_outcome_d` patients were reported dead. 
 
-```{r}
+```{r ISS_category}
 
 kbbh$iss <- as.numeric(kbbh$iss)
 
 # Categorizing ISS Score
 
+kbbh$isspv[kbbh$iss >= 16 & kbbh$iss <= 24] = 'Severe'
 kbbh$isspv[kbbh$iss >= 9 & kbbh$iss <= 15] = 'Moderate'
 kbbh$isspv[kbbh$iss == 1 & kbbh$iss <= 8] = 'Minor'
 kbbh$isspv[is.na(kbbh$iss)] = 'No injuries defined'
@@ -278,8 +352,7 @@ kable(Table2,
 
 ```
 
-```{r}
-# For calculating RTS
+```{r RTS}
 
 ## Append a new variable 'GCS' to the dataset
 
@@ -347,7 +420,7 @@ Among the patients triaged green, injury due to assualt and transport accidents 
 
 ## Analysis
 
-```{r, warning=FALSE, results='hide'}
+```{r Extra, warning=FALSE, results='hide'}
 
 ## Table of age group
 tab1(kbbh$agegrp, main = "Distribution of patients by Age")
