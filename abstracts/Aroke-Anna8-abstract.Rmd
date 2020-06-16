@@ -77,6 +77,9 @@ dt <- data.table(merged)
 drop.cols <- grep(".x$", colnames(dt))
 dt[, (drop.cols) := NULL]
 
+## Removed .y from the coulmn names
+names(dt) <- sub(".y$", "", names(dt))
+
 ## Rearranging columns
 dt <- dt[,c(17,1,20,18:19,21:33,36:45,47,46,34:35,48:129,142,2:15,130:141)]
 
@@ -86,6 +89,7 @@ extra_col <- dt[,130:141]
 g <- cbind(g,extra_col)
 
 ## Changing class of the columns
+
 
 dt[] <- lapply(names(dt), function(name) {
     column <- dt[, name]
@@ -98,13 +102,11 @@ dt[] <- lapply(names(dt), function(name) {
     return (new.column)
 })
 
-## Removed .y from the coulmn names
 
-names(dt) <- sub(".y$", "", names(dt))
-
-dt <- as.tibble(dt)
 
 ## Split clean column data
+
+dt <- as.tibble(dt)
 
 ais <- dt %>% dplyr:: select(starts_with("clean_"))
 
@@ -128,6 +130,8 @@ calculate_iss <- function(x) {
 iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
 dt$iss <- iss
 
+
+# Complete case analysis
 ## Converting all Injury 999 to Not Defined
 dt[,69:142] <- dt[,69:142] %>% 
     mutate_all(funs(str_replace(., "999", "ND")))
