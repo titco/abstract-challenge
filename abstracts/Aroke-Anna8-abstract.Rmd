@@ -65,7 +65,6 @@ h$pid <- as.integer(h$pid)
 merged <- merge(g, h, by = "pid")
 
 ## Duplicated rows
-merged$pid[duplicated(merged$pid)]
 merged <- merged[!duplicated(merged$pid), ]
 
 ## Changed column names
@@ -78,18 +77,24 @@ drop.cols <- grep(".x$", colnames(dt))
 dt[, (drop.cols) := NULL]
 
 ## Removed .y from the coulmn names
-names(dt) <- sub(".y$", "", names(dt))
+names(dt) <- sub('\\.[^.]+$', "", names(dt))
 
 ## Rearranging columns
-dt <- dt[,c(17,1,20,18:19,21:33,36:45,47,46,34:35,48:129,142,2:15,130:141)]
+
+#dt <- dt %>% dplyr::select(order(colnames(.)))
+
+dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:tvsr,dus:testvar,locked,X0:iss,doi_toi:valid)
+
+extra_col <- dt %>% dplyr::select(doi_toi:valid)
 
 ## Adding the extra columns to g
-extra_col <- dt[,130:141]
 
 g <- cbind(g,extra_col)
 
 ## Changing class of the columns
 
+g <- as.data.frame(g)
+dt <- as.data.frame(dt)
 
 dt[] <- lapply(names(dt), function(name) {
     column <- dt[, name]
@@ -102,9 +107,9 @@ dt[] <- lapply(names(dt), function(name) {
     return (new.column)
 })
 
+## dplyr::all_equal(g,dt) ##To compare the two dataframes
 
-
-## Split clean column data
+# Calculating ISS
 
 dt <- as.tibble(dt)
 
@@ -130,15 +135,37 @@ calculate_iss <- function(x) {
 iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
 dt$iss <- iss
 
-
 # Complete case analysis
+
+dt$s24h <- replace(dt$s24h, dt$s24h == 999, 99) ##Loss of follow up 
+dt$s30d <- replace(dt$s30d, dt$s30d == 999, 99)
+dt$s6m <- replace(dt$s6m, dt$s6m == 999, 99)
+dt$s <- replace(dt$s, dt$s == 999, 99)
+
 ## Converting all Injury 999 to Not Defined
-dt[,69:142] <- dt[,69:142] %>% 
+
+inj_cols <- dt[,grep("inj", colnames(dt))]
+
+inj_cols <- inj_cols %>% 
     mutate_all(funs(str_replace(., "999", "ND")))
 
+dt[,grep("inj", colnames(dt))] <- inj_cols
+
+## Converting NA to ND in max cols
+
+dt %>% dplyr:: select(starts_with("max_")) %>% 
+    mutate_all(funs(str_replace(., "NA", "ND")))
+
+## Dropping unwanted columns
+drop.cols2 <- dt %>% dplyr:: select(starts_with("clean_"), starts_with("max_"), qcrec, vsqs, testvar, locked, X0)
+
+drop.cols2 <- colnames(drop.cols2)
+
+dt <- dt[, !(colnames(dt) %in% c(drop.cols2))]
+
 ## Converting rest of the 999s to NA
-dt[,22:68] <- dt[,22:68] %>% 
-    mutate_all(funs(str_replace(., "999", 'NA')))
+dt[] <- dt[] %>% 
+    mutate_all(funs(na_if(.,"999")))
 
 missing.data.list <- lapply(dt, function(column) {
     n.na <- sum(is.na(column))
@@ -149,15 +176,13 @@ missing.data.list <- lapply(dt, function(column) {
 
 missing.data <- do.call(rbind, missing.data.list)
 
-view(missing.data)
-
 maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data$Count)]
 
 complete.index <- complete.cases(dt)
-n.incomplete <- sum(!complete.index) # Note the use of the exclamation mark !
+n.incomplete <- sum(!complete.index)
 p.incomplete <- round((n.incomplete/nrow(dt)) * 100)
 
-kbbh <- dt[complete.index, ]
+dtt <- dt[complete.index, ]
 
 ```
 
@@ -165,7 +190,7 @@ kbbh <- dt[complete.index, ]
 ```{r age_sex_toi_mot}
 
 # Created a dataframe of triage category green
-kbbh <- subset(x=dt,subset = dt$tc == 0)
+kbbh <- subset(x=dtt,subset = dtt$tc == 0)
 
 # Number of records
 dm <- as.numeric(nrow(kbbh))
@@ -186,18 +211,17 @@ setDT(kbbh)[,agegrp := cut(kbbh$age,
 
 ## Calculating percentage of patients below age 65
 
-#dm_age <- nrow(subset(kbbh, !is.na(age))) 
+dm_age <- nrow(subset(kbbh, !is.na(age))) 
 
 age_below65 <- dplyr::filter(kbbh, kbbh$agegrp != "65+") 
 nm_age <- nrow(age_below65) # neumerator
-percent_agebelow65 <- round((nm_age/ dm) * 100, 2) ## This includes those with missing age in the denominator. Is that intentional? 
+percent_agebelow65 <- round((nm_age/ dm) * 100, 2)
 
 ## The above could have been achieved with
 nm_age <- sum(kbbh$agegrp != "65+", na.rm = TRUE)
 percent_agebelow65 <- round(mean(kbbh$agegrp != "65+", na.rm = TRUE) * 100, 2)
 
 # Sex
-#dm_sex <- nrow(subset(kbbh, !is.na(sex))) # denominator if excluding NA
 
 kbbh$sex <- as.numeric(kbbh$sex)
 
@@ -211,8 +235,6 @@ percent_female <- round((nm_female/ dm) * 100,2)
 
 # Type of Injury
 
-#dm_tyi <- nrow(subset(kbbh, !is.na(tyi))) #denominator if excuding NA
-
 kbbh$tyi <- as.numeric(kbbh$tyi)
 
 blunt <- dplyr::filter(kbbh, kbbh$tyi == 0) # neumerator
@@ -225,9 +247,19 @@ kbbh$mot <- as.numeric(kbbh$mot)
 
 kbbh$mot <- replace(kbbh$mot, kbbh$mot == 999, NA)
 
-mot_pvt <- dplyr::filter(kbbh, kbbh$mot == 2) # neumerator
+kbbh$mot <- replace(kbbh$mot, kbbh$mot == 2, "Private Vehicles")
+mot_pvt <- dplyr::filter(kbbh, kbbh$mot == "Private Vehicles") # neumerator
 nm_pvt <- nrow(mot_pvt)
 percent_mot_pvt <- round((nm_pvt/ dm) * 100,2)
+
+sort_most_common <- function(v) {
+   uniqv <- unique(v)
+   uniqv[sort.list(tabulate(match(v, uniqv)), decreasing = TRUE)]
+}
+
+sorted_mot <- sort_most_common(kbbh$mot)
+
+mot1 <- sorted_mot[[1]][]
 
 mot_onfoot <- dplyr::filter(kbbh, kbbh$mot == 3) # neumerator
 nm_onfoot <- nrow(mot_onfoot)
@@ -241,8 +273,6 @@ percent_mot_onfoot <- round((nm_onfoot/ dm) * 100,2)
 # Mechanism of Injury
 moi.collapsed <- moi <- as.character(kbbh$moi)
 
-
-## You can probably see how you could create a function to do some work for you
 get_icd_range <- function(first.char, start.number, end.number) {
     icd.range <- paste0(
         paste0(
@@ -262,33 +292,7 @@ icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
 for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
 moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
 
-## And if you want to put this back into the data as a factor then:
 kbbh$moi.collapsed <- as.factor(moi.collapsed)
-
-moi_assualt <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Assault") # neumerator
-nm_moi_assualt <- nrow(moi_assualt)
-percent_moi_assualt <- round((nm_moi_assualt/ dm) * 100,2)
-
-moi_tra <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Transport accident") # neumerator
-nm_moi_tra <- nrow(moi_tra)
-percent_moi_tra <- round((nm_moi_tra/ dm) * 100,2)
-
-moi_fall <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Fall") # neumerator
-nm_moi_fall <- nrow(moi_fall)
-percent_moi_fall <- round((nm_moi_fall/ dm) * 100,2)
-
-moi_anb <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Animal bite") # neumerator
-nm_moi_anb <- nrow(moi_anb)
-percent_moi_anb <- round((nm_moi_anb/ dm) * 100,2)
-
-moi_other <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Other") # neumerator
-nm_moi_other <- nrow(moi_other)
-percent_moi_other <- round((nm_moi_other/ dm) * 100,2)
-
-## Note that your performing similar operations many time
-## above. That's usually a good indication that you can make your code
-## more efficient and less prone to errors if you turn it into a loop
-## of some sort
 
 calculate_n_p_moi <- function(level.name) {
     moi.level <- dplyr::filter(kbbh, kbbh$moi.collapsed == level.name) # neumerator
@@ -300,43 +304,48 @@ calculate_n_p_moi <- function(level.name) {
 
 moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p_moi)
 
+p_animalbite <- moi.data[[1]][2]
+p_assualt <- moi.data[[2]][2]
+p_fall <- moi.data[[3]][2]
+p_other <- moi.data[[4]][2]
+p_tra <- moi.data[[5]][2]
 
+sorted_moi <- sort_most_common(kbbh$moi.collapsed)
 
+moi1 <- sorted_moi[[1]][]
+moi2 <- sorted_moi[[2]][]
+moi3 <- sorted_moi[[3]][]
 
 # Trauma outcomes
-kbbh$s24h <- as.numeric(kbbh$s24h)
-kbbh$s30d <- as.numeric(kbbh$s30d)
+
 kbbh$s6m <- as.numeric(kbbh$s6m)
 
-kbbh$s24h <- replace(kbbh$s24h, kbbh$s24h == 999, NA)
-kbbh$s30d <- replace(kbbh$s30d, kbbh$s30d == 999, NA)
-kbbh$s6m <- replace(kbbh$s6m, kbbh$s6m == 999, NA)
+kbbh$s6m <- as.factor(kbbh$s6m)
 
+calculate_n_p_outcome <- function(level.name) {
+    outcome.level <- dplyr::filter(kbbh, kbbh$s6m == level.name) # neumerator
+    nm <- nrow(outcome.level)
+    percent <- round((nm/dm) * 100,2)
+    return.list <- list(nm = nm, percent = percent)
+    return (return.list)
+}
 
-## Alive at 6month
-outcome_a <- dplyr::filter(kbbh, kbbh$s6m == "0") # neumerator
-nm_outcome_a <- nrow(outcome_a)
-percent_outcome_a <- round((nm_outcome_a/ dm) * 100,2)
+outcome.data <- lapply(setNames(nm = levels(kbbh$s6m)), calculate_n_p_outcome)
 
-## Status unknown/ Loss of followup
-outcome_uk <- dplyr::filter(kbbh, is.na(kbbh$s6m)) # neumerator
-nm_outcome_uk <- nrow(outcome_uk)
-percent_outcome_uk <- round((nm_outcome_uk/ dm) * 100,2)
+str(outcome.data)
 
-## Dead at 6month
-outcome_d <- dplyr::filter(kbbh, kbbh$s6m == "1") # neumerator
-nm_outcome_d <- nrow(outcome_d)
-percent_outcome_d <- round((nm_outcome_d/ dm) * 100,2)
-
-## See if you can apply the same function for calculating n and p that
-## I defined above to make the outcome calculations more efficient
+p_outcome_alive <- outcome.data[[1]][2]
+p_outcome_dead <- outcome.data[[2]][2]
+n_outcome_dead <- outcome.data[[2]][1]
 
 ## Successful Followups
-percent_followup <- percent_outcome_a+percent_outcome_d
+percent_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
 
 ```
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles<!-- Think about how you can get the name of this level without having to spell it out here --> (`r percent_mot_pvt`%). `r percent_mot_onfoot`% patients came to the ED on foot. Assualt<!-- You don't want to spell that out, you want to get that progamatically--> were the most common cause of injury `r percent_moi_assualt`% followed by transport accidents `r percent_moi_tra`% and fall `r percent_moi_fall`. Injury due to animal bites were `r percent_moi_anb`%.`r percent_followup`% patients were successfully followed up at 6months, of which `r nm_outcome_d` patients were reported dead. 
+There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
+
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury `r p_assualt`% followed by `r moi2` `r p_tra`% and `r moi3` `r p_fall`%. Injury due to animal bites were. `r percent_followup` patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. 
 
 ```{r ISS_category}
 
