@@ -1,0 +1,48 @@
+---
+title: Profile of Patients with Thoracic Trauma at Tertiary Care Hospital in Delhi
+author: "Deepak Kumar"
+date: "17/05/2020"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+# Introduction 
+  A chest injury, also known as chest trauma, is any form of physical injury to the chest including the heart, ribs and lungs. Chest injuries account for 25% of all deaths from traumatic injury. Typically chest injuries are caused by blunt mechanisms such as road traffic accidents or penetrating mechanisms such as stabbing. Blunt trauma refers to mechanisms causing increased in thoracic pressure such as injuries most common cause of thoracic trauma), falls and other causes of road traffic injuries.In the current study only thoracic trauma patients will be included. 
+
+# Aim
+     To study the a demographic factors associated in the thoracic trauma patients and their outcomes.
+
+# Design
+In our study we included patients 18 years and above with trauma admitted to the hospital. <!--This is part of the Methods section, please move it there. This is your study population. Design would be retrospective or prospective -->
+
+# Methods
+<!--Try to structure the Methods section into:
+Design
+Population
+Setting (the type of hospital,its location)
+Analysis (what tests will you include, what statistical software will you use)-->
+ Present study would be quantitative in nature. <!-- Please remove this line, not required-->
+```{r}
+TAFTDATA <- read.csv("D:/taft r/TAFTDATA.csv")
+summary(TAFTDATA$tyi)
+```
+```{r}
+hist(TAFTDATA$tyi,col = 'blue')
+```
+
+
+  * ** This histogram shows type of injury.(0=Blunt, 1= Penetrating)**
+  
+# Result
+  The TAFT study data analysis of 249 patients at Lok Nayak Hospital, New Delhi shows around 99% patients having blunt injury, most of these patients are injured in road accidents. Its shows the main reason of thoracic injury is blunt trauma.<!-- First report how many total patients are there. Second what is the percentage of thoracic injuries. Then report the gender, age distribution, mechanism of injury, type of injury (blunt or penetrating) and most importantly mortality rate in thoracic patients.--> 
+    
+# Conclusion
+The Present study has concluded majority of thoracic trauma is due blunt injury among road accident patients.<!--Good. You'll also be able to describe what is main mechanism of thoracic injury, mortality rate after you run codes for them-->
