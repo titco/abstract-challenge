@@ -3,7 +3,7 @@ library(tibble)
 library(dplyr)
 library(tidyr)
 library(splitstackshape)
-ttris <- file.path(getOption("data.path"), "ttris-dataset-with-iss-8317-20190708120045.csv") %>%
+titco <- file.path(getOption("data.path"), "ttris-dataset-with-iss-8317-20190708120045.csv") %>%
     rio::import() %>%
     as_tibble()
 ais <- titco %>% select(contains("clean_"))
