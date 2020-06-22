@@ -1,26 +1,20 @@
 ---
+title: Demographics and outcomes of female trauma patients admitted to a tertiary care centre in Bengaluru
+author: "Dr. Manjula Ranagatti"
+date: "May 27, 2020"
 output:
   word_document: default
   html_document: default
 ---
-```
-> title: Demographics and outcomes of female trauma patients admitted to a tertiary care centre in Bengaluru
-> author: "Dr. Manjula Ranagatti"
-> date: "May 27, 2020"
-> output:
-> word_document: default
-> html_document: default
-```
-```{r}
 
-  library(ggplot2)
-  library(yaml)
-  library(data.table)
-  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+library(ggplot2)
+library(yaml)
+library(data.table)
+library(tidyverse)
+library(rio)
 ```
-  
-
----
 
 # Abstract
 
@@ -28,119 +22,89 @@ output:
 Demographics and outcomes of female trauma patients admitted to a tertiary care centre in Bengaluru.
 
 # Introduction
-Trauma is a major cause of morbidity and mortality in low, middle, and high income countries.The usual causes of trauma are road traffic accidents (RTAs), fall from height, occupational injuries,burns and assault. Generally, the incidence of traumatic injuries is disproportionately high in males. Trauma is prevalent in the lives of women and the emotional, physical, social and financial costs are often enduring and pervasive.
+Trauma is a major cause of morbidity and mortality in low, middle, and high income countries. The usual causes of trauma are road traffic accidents (RTAs), fall from height, occupational injuries, burns and assault. Generally, the incidence of traumatic injuries is disproportionately high in males. Trauma is prevalent in the lives of women and the emotional, physical, social and financial costs are often enduring and pervasive.
 
 # Aim
-To study demographic variables and outcome of different mechanisms and types of traumatic injuries in females.
+To study demographic variables and outcome of different mechanisms and types of traumatic injuries<!-- I suggest you use one term consistently, and recommend trauma over traumatic injuries --> in females.
 
 # Design
-A prospective observational study was conducted on female patients came with history of trauma to the emergency department and were admitted.
+A prospective observational study was conducted on female patients came with history of trauma to the emergency department and were admitted.<!-- The last part is repeated in the Methods section below. I suggest you remove it from here -->
 
 # Methods
-This was an observational study of all adult female trauma patients more than 18 year old presenting to adult emergency department of St.Johns Medical College Hospital, Bengaluru and were admitted. Details of the incident, injuries, and outcome were noted. The inclusion criteria were all patients who had sustained trauma through RTA, fall from height or level ground, burns, work place injuries and trauma related to assault, sports and animals. Patients aged below 18 presenting with trauma and adult patients who were dead on arrival were excluded from the study. Details of history and vital parameters of all patients were recorded on a standard data collection sheet. The following were extracted: Demographics, mechanism and type of injury, date and time of injury, date and time of arrival to emergency, transportation, pre-hospital history, WHO trauma care checklist, GCS score and injuries etc.
+This was an observational study of all adult female trauma patients more than 18 year old presenting to adult emergency department of St.Johns Medical College Hospital, Bengaluru and were admitted. Details of the incident, injuries, and outcome were noted. The inclusion criteria were all patients who had sustained trauma through RTA, fall from height or level ground, burns, work place injuries and trauma related to assault, sports and animals<!-- You already mention some inclusion criteria in the first line of this section. I suggest you keep them all in one place.-->. Patients aged below 18 presenting with trauma and adult patients who were dead on arrival were excluded from the study<!-- They were never included, and therefore cannot be excluded-->. Details of history and vital parameters of all patients were recorded on a standard data collection sheet. The following were extracted: Demographics, mechanism and type of injury, date and time of injury, date and time of arrival to emergency, transportation, pre-hospital history, WHO trauma care checklist, GCS score and injuries etc.
 
 # Results
-We have enrolled total 535 patients includes both male and female during the study period. The gender distribution was 82.5% males and 17.5% females.The median age was 41 years. The frequency of trauma in males was higher than in females.The mode of transport of arrival to emergency was through private vehicles(72%) followed by ambulance (26%) and  brought by police(2%). 70% of patients were referred from other hospital and 30% patients came directly to the hospital. The most common mechanism of injuries are Road Traffic Accidents (48%), Falls 26% (height, bed, stairs, same level fall, accidental fall), Burns (14%), Exposure to inanimate mechanical forces (12%). The most common type of injuries was blunt injuries (97%). Among all the enrolled (admitted) patients 90% were discharged home, 2% were discharged against medical advice, 8% were died in the hospital and 70% patients undergone for surgery.
-
- 
-
 ```{r}
 
-taft.dataset.4178.20200608232208 <- read.csv("C:/Users/Rajeeva/Desktop/taft-dataset-4178-20200608232208.csv")
-summary(taft.dataset.4178.20200608232208)
+## Let whoever runs this script, including you, put the path to the
+## direcctory where the data is in an option called data.dir. You do
+## that by running options(data.dir = "<path to data directory>"). You
+## need to replace the <path to data directory> with the actual path.
+data.dir <- getOption("data.dir")
+taft <- import(file.path(data.dir, "taft-dataset-4178-20200608232208.csv")) %>% as_tibble()
+
+## Put the number of patients in an object and use that in your results
+n.patients <- nrow(taft)
+
+## Put the number and percentages of males and femailes in objects
+n.males <- sum(taft$sex == 1, na.rm = TRUE)
+p.males <- round(mean(taft$sex == 1, na.rm = TRUE) * 100)
+n.females <- sum(taft$sex == 0, na.rm = TRUE)
+p.females <- round(mean(taft$sex == 0, na.rm = TRUE) * 100)
+
+summary(taft)
+
+summary(taft$age)
+
+summary(taft$mot)
+
+hist(taft$age,col='blue')
+
+hist(taft$mot,col='red')
+
+hist(taft$tran,col='yellow')
+
+summary(taft$hr1)
+
+hist(taft$rr1,col='green')
+
+hist(taft$age)
+
+barplot(taft$age)
+
+table(taft$age)
+
+summary(taft$mot)
+
+hist(taft$mot)
+
+hist(taft$mot,col='red')
+
+summary(taft$rr1)
+
+summary(taft$hr1)
+
+summary(taft$tran)
+
+hist(taft$rr2,col='blue')
+
+summary(taft$tran)
+
+hist(taft$tran)
+
+taft$sbp1 <- replace(taft$sbp1, taft$sbp1 == 999, NA)
+hist(taft$age, main = "Distribution of patients by Age")
+
+hist(taft$mot, main = "Distribution of Mode of transport")
+
+ggplot(taft, aes(x= age)) + geom_bar()
+
+prop.table(table (taft$age))
+
+colnames(taft)
 ```
 
-
-```{r}
-summary(taft.dataset.4178.20200608232208$age)
-```
-
-```{r}
-summary(taft.dataset.4178.20200608232208$mot)
-```
-
-```{r}
-hist(taft.dataset.4178.20200608232208$age,col='blue')
-```
-
-```{r}
-hist(taft.dataset.4178.20200608232208$mot,col='red')
-```
-
-```{r}
-hist(taft.dataset.4178.20200608232208$tran,col='yellow')
-```
-
-```{r}
-summary(taft.dataset.4178.20200608232208$hr1)
-```
-
-```{r}
-hist(taft.dataset.4178.20200608232208$rr1,col='green')
-```
-
-
-
-hist(taft.dataset.4178.20200608232208$age)
-
-barplot(taft.dataset.4178.20200608232208$age)
-
-table(taft.dataset.4178.20200608232208$age)
-
-summary(taft.dataset.4178.20200608232208$mot)
-
-hist(taft.dataset.4178.20200608232208$mot)
-
-hist(taft.dataset.4178.20200608232208$mot,col='red')
-
-summary(taft.dataset.4178.20200608232208$rr1)
-
-summary(taft.dataset.4178.20200608232208$hr1)
-
-summary(taft.dataset.4178.20200608232208$tran)
-
-hist(taft.dataset.4178.20200608232208$rr2,col='blue')
-
-summary(taft.dataset.4178.20200608232208$tran)
-
-hist(taft.dataset.4178.20200608232208$tran)
-
-```{r}
-taft.dataset.4178.20200608232208$sbp1 <- replace(taft.dataset.4178.20200608232208$sbp1, taft.dataset.4178.20200608232208$sbp1 == 999, NA)
-```
-```{r}
-hist(taft.dataset.4178.20200608232208$age, main = "Distribution of patients by Age")
-```
-
-```{r}
-hist(taft.dataset.4178.20200608232208$mot, main = "Distribution of Mode of transport")
-```
-
-```{r}
-ggplot(taft.dataset.4178.20200608232208, aes(x= age)) + geom_bar()
-```
-
-```{r}
-prop.table(table (taft.dataset.4178.20200608232208$age))
-```
-
-```{r}
-data.table(taft.dataset.4178.20200608232208)
-```
-
-
-```{r}
-print(seq(1,50))
-```
-
-```{r}
-colnames(taft.dataset.4178.20200608232208)
-```
-
-```{r}
-mystring <- "this is my output for analysis"
-print(mystring)
-```
+We have enrolled total `r n.patients` patients, including both males and females during the study period. The gender distribution was `r p.males`% males and `r p.females`% females. The median age was 41 years. The frequency of trauma in males was higher than in females.The mode of transport of arrival to emergency was through private vehicles(72%) followed by ambulance (26%) and  brought by police(2%). 70% of patients were referred from other hospital and 30% patients came directly to the hospital. The most common mechanism of injuries are Road Traffic Accidents (48%), Falls 26% (height, bed, stairs, same level fall, accidental fall), Burns (14%), Exposure to inanimate mechanical forces (12%). The most common type of injuries was blunt injuries (97%). Among all the enrolled (admitted) patients 90% were discharged home, 2% were discharged against medical advice, 8% were died in the hospital and 70% patients undergone for surgery.
 
 # Conclusion
 The road traffic accidents are the major cause of trauma. Elderly women is highly associated with fall-related fractures.The majority of fractures are caused by falls.In almost all types and mechanism of injuries, the frequency of male gender is disproportionately high and masks the impact of trauma in female population.So, there is a need of extensive research for evaluation of exact magnitude of traumatic injuries in women together with effective implementation of community based preventive interventional programs.
