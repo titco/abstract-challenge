@@ -20,9 +20,11 @@ get_top_3 <- function(x) {
     x[seq_len(i)]
 }
 calculate_iss <- function(x) {
-    top_3 <- get_top_3(x)
-    iss <- sum(x[1]^2, x[2]^2, x[3]^2, na.rm = TRUE)
+    top3 <- get_top_3(x)
+    iss <- sum(top3[1]^2, top3[2]^2, top3[3]^2, na.rm = TRUE)
+    if (all(is.na(top3)))
+        iss <- NA
     iss
 }
 iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
-ttris$iss <- iss
+titco$iss <- iss
