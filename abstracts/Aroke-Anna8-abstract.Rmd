@@ -43,7 +43,6 @@ Data of patients triaged green were extracted from the Trauma Triage Study in In
 ```{r Data_cleaning_manipulation, warning=FALSE, results='hide'}
 
 # Get data directory
-options(data.dir = "C:\\Users\\annan\\OneDrive\\Documents\\Projects\\PGTP")
 
 data.dir <- getOption("data.dir")
 if (is.null(data.dir))
