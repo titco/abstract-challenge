@@ -44,6 +44,8 @@ Data of patients triaged green were extracted from the Trauma Triage Study in In
 
 # Get data directory
 
+jseghfkusdg
+
 data.dir <- getOption("data.dir")
 if (is.null(data.dir))
     stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
