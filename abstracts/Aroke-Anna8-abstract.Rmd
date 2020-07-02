@@ -44,8 +44,6 @@ Data of patients triaged green were extracted from the Trauma Triage Study in In
 
 # Get data directory
 
-jseghfkusdg
-
 data.dir <- getOption("data.dir")
 if (is.null(data.dir))
     stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
@@ -152,6 +150,10 @@ get_top_3 <- function(x) {
 calculate_iss <- function(x) {
     top_3 <- get_top_3(x)
     iss <- sum(x[1]^2, x[2]^2, x[3]^2, na.rm = TRUE)
+    top3 <- get_top_3(x)
+    iss <- sum(top3[1]^2, top3[2]^2, top3[3]^2, na.rm = TRUE)
+    if (all(is.na(top3)))
+        iss <- NA
     iss
 }
 iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
@@ -163,7 +165,7 @@ isspv <- iss <- dt$iss
 isspv[iss >= 16 & iss < 25] <- "Severe"
 isspv[iss >= 9 & iss < 16] <- "Moderate"
 isspv[iss > 0 & iss < 9] <- "Minor"
-isspv[iss==0] <- "No injuries defined"
+isspv[is.na(iss)] <- "No injuries defined"
 
 dt$isspv <- isspv
 
