@@ -157,6 +157,8 @@ calculate_iss <- function(x) {
     iss
 }
 iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
+iss[is.na(iss)] <- "ND"
+
 dt$iss <- iss
 
 ## grouping ISS
@@ -165,7 +167,6 @@ isspv <- iss <- dt$iss
 isspv[iss >= 16 & iss < 25] <- "Severe"
 isspv[iss >= 9 & iss < 16] <- "Moderate"
 isspv[iss > 0 & iss < 9] <- "Minor"
-isspv[is.na(iss)] <- "No injuries defined"
 
 dt$isspv <- isspv
 
@@ -206,10 +207,10 @@ dt$RTS = round(0.9368*as.numeric(gcspv) +
                  0.2908*as.numeric(rrpv), digits = 0)
 
 # Complete case analysis
-dt$s24h <- replace(dt$s24h, dt$s24h == 999, 99) ##Loss of follow up 
-dt$s30d <- replace(dt$s30d, dt$s30d == 999, 99)
-dt$s6m <- replace(dt$s6m, dt$s6m == 999, 99)
-dt$s <- replace(dt$s, dt$s == 999, 99)
+dt$s24h <- replace(dt$s24h, dt$s24h == 999, 888) ##Loss of follow up 
+dt$s30d <- replace(dt$s30d, dt$s30d == 999, 888)
+dt$s6m <- replace(dt$s6m, dt$s6m == 999, 888)
+dt$s <- replace(dt$s, dt$s == 999, 888)
 
 ## Converting all Injury 999 to Not Defined
 inj_cols <- dt[,grep("inj", colnames(dt))]
@@ -349,16 +350,16 @@ In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these 
 ```{r ISS_category, RTS}
 
 Table1 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
-kable(Table2, 
+kable(Table1, 
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
 
-p_iss_nd <- round(mean(kbbh$isspv == "No injuries defined") * 100,2)
+p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
 p_iss_mi <- round(mean(kbbh$isspv == "Minor")*100,2)
 
 Table2 <- rowPerc(xtabs(~kbbh$RTS, data = kbbh))
 kable(Table2, 
-      caption = "Table 1. RTS of patients",
+      caption = "Table 2. RTS of patients",
 )
 
 RTS_8 <- dplyr::filter(kbbh, kbbh$RTS == 8) # neumerator
