@@ -3,18 +3,21 @@ title: Epidemiology of traumatic brain injury patients attending a tertiary care
   in eastern India
 author: "Debojit Basak"
 date: "05/06/2020"
-output: word_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 # Abstract
-Trauma is one of the leading causes of death in India. Road traffic accidents cause about 60% of all traumatic brain injuries (TBI) in India. [1] <!-- There shouldn't be any references in an abstract, please remove those -->According to an estimate 50% of trauma deaths in India is caused by Traumatic Brain Injury (TBI)<!-- You've already abbreviated TBI, no need to do it twice -->. [2]  The purpose of this study is to assess the prevalence, severity, cause, and outcome of admitted TBI patients.
+Trauma is one of the leading causes of death in India. Road traffic accidents cause about 60% of all traumatic brain injuries (TBI) in India. According to an estimate 50% of trauma deaths in India is caused by TBI.  The purpose of this study is to assess the prevalence, severity, cause, and outcome of admitted TBI patients.
 
 ## Method:
-We will retrospectively analyse data from the Trauma Audit Filter Trial (TAFT). The data was collected from the tertiary care centre Seth Sukhlal Karnani Memorial Hospital (SSKM), Kolkata, West Bengal. The data collection period was October 2017 to January 2020. One project officer was appointed to collect data prospectively for eight hours per day in the emergency room. Vital signs i.e. blood pressure, heart rate, respiratory rate, spo2, Glasgow coma scale (GCS), and AVPU were measured in the emergency department. For measurement of blood pressure, heart rate, Spo2 calibrated electronic bp-machine and Spo2 machine was provided<!-- No need to be this detailed in the abstract -->. Data collector was trained to measure vitals at the start of the study. The project officer’s duty was divided into morning, evening and night shifts. Patient’s outcome was recorded from patients file till discharge or death. Data was uploaded in data server on weekly basis and data review was conducted. Audit of data collection and vital sign measurement was done quarterly. In addition to audit, project officer at quarterly interval was made to collect vitals of 10 patients with the Investigator on site to ensure that data quality and data integrity is maintained<!-- Same here, everything between the last comment and this one can be removed and kept for a full paper -->. We included all patients who were 18 years or older and presented to the emergency department (ED) and was admitted for TBI.
+We will retrospectively analyse data from the Trauma Audit Filter Trial (TAFT). The data was collected from the tertiary care centre Seth Sukhlal Karnani Memorial Hospital (SSKM), Kolkata, West Bengal. The data collection period was October 2017 to January 2020. One project officer was appointed to collect data prospectively for eight hours per day in the emergency room. We included all patients who were 18 years or older and presented to the emergency department (ED) and was admitted for TBI.
 
 ## Results:
 
 ```{r}
+
 ## Always start by loading the packages you use
 library(rio)
 library(tidyr)
@@ -22,6 +25,8 @@ library(dplyr)
 library(stringr)
 
 ## Loading the csv file
+options(data.dir = "C:/Users/Debojit/Desktop/corsera/")
+
 data.dir <- getOption("data.dir")
 if (is.null(data.dir))
     stop ("Please set the data directory using options(data.dir = \"<path to data>\").")
@@ -41,57 +46,64 @@ pattern <- str_c(icd.codes, collapse = "|")
 a <- unite(a, allinj, contains("icd"), sep = ",", remove = FALSE)
 tbi <- filter(a, str_detect(allinj, pattern))
 
+#sample size
+nrow(tbi)
+
 ## To find no of male female and there percentage
 males <- tbi$sex == 1
 n.male <- sum(males)
 p.male <- round(mean(males) * 100)
 
-###replacing 999 with NA in column mortality
+#summary of age 
 
-hd <- tbi[,62]
-hd <- replace(hd,hd>3,NA)
-hd <- as.factor(hd)
+age <- as.numeric(as.character(tbi$age))
 
-###to find % mortality
+m.age <- median(age)
+q1.age <- quantile(age,0.25)
+q3.age <- quantile (age,0.75)
+range.age <- range(age)
 
+#breaking age into groups
 
-mortality1 <- tbi["mortalityfinal"] <- ifelse(hd == 0,"discharge",
-                                              ifelse(hd == 1,"death",
-                                                     ifelse(hd == 2, "alive and tranferred",
-                                                            ifelse(hd == 3, "DAMA",0)
-                                                            )
-                                                     )
-                                                )
+age_groups <- cut(age, breaks = c(17,25,45,65,85), labels =  c("18-24","25-44","45-64","65+"))  
 
+table1 <- table(age_groups)
 
-
-
-b <- table(mortality1)
-prop.table(b)
-mortality_round <- round(prop.table(b),4)*100
 
 ##to find percentage transferred
 
-transferred <- as.factor (tbi [,12])
-transferred1 <- ifelse(transferred == 0,"direct","transferred")
-trans_table <- table(transferred1)
-prop.table(trans_table)
-round(prop.table(trans_table),4)*100
+transferred <- tbi$tran == 1
+n.tran <- sum(transferred)
+p.tran <- round(mean(transferred)*100)
 
-##to find mode of transport
+##to find mode of transport 
 
-transport <- as.factor(tbi [,11])
-transport1 <- ifelse(transport == 0, "ambulance","police")
-transport_table <- table(transport1)
-prop.table (transport_table)
-round(prop.table(transport_table),2)*100
+ambulance <- tbi$mot == 0
+n.ambulance <- sum(ambulance)
+p.ambulance <- round(mean(ambulance)*100)
 
-##to find mechanism of injury ## tried but failed 
-##i tried to add ICD code for RTA, fall, assault and then tried to create a table but was unable
-##i tried using replace , as well as ifelse but using ifelse would create a very long code. so i used a external calculator to add individual percent
-injury <- as.factor (tbi [,9])
-injury_table <- table(injury)
-round(prop.table (injury_table),4)*100
+## to find average delay in arrival to the hospital
+
+col2 <- c("doi","toi")
+y <- tbi$date_time_injury <- apply (tbi[,col2],1, paste,collapse ="")
+
+date.time.injury <- as.POSIXct(y)
+
+
+col3 <- c("doar","toar")
+x <- tbi$date_time_arrival <- apply (tbi[,col3],1,paste,collapse ="")
+date.time.arrival <- as.POSIXct(x)
+
+delay <-difftime(date.time.arrival, date.time.injury)
+
+delay_hours <- as.numeric(delay/60)
+
+
+m.delay <- median(delay_hours)
+q1.delay <- quantile(delay_hours,0.25)
+q3.delay <- quantile(delay_hours,0.75)
+
+range.delay <- range(delay_hours)
 
 ##to find mean arterial pressure 
 
@@ -101,8 +113,13 @@ dbp_avg <- tbi["dbpfinal"] <- (tbi$dbp1+tbi$dbp2)/2
 bp1 <- tbi["map1"] <- sbp_avg + dbp_avg
 bp2 <- tbi["map2"] <- bp1 + dbp_avg
 mean_arterial_pressure <- tbi["mapfinal"] <- bp2/3
-##its almost a normal distribution curve
+
+
 summary (mean_arterial_pressure) 
+m.ap <- median(mean_arterial_pressure)
+q1.ap <- quantile(mean_arterial_pressure,0.25)
+q3.ap <- quantile(mean_arterial_pressure,0.75)
+range.ap <- range(mean_arterial_pressure)
 
 ##creating a new column with colname GCS which will contain total gcs
 
@@ -112,48 +129,108 @@ gcs <- replace(G,G > 15 ,NA)
 #breaking gcs into groups
 
 gcs_groups <- cut(gcs, breaks = c(2,8,13,15), labels = c( "3-8","9-13","14-15"))
-table
 
 #creating table of GCS distribution
-gcs_table <-table(gcs_groups)
-round(prop.table(gcs_table),2)*100
+table2 <-table(gcs_groups)
 
-###calculating proportion of patients in AVPU
-
-avpu <- tbi[,33]
-avpu <- replace(avpu,avpu>3,NA)
-
-avpu1 <-  ifelse(avpu == 0,"Unresponsive",
-                                              ifelse(avpu == 1,"Pain responsive",
-                                                     ifelse(avpu == 2, "Voice responsive",
-                                                            ifelse(avpu == 3, "Alert",0)
-                                                     )
-                                              )
-)
+#to find no of patients alert 
 
 
-
-avpu_table <- table(avpu1)
-
-round(prop.table(avpu_table),2)*100
-
-#breaking age into groups
-
-age_groups <- cut(age, breaks = c(17,25,45,65,85), labels =  c("18-24","25-44","45-64","65+"))  
-
-table (age_groups)
+alert <- tbi$avpu == 3
+n.alert <- sum(alert)
+p.alert <- round(mean(alert)*100)
 
 #to find number of ot done
 
-#creating a seperate column surgery to contain to terms "conservative" , "intervention"
-#inorder to do so first i replaced all zero's with 999 as it was errors while typing
-s <- tbi[,61]
-surg <- replace(s,s==0,999)
-#then created a seperate column using ifelse 
-surgery <- tbi["surgeryfinal"] <- ifelse(surg == 999,"conservative","intervention")
-  
-table_surgery <- table(surgery)
-round(prop.table(table_surgery),2)*100
+
+s <- tbi$s 
+surg<- ifelse(s == 0, 0,
+              ifelse(s == 999, 0, 1)
+              )
+surgery <- surg == 1
+n.surg <- sum(surgery)
+p.surg <- round(mean(surgery)*100)
+
+# Mechanism of Injury
+dm <- as.numeric(nrow(tbi))
+
+moi.collapsed <- moi <- as.character(tbi$moi)
+## Method 2
+## You can probably see how you could create a function to do some work for you
+get_icd_range <- function(first.char, start.number, end.number) {
+  icd.range <- paste0(
+    paste0(
+      "^",
+      first.char,
+      stringr::str_pad(start.number:end.number, 2, pad = "0"),
+      "[0-9]?$"),
+    collapse = "|")
+  return (icd.range)
+}
+icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("others" = get_icd_range("W", 20, 64)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
+moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
+
+#to find number of rta and percentage
+
+tbi$moi.collapsed <- as.factor(moi.collapsed)
+moi.transport <- dplyr::filter(tbi, tbi$moi.collapsed == "Transport accident")
+nm.moi.transport <- nrow(moi.transport)
+moi_transport <- round((nm.moi.transport/ dm) * 100,2)
+
+
+#to find number of fall and percentage
+
+moi.fall <- dplyr::filter(tbi, tbi$moi.collapsed == "Fall")
+nm.moi.fall <- nrow(moi.fall)
+moi_fall <- round((nm.moi.fall/ dm) * 100,2)
+
+# to find prevelance of two wheeler accidents in RTA
+
+
+icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Two wheeler accident" = get_icd_range("V", 20, 29)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("others" = get_icd_range("W", 20, 64)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
+moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
+
+#to find number of rta and percentage
+
+tbi$moi.collapsed <- as.factor(moi.collapsed)
+moi.twowheelers <- dplyr::filter(tbi, tbi$moi.collapsed == "Two wheeler accident")
+nm.moi.twowheelers <- nrow(moi.twowheelers)
+moi_twowheelers <- round((nm.moi.twowheelers/ dm) * 100,2)
+
+
+#to find % mortality
+death <- tbi$hd == 1
+n.death <- sum(death)
+p.death <- round(mean(death)*100)
+
+
+
+
+
+
+
+
+```
+
+A total of `r nrow(tbi)` TBI patients were admitted during the period of our study. `r n.male` (`r p.male`%) were male. Median age of patients was `r m.age` (quantile range: `r q1.age` to `r q3.age` & range: `r range.age`).Majority of the patients were within the age group 25-44 (Table no.1: `r table1`).Of all the TBI patients `r n.tran`(`r p.tran`%) were transferred from other hospitals. `r n.ambulance`(`r p.ambulance`%) patients were brought to SSKM via ambulance. There was median delay of `r m.delay`hrs (quantile range: `r q1.delay` to `r q3.delay`hrs, range: `r range.delay`hrs) from time of injury to arrival in hospital. Mean arterial pressure among TBI patients were `r m.ap` (quantile range: `r q1.ap` to `r q3.ap`; range: `r range.ap`).  Majority of the patients were within the GCS range 14-15 (Table no.2 : `r table2`) . A total of `r n.alert`(`r p.alert`%) were alert on presentation. Among the TBI patients admitted, `r n.surg` (`r p.surg`%) operative intervention was needed. Road traffic accident (RTA) accounts for majority of TBIs `r nm.moi.transport`(`r moi_transport`%) followed by fall `r nm.moi.fall`( `r moi_fall`%). Of all the RTA’s, two wheeler accident consist of `r nm.moi.twowheelers`(`r moi_twowheelers`%). Mortality was `r n.death`(`r p.death`%) among these patients.  
+
+## Conclusion
+Road traffic accidents (RTA) is one of the main cause of TBI. Amoung RTA, two wheeler accidents (`r moi_twowheelers`%) were predominant. Majority of TBI patients were male (`r p.male`%). As SSKM is a tertiary care hospital majority of the patients were transferred (`r p.tran`%) from other hospitals.Therefore, median delay in arrival to the hospital is also high (`r m.delay`hrs).  Although `r p.alert`% were alert on presentation at the emergency department `r p.surg`% required operative intervention. Moratlity among the TBI patients was `r p.death`%. 
+
+
+
+
+
+
 
 # Analysis
 
@@ -199,9 +276,6 @@ sex_mortality <- table (sex_1,mortality1)
 sex_mortality_round <- round(prop.table(sex_mortality,1),2)*100
 
 
-
-
-
 ##crosstabulation between transfer status and mortality
 
 trans_mortality <- table(tbi$tran, mortality1)
@@ -214,9 +288,3 @@ round(prop.table(trans_mortality,1),2)*100
 surgery_mortality <- table(surgery,mortality1)
 #calculating row% to calculate mortality among intervention and conservative managements
 round(prop.table(surgery_mortality,1),2)*100
-```
-
-A total of `r nrow(tbi)` TBI patients were admitted during the period of our study. `r n.male` (`r p.male`%) were male. Median age of patients was 40 (IQR: 30 to 54; range: 18 to 85).There were 369(47.6%) Of all the TBI patients 655(84.4%) were transferred from other hospitals. Almost 741(95%) patients were brought to SSKM via ambulance. Mean arterial pressure among them were 84.5 (IQR: 81.17 to 88.88; range: 53.17 to 139.67).  340(44%) patients had GCS within range of 14-15 and 434 (56%) patients were Alert (A). Among 336 (43%) patients operative intervention was needed. Road traffic accident (RTA) accounts for majority of TBIs 430 (55.35%) followed by fall 177(22.81%). Of all the RTA’s, two wheeler accident consist of 335(43.19%). Mortality was 29.8% among these patients.  
-
-## Conclusion
-There has been a significant rise of trauma in India in last few decades of which TBI forms a major portion. Prevention, Pre-hospital care and rehabilitation are the needs of the hour as the burden of TBI is increasing. Major developing economy like India faces a major challenge in these fields. <!-- Altough true none of this relates to your aim. Remove and summarize your findings instead -->
