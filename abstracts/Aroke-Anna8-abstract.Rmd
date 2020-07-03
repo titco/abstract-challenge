@@ -29,7 +29,7 @@ opts_chunk$set(echo = FALSE)
 
 ## Introduction
 
-Injuries are one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged into red, orange, yellow, and green, from most to least urgent. Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. Although these patients are triaged green they consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
+Trauma is one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. Although these patients are triaged green they consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
 
 ## Aim
 
@@ -57,9 +57,9 @@ h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 ## Merged the two datatables
 h$pid <- as.integer(h$pid)
 
-merged <- merge(g, h, by = "pid")
+merged <- merge(g, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional?
 
-## Duplicated rows
+## Remove duplicated rows
 merged <- merged[!duplicated(merged$pid), ]
 
 ## Changed column names
@@ -80,9 +80,9 @@ dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:t
 extra_col <- dt %>% dplyr::select(doi_toi:valid)
 
 ## Adding the extra columns to g
-g <- cbind(g,extra_col)
+g <- cbind(g,extra_col) # So here you are putting in data in g from dt. Why do you want to do that? 
 
-## Changing class of the columns
+## Changing class of the data
 g <- as.data.frame(g)
 dt <- as.data.frame(dt)
 
@@ -102,10 +102,10 @@ dt[] <- lapply(names(dt), function(name) {
 # Creating age groups
 agebreaks <- c(17,25,45,65,98)
 agelabels <- c("18-24","25-44","45-64","65+")
-setDT(dt)[,agegrp := cut(dt$age,
-                           breaks = agebreaks,
-                           right = FALSE,
-                           labels = agelabels)]
+dt$agegrp <-cut(dt$age,
+                breaks = agebreaks,
+                right = FALSE,
+                labels = agelabels)
 
 # Mechanism of Injury
 moi.collapsed <- moi <- as.character(dt$moi)
@@ -128,11 +128,10 @@ icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
 
 for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
 moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
-
 dt$moi.collapsed <- as.factor(moi.collapsed)
 
-# Calculating ISS
-dt <- as.tibble(dt)
+# Correcting ISS
+dt <- as_tibble(dt)
 ais <- dt %>% dplyr:: select(starts_with("clean_"))
 
 ais.list <- lapply(names(ais), function(x) cSplit(ais[, x], x, sep = ","))
@@ -162,8 +161,12 @@ iss[is.na(iss)] <- "ND"
 dt$iss <- iss
 
 ## grouping ISS
-isspv <- iss <- dt$iss
 
+## Why are you not using cut like you do with age?
+isspv <- iss <- as.numeric(dt$iss)
+
+## Note that these operations do not work as intended because iss is
+## character, not numeric
 isspv[iss >= 16 & iss < 25] <- "Severe"
 isspv[iss >= 9 & iss < 16] <- "Moderate"
 isspv[iss > 0 & iss < 9] <- "Minor"
@@ -174,6 +177,7 @@ dt$isspv <- isspv
 gcs <- with(dt, egcs + vgcs + mgcs)
 gcs <- replace(gcs, gcs > 15, NA)
 
+## What's happening here?
 gcspv <- gcs
 gcspv[gcs >= 13] <- 4
 gcspv[gcs >= 9 & gcs < 13] <- 3
@@ -202,9 +206,11 @@ sbppv[sbp >= 1 & sbp <= 49] <- 1
 sbppv[sbp == 0] <- 0
 
 ## Formula for calculating RTS
+
+## Why capital RTS?
 dt$RTS = round(0.9368*as.numeric(gcspv) + 
-                 0.7326*as.numeric(sbppv) + 
-                 0.2908*as.numeric(rrpv), digits = 0)
+               0.7326*as.numeric(sbppv) + 
+               0.2908*as.numeric(rrpv), digits = 0)
 
 # Complete case analysis
 dt$s24h <- replace(dt$s24h, dt$s24h == 999, 888) ##Loss of follow up 
@@ -308,13 +314,33 @@ calculate_n_p_moi <- function(level.name) {
     return (return.list)
 }
 
-moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p_moi)
+## Why do you define multiple calculate_n_p functions? You could add
+## an argument with the variable, i.e. function(variable, level.name)
+library(assertthat)
+calculate_n_p <- function(level.name, factor.var) {
+    assert_that(is.character(level.name))
+    assert_that(is.factor(factor.var))
+    nm <- sum(factor.var == level.name)
+    percent <- round((nm/dm) * 100,2)
+    return.list <- list(nm = nm, percent = percent)
+    return (return.list)
+}
 
-p_animalbite <- moi.data[[1]][2]
+moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p, factor.var = kbbh$moi.collapsed)
+
+## It's often safer to refer to list items by their name rather than
+## index number. That way you're warned if you change the index order
+## for some reason but forget to change the extraction logic.
+p_animalbite <- moi.data[["Animal bite"]]["percent"]
 p_assualt <- moi.data[[2]][2]
 p_fall <- moi.data[[3]][2]
 p_other <- moi.data[[4]][2]
 p_tra <- moi.data[[5]][2]
+
+## You could also flatten the list if you want to avoid typing too
+## many square brackets in your inline code
+moiv <- unlist(moi.data)
+## And now you can refer to items in there as moiv["Animal bite.percent"]
 
 sorted_moi <- sort_most_common(kbbh$moi.collapsed)
 
