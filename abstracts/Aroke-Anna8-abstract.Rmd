@@ -15,10 +15,13 @@ output:
 library(knitr)
 library(dplyr)
 library(psych)
-library(data.table)
+library(data.table) 
 library(tableone)
 library(epiDisplay)
 library(tigerstats)
+library(splitstackshape)
+library(tidyverse)
+library(tidyr)
 opts_chunk$set(echo = FALSE)
 ```
 
@@ -26,7 +29,7 @@ opts_chunk$set(echo = FALSE)
 
 ## Introduction
 
-Injuries are one of the leading causes of Emergency Department visits. Physicians triage patients into red, orange, yellow and green, from most to least urgent based on injruy severity and physiological parameters. The proportion of patients that are triaged green is larger compared with patients with life-threatning injuries and injuries that require urgent attention<!-- This sentence is a bit awkward. Do you mean that more patients are triage green compared with red?-->. It is important to understand the characteristics of these patients <!-- It's not obvious that "these patients" here refers to the patients triaged green. Try to make that clearer.-->to know if there is a need for them to be managed differently so that the manpower and resources of the emergency department can be directed towards serious patients<!-- This sentence is a bit long. Try to be more direct: "... to understand how they should be managed to allow resources to be directed towards serios patients", or something like that.-->
+Injuries are one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged into red, orange, yellow, and green, from most to least urgent. Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. Although these patients are triaged green they consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
 
 ## Aim
 
@@ -37,16 +40,10 @@ The aim of this study is to describe the demographic, physiological and injury c
 Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective cohort analysis of the data was performed using R. 
 
 ## Results
-```{r, warning=FALSE, results='hide'}
+```{r Data_cleaning_manipulation, warning=FALSE, results='hide'}
 
-# read the original csv file
+# Get data directory
 
-## Now let's take this one level further. You ideally don't want to
-## specify any file paths here, because that means that the next
-## person, like me, have to change the file path directly here to get
-## it to work. Let's add a call to options instead.
-
-## Get data directory
 data.dir <- getOption("data.dir")
 if (is.null(data.dir))
     stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
@@ -57,19 +54,13 @@ g <- data.table::fread(file.path(data.dir, "ttris-dataset-with-iss-8317-20190708
 ## datatable without ISS
 h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 
-#h$iss <- NA
-
-#h[] <- mapply(FUN = as,h,sapply(g,class),SIMPLIFY = FALSE)
-
-
 ## Merged the two datatables
-
 h$pid <- as.integer(h$pid)
 
 merged <- merge(g, h, by = "pid")
 
-## Note that you have a number of duplicate pids in your merged data
-merged$pid[duplicated(merged$pid)]
+## Duplicated rows
+merged <- merged[!duplicated(merged$pid), ]
 
 ## Changed column names
 names(merged)[names(merged) == "iss.y"] <- "delcolumn.x"
@@ -81,94 +72,44 @@ drop.cols <- grep(".x$", colnames(dt))
 dt[, (drop.cols) := NULL]
 
 ## Removed .y from the coulmn names
+names(dt) <- sub('\\.[^.]+$', "", names(dt))
 
-names(dt) <- sub(".y$", "", names(dt))
-make.names(names(dt)) # What are you trying to achieve here? This will only print the output to the console, but maybe that's what you're after?
+## Rearranging columns
+dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:tvsr,dus:testvar,locked,X0:iss,doi_toi:valid)
 
-```
+extra_col <- dt %>% dplyr::select(doi_toi:valid)
 
+## Adding the extra columns to g
+g <- cbind(g,extra_col)
 
-```{r}
+## Changing class of the columns
+g <- as.data.frame(g)
+dt <- as.data.frame(dt)
 
-# Created a dataframe of triage category green
-kbbh <- subset(x=dt,subset = dt$tc == 0)
+dt[] <- lapply(names(dt), function(name) {
+    column <- dt[, name]
+    correct.class <- class(g[, name])
+    if (correct.class == "factor") {
+        new.column <- factor(column, levels = levels(g[, name]))
+    } else {
+        new.column <- as(column, correct.class)
+    }
+    return (new.column)
+})
 
-# Number of records
-dm <- as.numeric(nrow(kbbh))
+## dplyr::all_equal(g,dt) ##To compare the two dataframes
 
-# Age
-kbbh$age <- as.numeric(kbbh$age)
-kbbh$age <- replace(kbbh$age, kbbh$age == 999, NA)
-mean_age <- round(mean(kbbh$age, na.rm = TRUE),2)
-stddev_age <- round(sd(kbbh$age, na.rm = TRUE),2)
-
-## Creating age groups
+# Creating age groups
 agebreaks <- c(17,25,45,65,98)
 agelabels <- c("18-24","25-44","45-64","65+")
-setDT(kbbh)[,agegrp := cut(kbbh$age,
+setDT(dt)[,agegrp := cut(dt$age,
                            breaks = agebreaks,
                            right = FALSE,
                            labels = agelabels)]
 
-## Calculating percentage of patients below age 65
-
-#dm_age <- nrow(subset(kbbh, !is.na(age))) 
-
-age_below65 <- dplyr::filter(kbbh, kbbh$agegrp != "65+") 
-nm_age <- nrow(age_below65) # neumerator
-percent_agebelow65 <- round((nm_age/ dm) * 100, 2) ## This includes those with missing age in the denominator. Is that intentional? 
-
-## The above could have been achieved with
-nm_age <- sum(kbbh$agegrp != "65+", na.rm = TRUE)
-percent_agebelow65 <- round(mean(kbbh$agegrp != "65+", na.rm = TRUE) * 100, 2)
-
-# Sex
-#dm_sex <- nrow(subset(kbbh, !is.na(sex))) # denominator if excluding NA
-
-kbbh$sex <- as.numeric(kbbh$sex)
-
-male <- dplyr::filter(kbbh, kbbh$sex == 1) # neumerator
-nm_male <- nrow(male)
-percent_male <- round((nm_male/ dm) * 100,2)
-
-female <- dplyr::filter(kbbh, kbbh$sex == 0) # neumerator
-nm_female <- nrow(female)
-percent_female <- round((nm_female/ dm) * 100,2)
-
-# Type of Injury
-
-#dm_tyi <- nrow(subset(kbbh, !is.na(tyi))) #denominator if excuding NA
-
-kbbh$tyi <- as.numeric(kbbh$tyi)
-
-blunt <- dplyr::filter(kbbh, kbbh$tyi == 0) # neumerator
-nm_blunt <- nrow(blunt)
-percent_blunt <- round((nm_blunt/ dm) * 100,2)
-
-# Mode of Transport
-
-kbbh$mot <- as.numeric(kbbh$mot)
-
-kbbh$mot <- replace(kbbh$mot, kbbh$mot == 999, NA)
-
-mot_pvt <- dplyr::filter(kbbh, kbbh$mot == 2) # neumerator
-nm_pvt <- nrow(mot_pvt)
-percent_mot_pvt <- round((nm_pvt/ dm) * 100,2)
-
-mot_onfoot <- dplyr::filter(kbbh, kbbh$mot == 3) # neumerator
-nm_onfoot <- nrow(mot_onfoot)
-percent_mot_onfoot <- round((nm_onfoot/ dm) * 100,2)
-
-```
-
-
-```{r, results='hide'}
-
 # Mechanism of Injury
-moi.collapsed <- moi <- as.character(kbbh$moi)
+moi.collapsed <- moi <- as.character(dt$moi)
 
-## Method 2
-## You can probably see how you could create a function to do some work for you
 get_icd_range <- function(first.char, start.number, end.number) {
     icd.range <- paste0(
         paste0(
@@ -188,107 +129,49 @@ icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
 for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
 moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
 
-## And if you want to put this back into the data as a factor then:
-kbbh$moi.collapsed <- as.factor(moi.collapsed)
+dt$moi.collapsed <- as.factor(moi.collapsed)
 
-moi_assualt <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Assault") # neumerator
-nm_moi_assualt <- nrow(moi_assualt)
-percent_moi_assualt <- round((nm_moi_assualt/ dm) * 100,2)
+# Calculating ISS
+dt <- as.tibble(dt)
+ais <- dt %>% dplyr:: select(starts_with("clean_"))
 
-moi_tra <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Transport accident") # neumerator
-nm_moi_tra <- nrow(moi_tra)
-percent_moi_tra <- round((nm_moi_tra/ dm) * 100,2)
-
-moi_fall <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Fall") # neumerator
-nm_moi_fall <- nrow(moi_fall)
-percent_moi_fall <- round((nm_moi_fall/ dm) * 100,2)
-
-moi_anb <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Animal bite") # neumerator
-nm_moi_anb <- nrow(moi_anb)
-percent_moi_anb <- round((nm_moi_anb/ dm) * 100,2)
-
-moi_other <- dplyr::filter(kbbh, kbbh$moi.collapsed == "Other") # neumerator
-nm_moi_other <- nrow(moi_other)
-percent_moi_other <- round((nm_moi_other/ dm) * 100,2)
-
-## Note that your performing similar operations many time
-## above. That's usually a good indication that you can make your code
-## more efficient and less prone to errors if you turn it into a loop
-## of some sort
-
-calculate_n_p_moi <- function(level.name) {
-    moi.level <- dplyr::filter(kbbh, kbbh$moi.collapsed == level.name) # neumerator
-    nm <- nrow(moi.level)
-    percent <- round((nm/dm) * 100,2)
-    return.list <- list(nm = nm, percent = percent)
-    return (return.list)
+ais.list <- lapply(names(ais), function(x) cSplit(ais[, x], x, sep = ","))
+row_max <- function(x, na.rm = FALSE) {
+    if (all(is.na(x)))
+        return (NA)
+    max(x, na.rm = na.rm)
 }
-moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p_moi)
+ais.max <- lapply(ais.list, function(x) apply(x, 1, row_max, na.rm = TRUE))
+get_top_3 <- function(x) {
+    x <- sort(x, decreasing = TRUE, na.last = TRUE)
+    i <- min(c(3, length(x)))
+    x[seq_len(i)]
+}
+calculate_iss <- function(x) {
+    top_3 <- get_top_3(x)
+    iss <- sum(x[1]^2, x[2]^2, x[3]^2, na.rm = TRUE)
+    top3 <- get_top_3(x)
+    iss <- sum(top3[1]^2, top3[2]^2, top3[3]^2, na.rm = TRUE)
+    if (all(is.na(top3)))
+        iss <- NA
+    iss
+}
+iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
+iss[is.na(iss)] <- "ND"
 
+dt$iss <- iss
 
-# Trauma outcomes
-kbbh$s24h <- as.numeric(kbbh$s24h)
-kbbh$s30d <- as.numeric(kbbh$s30d)
-kbbh$s6m <- as.numeric(kbbh$s6m)
+## grouping ISS
+isspv <- iss <- dt$iss
 
-kbbh$s24h <- replace(kbbh$s24h, kbbh$s24h == 999, NA)
-kbbh$s30d <- replace(kbbh$s30d, kbbh$s30d == 999, NA)
-kbbh$s6m <- replace(kbbh$s6m, kbbh$s6m == 999, NA)
+isspv[iss >= 16 & iss < 25] <- "Severe"
+isspv[iss >= 9 & iss < 16] <- "Moderate"
+isspv[iss > 0 & iss < 9] <- "Minor"
 
+dt$isspv <- isspv
 
-## Alive at 6month
-outcome_a <- dplyr::filter(kbbh, kbbh$s6m == "0") # neumerator
-nm_outcome_a <- nrow(outcome_a)
-percent_outcome_a <- round((nm_outcome_a/ dm) * 100,2)
-
-## Status unknown/ Loss of followup
-outcome_uk <- dplyr::filter(kbbh, is.na(kbbh$s6m)) # neumerator
-nm_outcome_uk <- nrow(outcome_uk)
-percent_outcome_uk <- round((nm_outcome_uk/ dm) * 100,2)
-
-## Dead at 6month
-outcome_d <- dplyr::filter(kbbh, kbbh$s6m == "1") # neumerator
-nm_outcome_d <- nrow(outcome_d)
-percent_outcome_d <- round((nm_outcome_d/ dm) * 100,2)
-
-## See if you can apply the same function for calculating n and p that
-## I defined above to make the outcome calculations more efficient
-
-## Successful Followups
-percent_followup <- percent_outcome_a+percent_outcome_d
-
-```
-
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles<!-- Think about how you can get the name of this level without having to spell it out here --> (`r percent_mot_pvt`%). `r percent_mot_onfoot`% patients came to the ED on foot. Assualt<!-- You don't want to spell that out, you want to get that progamatically--> were the most common cause of injury `r percent_moi_assualt`% followed by transport accidents `r percent_moi_tra`% and fall `r percent_moi_fall`. Injury due to animal bites were `r percent_moi_anb`%.`r percent_followup`% patients were successfully followed up at 6months, of which `r nm_outcome_d` patients were reported dead. 
-
-```{r}
-
-kbbh$iss <- as.numeric(kbbh$iss)
-
-# Categorizing ISS Score
-
-kbbh$isspv[kbbh$iss >= 9 & kbbh$iss <= 15] = 'Moderate'
-kbbh$isspv[kbbh$iss == 1 & kbbh$iss <= 8] = 'Minor'
-kbbh$isspv[is.na(kbbh$iss)] = 'No injuries defined'
-
-Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
-kable(Table2, 
-      caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
-)
-
-```
-
-```{r}
-# For calculating RTS
-
-## Append a new variable 'GCS' to the dataset
-
-kbbh$egcs <- as.numeric(kbbh$egcs)
-kbbh$vgcs <- as.numeric(kbbh$vgcs)
-kbbh$mgcs <- as.numeric(kbbh$mgcs)
-
-gcs <- with(kbbh, egcs + vgcs + mgcs)
-
+# Append a new variable 'GCS' to the dataset
+gcs <- with(dt, egcs + vgcs + mgcs)
 gcs <- replace(gcs, gcs > 15, NA)
 
 gcspv <- gcs
@@ -299,11 +182,7 @@ gcspv[gcs >= 4 & gcs < 6] <- 1
 gcspv[gcs < 4] <- 0
 
 ## RR parameter value for calculating RTS
-
-kbbh$rr <- as.numeric(kbbh$rr)
-
-rr <- with(kbbh,replace(rr, rr == 999, NA))
-
+rr <- with(dt,replace(rr, rr == 999, NA))
 rrpv <- rr
 
 rrpv[rr >= 10 & rr <= 29] = 4
@@ -313,12 +192,9 @@ rrpv[rr >= 1 & rr <= 5] = 1
 rrpv[rr == 0] = 0
 
 ## SBP parameter value for calculating RTS
-
-kbbh$sbp <- as.numeric(kbbh$sbp)
-
-sbp <- with(kbbh,replace(sbp, sbp == 999, NA))
-
+sbp <- with(dt,replace(sbp, sbp == 999, NA))
 sbppv <- sbp
+
 sbppv[sbp > 89] <- 4
 sbppv[sbp >=76 & sbp <= 89] <- 3
 sbppv[sbp >= 50 & sbp <= 75] <- 2
@@ -326,44 +202,185 @@ sbppv[sbp >= 1 & sbp <= 49] <- 1
 sbppv[sbp == 0] <- 0
 
 ## Formula for calculating RTS
-
-## Why do you want to round it using 0 digits?
-## So that I get a whole number.The decimals make a longer table.
-
-kbbh$RTS = round(0.9368*as.numeric(gcspv) + 
+dt$RTS = round(0.9368*as.numeric(gcspv) + 
                  0.7326*as.numeric(sbppv) + 
                  0.2908*as.numeric(rrpv), digits = 0)
 
+# Complete case analysis
+dt$s24h <- replace(dt$s24h, dt$s24h == 999, 888) ##Loss of follow up 
+dt$s30d <- replace(dt$s30d, dt$s30d == 999, 888)
+dt$s6m <- replace(dt$s6m, dt$s6m == 999, 888)
+dt$s <- replace(dt$s, dt$s == 999, 888)
+
+## Converting all Injury 999 to Not Defined
+inj_cols <- dt[,grep("inj", colnames(dt))]
+
+inj_cols <- inj_cols %>% 
+    mutate_all(funs(str_replace(., "999", "ND")))
+
+dt[,grep("inj", colnames(dt))] <- inj_cols
+
+## Converting NA to ND in max cols
+#dt %>% dplyr:: select(starts_with("max_")) %>% 
+#    mutate_all(funs(str_replace(., "NA", "ND")))
+
+## Dropping unwanted columns
+drop.cols2 <- dt %>% dplyr:: select(starts_with("clean_"), starts_with("max_"), qcrec, vsqs, testvar, locked, X0)
+
+drop.cols2 <- colnames(drop.cols2)
+
+dt <- dt[, !(colnames(dt) %in% c(drop.cols2))]
+
+## Converting rest of the 999s to NA
+dt[] <- dt[] %>% 
+    mutate_all(funs(na_if(.,"999")))
+
+missing.data.list <- lapply(dt, function(column) {
+    n.na <- sum(is.na(column))
+    p.na <- round((n.na/length(column)) * 100)
+    missing <- data.frame("Count" = n.na, "Percentage" = p.na)
+    return (missing)
+})
+
+missing.data <- do.call(rbind, missing.data.list)
+
+maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data$Count)]
+
+complete.index <- complete.cases(dt)
+n.incomplete <- sum(!complete.index)
+p.incomplete <- round((n.incomplete/nrow(dt)) * 100)
+
+dtt <- dt[complete.index, ]
+
+```
+
+```{r result2}
+
+# Created a dataframe of triage category green
+kbbh <- subset(x=dtt,subset = dtt$tc == 0)
+
+# Number of records
+dm <- as.numeric(nrow(kbbh))
+
+# Age
+kbbh$age <- as.numeric(kbbh$age)
+kbbh$age <- replace(kbbh$age, kbbh$age == 999, NA)
+mean_age <- round(mean(kbbh$age, na.rm = TRUE),2)
+stddev_age <- round(sd(kbbh$age, na.rm = TRUE),2)
+
+nm_age <- sum(kbbh$agegrp != "65+")
+percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 2)
+
+# Sex
+nm_male <- sum(kbbh$sex == 1)
+percent_male <- round(mean(kbbh$sex == 1) * 100,2)
+
+nm_female <- sum(kbbh$sex == 0)
+percent_female <- round(mean(kbbh$sex == 0) * 100,2)
+
+# Type of Injury
+nm_blunt <- sum(kbbh$tyi == 0)
+percent_blunt <- round(mean(kbbh$tyi == 0) * 100,2)
+
+# Mode of Transport
+kbbh$mot <- replace(kbbh$mot, kbbh$mot == 2, "Private Vehicles")
+
+nm_pvt <- sum(kbbh$mot == "Private Vehicles")
+percent_mot_pvt <- round(mean(kbbh$mot == "Private Vehicles") * 100,2)
+
+nm_onfoot <- sum(kbbh$mot == 3)
+percent_mot_onfoot <- round(mean(kbbh$mot == 3) * 100,2)
+
+sort_most_common <- function(v) {
+   uniqv <- unique(v)
+   uniqv[sort.list(tabulate(match(v, uniqv)), decreasing = TRUE)]
+}
+
+sorted_mot <- sort_most_common(kbbh$mot)
+mot1 <- sorted_mot[[1]][]
+
+# MOI
+calculate_n_p_moi <- function(level.name) {
+    moi.level <- dplyr::filter(kbbh, kbbh$moi.collapsed == level.name) # neumerator
+    nm <- nrow(moi.level)
+    percent <- round((nm/dm) * 100,2)
+    return.list <- list(nm = nm, percent = percent)
+    return (return.list)
+}
+
+moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p_moi)
+
+p_animalbite <- moi.data[[1]][2]
+p_assualt <- moi.data[[2]][2]
+p_fall <- moi.data[[3]][2]
+p_other <- moi.data[[4]][2]
+p_tra <- moi.data[[5]][2]
+
+sorted_moi <- sort_most_common(kbbh$moi.collapsed)
+
+moi1 <- sorted_moi[[1]][]
+moi2 <- sorted_moi[[2]][]
+moi3 <- sorted_moi[[3]][]
+
+# Trauma outcomes
+kbbh$s6m <- as.factor(kbbh$s6m)
+
+calculate_n_p_outcome <- function(level.name) {
+    outcome.level <- dplyr::filter(kbbh, kbbh$s6m == level.name) # neumerator
+    nm <- nrow(outcome.level)
+    percent <- round((nm/dm) * 100,2)
+    return.list <- list(nm = nm, percent = percent)
+    return (return.list)
+}
+
+outcome.data <- lapply(setNames(nm = levels(kbbh$s6m)), calculate_n_p_outcome)
+
+p_outcome_alive <- outcome.data[[1]][2]
+p_outcome_dead <- outcome.data[[2]][2]
+n_outcome_dead <- outcome.data[[2]][1]
+
+p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead) 
+
+```
+
+There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
+
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury `r p_assualt`% followed by `r moi2` `r p_tra`% and `r moi3` `r p_fall`%. Injury due to animal bites were. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. 
+
+```{r ISS_category, RTS}
+
+Table1 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
+kable(Table1, 
+      caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
+)
+
+p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
+p_iss_mi <- round(mean(kbbh$isspv == "Minor")*100,2)
+
 Table2 <- rowPerc(xtabs(~kbbh$RTS, data = kbbh))
 kable(Table2, 
-      caption = "Table 1. RTS of patients",
+      caption = "Table 2. RTS of patients",
 )
+
+RTS_8 <- dplyr::filter(kbbh, kbbh$RTS == 8) # neumerator
+nm_RTS_8 <- nrow(RTS_8)
+p_RTS_8 <- round((nm_RTS_8/ dm) * 100,2)
 
 ```
 
 ## Conclusion
 
-Among the patients triaged green, injury due to assualt and transport accidents were predominant.98.94% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are upto 99.75%. 
+Among the patients triaged green, injury due to assualt and transport accidents were predominant. `r p_RTS_8`% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are `r p_iss_mi`% and `r p_iss_nd`% respectively. 
 
 ## Analysis
 
-```{r, warning=FALSE, results='hide'}
+```{r Extra, warning=FALSE, results='hide'}
 
 ## Table of age group
 tab1(kbbh$agegrp, main = "Distribution of patients by Age")
-
 tab1(kbbh$sex, main = "Distribution of patients by Gender")
-
-kbbh$tyi <- replace(kbbh$tyi, kbbh$tyi == 999, NA)
-
 tab1(kbbh$tyi, main = "Distribution of type of injury")
-
-kbbh$mot <- replace(kbbh$mot, kbbh$mot == 999, NA)
-
 tab1(kbbh$mot, main = "Distribution of Mode of transport")
-
 tab1(kbbh$RTS, main = "Distribution of RTS")
-
 tab1(kbbh$hd, main = "Distribution of hospital disposition")
-
 ```
