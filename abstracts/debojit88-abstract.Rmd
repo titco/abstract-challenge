@@ -24,9 +24,6 @@ library(tidyr)
 library(dplyr)
 library(stringr)
 
-## Loading the csv file
-options(data.dir = "C:/Users/Debojit/Desktop/corsera/")
-
 data.dir <- getOption("data.dir")
 if (is.null(data.dir))
     stop ("Please set the data directory using options(data.dir = \"<path to data>\").")
@@ -46,7 +43,7 @@ pattern <- str_c(icd.codes, collapse = "|")
 a <- unite(a, allinj, contains("icd"), sep = ",", remove = FALSE)
 tbi <- filter(a, str_detect(allinj, pattern))
 
-#sample size
+## Sample size
 nrow(tbi)
 
 ## To find no of male female and there percentage
@@ -54,50 +51,37 @@ males <- tbi$sex == 1
 n.male <- sum(males)
 p.male <- round(mean(males) * 100)
 
-#summary of age 
-
+## Summary of age 
 age <- as.numeric(as.character(tbi$age))
-
 m.age <- median(age)
 q1.age <- quantile(age,0.25)
 q3.age <- quantile (age,0.75)
 range.age <- range(age)
 
-#breaking age into groups
-
+## Breaking age into groups
 age_groups <- cut(age, breaks = c(17,25,45,65,85), labels =  c("18-24","25-44","45-64","65+"))  
-
 table1 <- table(age_groups)
 
-
-##to find percentage transferred
-
+## To find percentage transferred
 transferred <- tbi$tran == 1
 n.tran <- sum(transferred)
 p.tran <- round(mean(transferred)*100)
 
-##to find mode of transport 
-
+## To find mode of transport 
 ambulance <- tbi$mot == 0
 n.ambulance <- sum(ambulance)
 p.ambulance <- round(mean(ambulance)*100)
 
-## to find average delay in arrival to the hospital
-
+## To find average delay in arrival to the hospital
 col2 <- c("doi","toi")
 y <- tbi$date_time_injury <- apply (tbi[,col2],1, paste,collapse ="")
-
 date.time.injury <- as.POSIXct(y)
-
 
 col3 <- c("doar","toar")
 x <- tbi$date_time_arrival <- apply (tbi[,col3],1,paste,collapse ="")
 date.time.arrival <- as.POSIXct(x)
 
-delay <-difftime(date.time.arrival, date.time.injury)
-
-delay_hours <- as.numeric(delay/60)
-
+delay_hours <-as.numeric(difftime(date.time.arrival, date.time.injury, units = "hours"))
 
 m.delay <- median(delay_hours)
 q1.delay <- quantile(delay_hours,0.25)
@@ -105,8 +89,7 @@ q3.delay <- quantile(delay_hours,0.75)
 
 range.delay <- range(delay_hours)
 
-##to find mean arterial pressure 
-
+## To find mean arterial pressure 
 sbp_avg <- tbi["sbpfinal"] <- (tbi$sbp1+tbi$sbp2)/2
 dbp_avg <- tbi["dbpfinal"] <- (tbi$dbp1+tbi$dbp2)/2
 
@@ -114,35 +97,28 @@ bp1 <- tbi["map1"] <- sbp_avg + dbp_avg
 bp2 <- tbi["map2"] <- bp1 + dbp_avg
 mean_arterial_pressure <- tbi["mapfinal"] <- bp2/3
 
-
 summary (mean_arterial_pressure) 
 m.ap <- median(mean_arterial_pressure)
 q1.ap <- quantile(mean_arterial_pressure,0.25)
 q3.ap <- quantile(mean_arterial_pressure,0.75)
 range.ap <- range(mean_arterial_pressure)
 
-##creating a new column with colname GCS which will contain total gcs
-
+## Creating a new column with colname GCS which will contain total gcs
 G <- tbi["GCS"] <- tbi$egcs+tbi$vgcs+tbi$mgcs
 gcs <- replace(G,G > 15 ,NA)
 
-#breaking gcs into groups
-
+## Breaking gcs into groups
 gcs_groups <- cut(gcs, breaks = c(2,8,13,15), labels = c( "3-8","9-13","14-15"))
 
-#creating table of GCS distribution
+## Creating table of GCS distribution
 table2 <-table(gcs_groups)
 
-#to find no of patients alert 
-
-
+## To find no of patients alert 
 alert <- tbi$avpu == 3
 n.alert <- sum(alert)
 p.alert <- round(mean(alert)*100)
 
-#to find number of ot done
-
-
+## To find number of ot done
 s <- tbi$s 
 surg<- ifelse(s == 0, 0,
               ifelse(s == 999, 0, 1)
@@ -153,10 +129,7 @@ p.surg <- round(mean(surgery)*100)
 
 # Mechanism of Injury
 dm <- as.numeric(nrow(tbi))
-
 moi.collapsed <- moi <- as.character(tbi$moi)
-## Method 2
-## You can probably see how you could create a function to do some work for you
 get_icd_range <- function(first.char, start.number, end.number) {
   icd.range <- paste0(
     paste0(
@@ -174,23 +147,22 @@ icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
 for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
 moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
 
-#to find number of rta and percentage
-
+## To find number of rta and percentage
 tbi$moi.collapsed <- as.factor(moi.collapsed)
 moi.transport <- dplyr::filter(tbi, tbi$moi.collapsed == "Transport accident")
 nm.moi.transport <- nrow(moi.transport)
 moi_transport <- round((nm.moi.transport/ dm) * 100,2)
 
 
-#to find number of fall and percentage
-
+## To find number of fall and percentage
 moi.fall <- dplyr::filter(tbi, tbi$moi.collapsed == "Fall")
 nm.moi.fall <- nrow(moi.fall)
 moi_fall <- round((nm.moi.fall/ dm) * 100,2)
 
-# to find prevelance of two wheeler accidents in RTA
+## to find prevelance of two wheeler accidents in RTA
 
-
+## I suggest you don't do this twice, change the code above instead to
+## have multiple categories of Transport accidents
 icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
                    c("Two wheeler accident" = get_icd_range("V", 20, 29)),
                    c("Fall" = get_icd_range("W", 0, 19)),
@@ -199,25 +171,16 @@ icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
 for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
 moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
 
-#to find number of rta and percentage
-
+## To find number of rta and percentage
 tbi$moi.collapsed <- as.factor(moi.collapsed)
 moi.twowheelers <- dplyr::filter(tbi, tbi$moi.collapsed == "Two wheeler accident")
 nm.moi.twowheelers <- nrow(moi.twowheelers)
 moi_twowheelers <- round((nm.moi.twowheelers/ dm) * 100,2)
 
-
-#to find % mortality
+## To find % mortality
 death <- tbi$hd == 1
 n.death <- sum(death)
 p.death <- round(mean(death)*100)
-
-
-
-
-
-
-
 
 ```
 
@@ -233,6 +196,9 @@ Road traffic accidents (RTA) is one of the main cause of TBI. Amoung RTA, two wh
 
 
 # Analysis
+```{r}
+## Not sure what's going on down here but. If you want to keep it then
+## I suggest you incorporate it into the code above
 
 ##crosstabulating map and mortality
 map_table <- table(map_group, mortality1)
@@ -288,3 +254,4 @@ round(prop.table(trans_mortality,1),2)*100
 surgery_mortality <- table(surgery,mortality1)
 #calculating row% to calculate mortality among intervention and conservative managements
 round(prop.table(surgery_mortality,1),2)*100
+```
