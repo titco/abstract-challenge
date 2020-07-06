@@ -26,3 +26,6 @@ Revise according to the comments. Specifically:
 
 ### Week 5
 Pull the changes to this repository using Rstudio. Then revise according to the changes, push to your fork and finally submit a pull request. Do not upload a new file using GitHub's upload file feature.
+
+### Week 6
+See Week 5. Some of you are getting close to finalising the abstract and start writing up the full paper. However, first you need to add a table of sample characteristics. Hint: have a look at the `tableone` package.
