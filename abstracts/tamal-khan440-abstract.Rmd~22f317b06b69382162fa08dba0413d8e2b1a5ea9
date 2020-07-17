@@ -1,0 +1,67 @@
+---
+title: "Adult age and Red triage"
+author: "TAMAL"
+date: "06/06/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+It is important to triage trauma patients because proper triaging indicate level of care required for the patients. The red triage level is used for very serious patients where green triage is for minor injury.So triaging is very important part of trauma care system.Present data shows that trauma increasing in adult age rather than senior adult.
+
+## Aim
+Aim of the study is To characterise trauma patients triaged red with special reference to their age distribution.
+
+## Study design
+Data patients triage red were extracted from TTRIS data set of centre 1515 then retrospective analysis of a prospective cohort of trauma patients with age division.
+
+
+## Methods
+Data of triaged red patients extract out from the data set of TTRIS study project. A retrospective cohort analysis of the data will performed using R with respect to age group. 
+
+## Result
+```{r}
+TTRIS_1515 <- read.csv("C:/Users/Tamal/Documents/TTRIS_1515.csv")
+summary(TTRIS_1515$tyi)
+```
+```{r}
+summary(TTRIS_1515$age)
+hist(TTRIS_1515$age, col='grey',xlab='Age', main='Age of patients')
+```
+```{r}
+summary(TTRIS_1515$tc)
+hist(TTRIS_1515$tc, col='grey',xlab='tc', main='Triage of patients')
+```
+```{r}
+summary(TTRIS_1515$tc == 3)
+table(TTRIS_1515$tc == 3)
+```
+```{r}
+red <- subset(x=TTRIS_1515, subset = TTRIS_1515$tc == 3)
+table(red$tc)
+```
+```{r}
+fd_red <- subset(x=red, subset = red$age <61)
+table(fd_red$age)
+```
+```{r}
+death <- subset(x=fd_red, subset = fd_red$hd == 1)
+table(death$hd)
+```
+```{r}
+mean(TTRIS_1515$tc == 3)*100
+```
+```{r}
+mean(red$hd == 1)*100
+```
+```{r}
+mean(red$age <61)*100
+```
+
+## Conclusion
+Total number patients available for analysis 5618, triage red category patients are 272 under this category so 4% patients are triage red, adult age patients under this triage are 219 percentage is 80. Number of patients death occured in this triage category are 158, percentage is 74.26.
