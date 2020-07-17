@@ -57,16 +57,7 @@ h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 
 ## Merged the two datatables
 h$pid <- as.integer(h$pid)
-
-merged <- merge(g, h, by = "pid")
-
-print(nrow(merged1))
-
-merged <- merge(g, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional? 
-
-print(nrow(g))
-print(nrow(merged))
-
+merged <- merge(g, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional? I had tried merging h to g by pid too.. I still lost 10 records. So I thought maybe the pids are no longer in the dataset
 
 ## Remove duplicated rows
 merged <- merged[!duplicated(merged$pid), ]
@@ -328,14 +319,14 @@ p_tra <- moiv["Transport accident.percent"]
 
 sorted_moi <- sort_most_common(kbbh$moi.collapsed)
 
+## Have used column numbers here since checking most common
 moi1 <- sorted_moi[[1]][]
 moi2 <- sorted_moi[[2]][]
 moi3 <- sorted_moi[[3]][]
 
+# Outcome
 kbbh$s6m <- as.factor(kbbh$s6m)
 outcome.data <- lapply(setNames(nm = levels(kbbh$s6m)), calculate_n_p, factor.var = kbbh$s6m)
-
-print(outcome.data)
 
 p_outcome_alive <- outcome.data[["0"]]["percent"]
 p_outcome_dead <- outcome.data[["1"]]["percent"]
@@ -347,7 +338,7 @@ p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury `r p_assualt`% followed by `r moi2` `r p_tra`% and `r moi3` `r p_fall`%. Injury due to animal bites were. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. 
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury `r p_assualt`% followed by `r moi2` `r p_tra`% and `r moi3` `r p_fall`%. Injury due to animal bites were. r p_followup% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. 
 
 ```{r tables}
 
@@ -356,12 +347,14 @@ kable(Table1,
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
 
-myvars <- c("age", "agegrp", "sex", "tyi", "mot",
-"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "moi.collapsed", "isspv", "rts")
+myvars <- c("age", "agegrp", "sex", "moi.collapsed", "tyi", "mot",
+"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs",  "valid", "isspv", "rts")
 
-catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd","gcs",  "valid", "rts")
+catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "gcs",  "valid", "rts")
 
-CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars, showAllLevels = TRUE)
+Table2 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
+
+print(Table2, showAllLevels = TRUE)
 
 p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
 p_iss_mi <- round(mean(kbbh$isspv == "Minor") * 100,2)
