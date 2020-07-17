@@ -12,30 +12,56 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Introduction
-Triage is very necessary for trauma patients because proper triaging indicate level of care required for the patients<!-- Try to rephrase, maybe something like: "It is important to triage trauma patients because..."-->. Triage category red is for very serious patients where green triage is for minor injury<!-- Try to repghrase: "The red triage level is used for..."-->. Red triage mostly used for adult age rather than senior adult according to injury data<!-- I don't understand this sentence. What are you trying to say here?-->.
+It is important to triage trauma patients because proper triaging indicate level of care required for the patients. The red triage level is used for very serious patients where green triage is for minor injury.So triaging is very important part of trauma care system.Present data shows that trauma increasing in adult age rather than senior adult.
 
 ## Aim
-To Find profile for red triage & involvement of adult age.<!-- Maybe: "To characterise trauma patients triaged red with special reference to their age distribution"?-->"
+Aim of the study is To characterise trauma patients triaged red with special reference to their age distribution.
 
 ## Study design
-<!-- Here you should state the study design. I would assume that you're doing a retrospective analysis of a prospective cohort of trauma patients -->
-1. Selection of adult age group i.e 18 -59 years of age.
-2. Finding the injury report & triaging information from medical report.
-3.collect medical History of the injured patient.
-4.Collect treatment records of injured patient(i.e 1st treatment time & condidition of patient, transfer history, diagnostic for finding injury.)
+Data patients triage red were extracted from TTRIS data set of centre 1515 then retrospective analysis of a prospective cohort of trauma patients with age division.
+
 
 ## Methods
-<!-- Write this section as a coherent paragraph rather than a bullet list -->
-1. Choosing of sample i.e patients age group of 18-59 years.
-2. Sort out patients asper triage cateory.
-3. Collection of medical history & findings.
-4. Analyse data for find out result i.e red triage percentage for the previouly mentioned age group & also finding out some other factors like initial triage category treatment for the patient with triage red.
+Data of triaged red patients extract out from the data set of TTRIS study project. A retrospective cohort analysis of the data will performed using R with respect to age group. 
 
 ## Result
-<!-- You should use R to come up with these numbers, see for example https://github.com/titco/abstract-challenge/abstracts/Aroke-Anna8-abstract.Rmd -->
-Total number of collected trauma patients are 5600, triage red category patients are 273 under this category adult age patients are 104 so 38% of triage red category.
+```{r}
+TTRIS_1515 <- read.csv("C:/Users/Tamal/Documents/TTRIS_1515.csv")
+summary(TTRIS_1515$tyi)
+```
+```{r}
+summary(TTRIS_1515$age)
+hist(TTRIS_1515$age, col='grey',xlab='Age', main='Age of patients')
+```
+```{r}
+summary(TTRIS_1515$tc)
+hist(TTRIS_1515$tc, col='grey',xlab='tc', main='Triage of patients')
+```
+```{r}
+summary(TTRIS_1515$tc == 3)
+table(TTRIS_1515$tc == 3)
+```
+```{r}
+red <- subset(x=TTRIS_1515, subset = TTRIS_1515$tc == 3)
+table(red$tc)
+```
+```{r}
+fd_red <- subset(x=red, subset = red$age <61)
+table(fd_red$age)
+```
+```{r}
+death <- subset(x=fd_red, subset = fd_red$hd == 1)
+table(death$hd)
+```
+```{r}
+mean(TTRIS_1515$tc == 3)*100
+```
+```{r}
+mean(red$hd == 1)*100
+```
+```{r}
+mean(red$age <61)*100
+```
 
 ## Conclusion
-So, we can conclude that only 38% of the collected patients are under triage category red due to RTA.
-
-
+Total number patients available for analysis 5618, triage red category patients are 272 under this category so 4% patients are triage red, adult age patients under this triage are 219 percentage is 80. Number of patients death occured in this triage category are 158, percentage is 74.26.
