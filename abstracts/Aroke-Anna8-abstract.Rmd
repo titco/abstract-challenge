@@ -22,6 +22,7 @@ library(tigerstats)
 library(splitstackshape)
 library(tidyverse)
 library(tidyr)
+library(assertthat)
 opts_chunk$set(echo = FALSE)
 ```
 
@@ -57,7 +58,15 @@ h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 ## Merged the two datatables
 h$pid <- as.integer(h$pid)
 
-merged <- merge(g, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional?
+merged <- merge(g, h, by = "pid")
+
+print(nrow(merged1))
+
+merged <- merge(g, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional? 
+
+print(nrow(g))
+print(nrow(merged))
+
 
 ## Remove duplicated rows
 merged <- merged[!duplicated(merged$pid), ]
@@ -80,7 +89,7 @@ dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:t
 extra_col <- dt %>% dplyr::select(doi_toi:valid)
 
 ## Adding the extra columns to g
-g <- cbind(g,extra_col) # So here you are putting in data in g from dt. Why do you want to do that? 
+g <- cbind(g,extra_col) # So here you are putting in data in g from dt. Why do you want to do that? We need same number of columns in both the dataset to be able to change the class, along with them being in the same order.
 
 ## Changing class of the data
 g <- as.data.frame(g)
@@ -156,28 +165,26 @@ calculate_iss <- function(x) {
     iss
 }
 iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
-iss[is.na(iss)] <- "ND"
+iss[is.na(iss)] <- "0"
 
-dt$iss <- iss
-
-## grouping ISS
-
-## Why are you not using cut like you do with age?
-isspv <- iss <- as.numeric(dt$iss)
+dt$iss <- as.numeric(iss)
 
 ## Note that these operations do not work as intended because iss is
 ## character, not numeric
-isspv[iss >= 16 & iss < 25] <- "Severe"
-isspv[iss >= 9 & iss < 16] <- "Moderate"
-isspv[iss > 0 & iss < 9] <- "Minor"
 
-dt$isspv <- isspv
+issbreaks <- c(0,1,9,16,25,100)
+isslabels <- c("ND","Minor","Moderate","Severe","Profound")
+dt$isspv <-cut(dt$iss,
+                breaks = issbreaks,
+                right = FALSE,
+                labels = isslabels)
 
 # Append a new variable 'GCS' to the dataset
 gcs <- with(dt, egcs + vgcs + mgcs)
 gcs <- replace(gcs, gcs > 15, NA)
 
-## What's happening here?
+## What's happening here? Assigning parameter value for calculating RTS. Something wrong?
+
 gcspv <- gcs
 gcspv[gcs >= 13] <- 4
 gcspv[gcs >= 9 & gcs < 13] <- 3
@@ -207,8 +214,7 @@ sbppv[sbp == 0] <- 0
 
 ## Formula for calculating RTS
 
-## Why capital RTS?
-dt$RTS = round(0.9368*as.numeric(gcspv) + 
+dt$rts = round(0.9368*as.numeric(gcspv) + 
                0.7326*as.numeric(sbppv) + 
                0.2908*as.numeric(rrpv), digits = 0)
 
@@ -260,7 +266,7 @@ dtt <- dt[complete.index, ]
 
 ```
 
-```{r result2}
+```{r result}
 
 # Created a dataframe of triage category green
 kbbh <- subset(x=dtt,subset = dtt$tc == 0)
@@ -269,10 +275,8 @@ kbbh <- subset(x=dtt,subset = dtt$tc == 0)
 dm <- as.numeric(nrow(kbbh))
 
 # Age
-kbbh$age <- as.numeric(kbbh$age)
-kbbh$age <- replace(kbbh$age, kbbh$age == 999, NA)
-mean_age <- round(mean(kbbh$age, na.rm = TRUE),2)
-stddev_age <- round(sd(kbbh$age, na.rm = TRUE),2)
+mean_age <- round(mean(kbbh$age),2)
+stddev_age <- round(sd(kbbh$age),2)
 
 nm_age <- sum(kbbh$agegrp != "65+")
 percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 2)
@@ -289,10 +293,8 @@ nm_blunt <- sum(kbbh$tyi == 0)
 percent_blunt <- round(mean(kbbh$tyi == 0) * 100,2)
 
 # Mode of Transport
-kbbh$mot <- replace(kbbh$mot, kbbh$mot == 2, "Private Vehicles")
-
-nm_pvt <- sum(kbbh$mot == "Private Vehicles")
-percent_mot_pvt <- round(mean(kbbh$mot == "Private Vehicles") * 100,2)
+nm_pvt <- sum(kbbh$mot == 2)
+percent_mot_pvt <- round(mean(kbbh$mot == 2) * 100,2)
 
 nm_onfoot <- sum(kbbh$mot == 3)
 percent_mot_onfoot <- round(mean(kbbh$mot == 3) * 100,2)
@@ -306,17 +308,6 @@ sorted_mot <- sort_most_common(kbbh$mot)
 mot1 <- sorted_mot[[1]][]
 
 # MOI
-calculate_n_p_moi <- function(level.name) {
-    moi.level <- dplyr::filter(kbbh, kbbh$moi.collapsed == level.name) # neumerator
-    nm <- nrow(moi.level)
-    percent <- round((nm/dm) * 100,2)
-    return.list <- list(nm = nm, percent = percent)
-    return (return.list)
-}
-
-## Why do you define multiple calculate_n_p functions? You could add
-## an argument with the variable, i.e. function(variable, level.name)
-library(assertthat)
 calculate_n_p <- function(level.name, factor.var) {
     assert_that(is.character(level.name))
     assert_that(is.factor(factor.var))
@@ -328,19 +319,12 @@ calculate_n_p <- function(level.name, factor.var) {
 
 moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p, factor.var = kbbh$moi.collapsed)
 
-## It's often safer to refer to list items by their name rather than
-## index number. That way you're warned if you change the index order
-## for some reason but forget to change the extraction logic.
-p_animalbite <- moi.data[["Animal bite"]]["percent"]
-p_assualt <- moi.data[[2]][2]
-p_fall <- moi.data[[3]][2]
-p_other <- moi.data[[4]][2]
-p_tra <- moi.data[[5]][2]
-
-## You could also flatten the list if you want to avoid typing too
-## many square brackets in your inline code
 moiv <- unlist(moi.data)
-## And now you can refer to items in there as moiv["Animal bite.percent"]
+p_animalbite <- moiv["Animal bite.percent"]
+p_assualt <- moiv["Assualt.percent"]
+p_fall <- moiv["Fall.percent"]
+p_other <- moiv["Other.percent"]
+p_tra <- moiv["Transport accident.percent"]
 
 sorted_moi <- sort_most_common(kbbh$moi.collapsed)
 
@@ -348,24 +332,16 @@ moi1 <- sorted_moi[[1]][]
 moi2 <- sorted_moi[[2]][]
 moi3 <- sorted_moi[[3]][]
 
-# Trauma outcomes
 kbbh$s6m <- as.factor(kbbh$s6m)
+outcome.data <- lapply(setNames(nm = levels(kbbh$s6m)), calculate_n_p, factor.var = kbbh$s6m)
 
-calculate_n_p_outcome <- function(level.name) {
-    outcome.level <- dplyr::filter(kbbh, kbbh$s6m == level.name) # neumerator
-    nm <- nrow(outcome.level)
-    percent <- round((nm/dm) * 100,2)
-    return.list <- list(nm = nm, percent = percent)
-    return (return.list)
-}
+print(outcome.data)
 
-outcome.data <- lapply(setNames(nm = levels(kbbh$s6m)), calculate_n_p_outcome)
+p_outcome_alive <- outcome.data[["0"]]["percent"]
+p_outcome_dead <- outcome.data[["1"]]["percent"]
+n_outcome_dead <- outcome.data[["1"]]["nm"]
 
-p_outcome_alive <- outcome.data[[1]][2]
-p_outcome_dead <- outcome.data[[2]][2]
-n_outcome_dead <- outcome.data[[2]][1]
-
-p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead) 
+p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
 
 ```
 
@@ -373,40 +349,26 @@ There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomp
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury `r p_assualt`% followed by `r moi2` `r p_tra`% and `r moi3` `r p_fall`%. Injury due to animal bites were. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. 
 
-```{r ISS_category, RTS}
+```{r tables}
 
 Table1 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
 kable(Table1, 
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
 
+myvars <- c("age", "agegrp", "sex", "tyi", "mot",
+"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "moi.collapsed", "isspv", "rts")
+
+catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd","gcs",  "valid", "rts")
+
+CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars, showAllLevels = TRUE)
+
 p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
-p_iss_mi <- round(mean(kbbh$isspv == "Minor")*100,2)
-
-Table2 <- rowPerc(xtabs(~kbbh$RTS, data = kbbh))
-kable(Table2, 
-      caption = "Table 2. RTS of patients",
-)
-
-RTS_8 <- dplyr::filter(kbbh, kbbh$RTS == 8) # neumerator
-nm_RTS_8 <- nrow(RTS_8)
-p_RTS_8 <- round((nm_RTS_8/ dm) * 100,2)
+p_iss_mi <- round(mean(kbbh$isspv == "Minor") * 100,2)
+p_rts_8 <- round(mean(kbbh$rts == 8) * 100,2)
 
 ```
 
 ## Conclusion
 
-Among the patients triaged green, injury due to assualt and transport accidents were predominant. `r p_RTS_8`% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are `r p_iss_mi`% and `r p_iss_nd`% respectively. 
-
-## Analysis
-
-```{r Extra, warning=FALSE, results='hide'}
-
-## Table of age group
-tab1(kbbh$agegrp, main = "Distribution of patients by Age")
-tab1(kbbh$sex, main = "Distribution of patients by Gender")
-tab1(kbbh$tyi, main = "Distribution of type of injury")
-tab1(kbbh$mot, main = "Distribution of Mode of transport")
-tab1(kbbh$RTS, main = "Distribution of RTS")
-tab1(kbbh$hd, main = "Distribution of hospital disposition")
-```
+Among the patients triaged green, injury due to assualt and transport accidents were predominant. `r p_rts_8`% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are `r p_iss_mi`% and `r p_iss_nd`% respectively. 
