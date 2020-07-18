@@ -3,11 +3,11 @@ title: Profile of patients triaged green in the Emergency Department (ED) of a s
 author: "Anna"
 date: "12/05/2020"
 output:
-  word_document: default
   html_document: 
     fig_caption: yes
     fig_height: 3
     fig_width: 5
+  word_document: default
 ---
 
 
@@ -30,8 +30,6 @@ opts_chunk$set(echo = FALSE)
 
 ## Introduction
 
-dsjflkh
-
 Trauma is one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. Although these patients are triaged green they consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
 
 ## Aim
@@ -53,14 +51,14 @@ if (is.null(data.dir))
 
 ## datatable with ISS
 g <- data.table::fread(file.path(data.dir, "ttris-dataset-with-iss-8317-20190708120045.csv"))
-g1 <- g[,!3:116]
+g1 <- g %>% dplyr::select(pid,X0:iss)
 
 ## datatable without ISS
 h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 
 ## Merged the two datatables
 h$pid <- as.integer(h$pid)
-merged <- merge(g1, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional? 
+dt <- merge(g1, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional? Yes, g has the AIS score columns.
 
 ## Rearranging columns
 dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:tvsr,dus:testvar,locked,X0:iss,doi_toi:valid)
