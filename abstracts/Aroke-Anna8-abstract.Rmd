@@ -30,6 +30,8 @@ opts_chunk$set(echo = FALSE)
 
 ## Introduction
 
+dsjflkh
+
 Trauma is one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. Although these patients are triaged green they consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
 
 ## Aim
@@ -51,28 +53,14 @@ if (is.null(data.dir))
 
 ## datatable with ISS
 g <- data.table::fread(file.path(data.dir, "ttris-dataset-with-iss-8317-20190708120045.csv"))
+g1 <- g[,!3:116]
 
 ## datatable without ISS
 h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 
 ## Merged the two datatables
 h$pid <- as.integer(h$pid)
-merged <- merge(g, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional? I had tried merging h to g by pid too.. I still lost 10 records. So I thought maybe the pids are no longer in the dataset
-
-## Remove duplicated rows
-merged <- merged[!duplicated(merged$pid), ]
-
-## Changed column names
-names(merged)[names(merged) == "iss.y"] <- "delcolumn.x"
-names(merged)[names(merged) == "iss.x"] <- "iss.y"
-
-## Removing duplicated columns
-dt <- data.table(merged)
-drop.cols <- grep(".x$", colnames(dt))
-dt[, (drop.cols) := NULL]
-
-## Removed .y from the coulmn names
-names(dt) <- sub('\\.[^.]+$', "", names(dt))
+merged <- merge(g1, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional? 
 
 ## Rearranging columns
 dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:tvsr,dus:testvar,locked,X0:iss,doi_toi:valid)
@@ -147,8 +135,6 @@ get_top_3 <- function(x) {
     x[seq_len(i)]
 }
 calculate_iss <- function(x) {
-    top_3 <- get_top_3(x)
-    iss <- sum(x[1]^2, x[2]^2, x[3]^2, na.rm = TRUE)
     top3 <- get_top_3(x)
     iss <- sum(top3[1]^2, top3[2]^2, top3[3]^2, na.rm = TRUE)
     if (all(is.na(top3)))
@@ -163,7 +149,7 @@ dt$iss <- as.numeric(iss)
 ## Note that these operations do not work as intended because iss is
 ## character, not numeric
 
-issbreaks <- c(0,1,9,16,25,100)
+issbreaks <- c(0,1,9,16,25,109)
 isslabels <- c("ND","Minor","Moderate","Severe","Profound")
 dt$isspv <-cut(dt$iss,
                 breaks = issbreaks,
@@ -258,7 +244,6 @@ dtt <- dt[complete.index, ]
 ```
 
 ```{r result}
-
 # Created a dataframe of triage category green
 kbbh <- subset(x=dtt,subset = dtt$tc == 0)
 
@@ -338,7 +323,7 @@ p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury `r p_assualt`% followed by `r moi2` `r p_tra`% and `r moi3` `r p_fall`%. Injury due to animal bites were. r p_followup% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. 
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury `r p_assualt`% followed by `r moi2` `r p_tra`% and `r moi3` `r p_fall`%. Injury due to animal bites were. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. 
 
 ```{r tables}
 
