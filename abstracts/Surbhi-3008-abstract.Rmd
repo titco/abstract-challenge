@@ -1,0 +1,94 @@
+---
+title: "Profile of patients Triaged Orange"
+author: "Surbhi Chauhan"
+date: "5/14/2020"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+# Abstract
+
+## Title
+Profile of patients triaged orange in emergency department of a tertiary referral hospital in India.
+
+## Introduction
+Trauma is a major cause of increasing death rates in India and a very important component of trauma care is prioritizing the patients on the basis of their level of injuries.Maybe "based on their level 0f urgency" or "based on clinical acuity" or "injury severity". Common causes of trauma include road traffic accidents, falls, occupational injuries and assaults. Most trauma deaths occur during the golden hour. So, its important to quickly assess the severity of injury accurately.
+In trauma care, how patients are prioritize,is the important part of patient care.
+The patients are in need of care, are seen first.
+This whole process of prioritizing the patients is called Triage and these priorities are coded using colors, e.g.red, orange, yellow and green, where red assigned to the most urgent patients and green to least urgent patients and orange and yellow comes in between red and green. After red, orange comes and then yellow and then green.
+
+We use physiological variebles such as Blood pressure, respiratory rate, oxygen saturation level and GCS to assess the level severity injuries of patients in our hospital.
+
+## Aim
+To study the different variables (like mortality rate and cause of death and some independent variables like Age, sex, mechanism of injury,type of injury,mode of transport,date and time of injury and coming to the ED) of patients with the history of trauma and patient triage orange.
+
+## Design
+It was a prospective observational study.
+
+## Methods
+This study was done on trauma patients presenting to the emegency department of Lok Nayak Jai Prakash Hospital, Delhi. We enrolled first 10 patients who presented to the ED during  each shift.Follow up was done after 30 days and after 6 months.The follow up was completed on phone or person if the patient was still admitted in the hospital or discharged from the hospital.
+The inclusion criteria were all patients who had trauma through RTA, falls, electrical injuries, mechanical injuries,trauma related to assault and animals.Patients below 18 presenting with trauma and adult patients with trauma who were dead on arroval were excluded from the study.Details of history of all patients were recorded on a data collection sheet and contact number of patient and relative also collected on enrolment day.The following details were noted: Mechanism of injury,type of injury, demographics,time of presenting to the ED,time of injury,triage priority,seveirity of injury and patients undergoing any operative interventions.Surgery data of patients were obtained from hospital records.
+Patients with minor injuries were discharged from the ED after observation.
+
+## Results
+<!-- Use inline r instead of pasting the numbers. -->
+
+```{r}
+TTRIS <- read.csv("~/TTRIS.csv")
+s <- read.csv("~/Triage_Orange.csv")
+
+```
+
+We recorded total 3436 patients during the study period with 15.22% of triaged orange. The gender distribution was 78.9% males and 21.2% females. The mean age was 34.6 years. Road Traffic Accident (RTA ) 48.6% was the most common mechanism of injury, followed by Assault (26.2%), fall on ground (11.5%), fall from stairs (11%), fall from height (3.2%), work place injuries (1%). Brain injury was seen in (2.1%).Patients comes directly (87.4%) and 12.4% are referred from other hospital.
+Majority of the patients 98.8% with mild head injury GCS (13-15), 0.6% had moderate head injury (9-12) and 0.6% had severe head injury. Median of SBP and DBP (80,120), Median of HR 84bpm, median RR was 19.
+1 patient(0.2%) was intubated in our ED. Upper and lower limb were the most common injuries seen (50.7%) of patients followed by facial and head injuries (37.3%), Thoracic injuries(2.7%), Back injuries(2.7%), Abdominal injuries(1.1%) and others (8%).
+Among all the adult trauma patients came in ED, 95.5% were discharged in stable condition, 4.2% were discharged against medical advice, 0.6% were transferred to other hospital, Only 1 patient(0.2%) died within the first 24 hour of trauma and the remaining (1.3%) were admitted in the hospital for surgical interventions or conservative management.
+
+
+
+
+```{r}
+summary(s$sex)
+round(prop.table(table(s$sex)),2)*100     # Give percentages w/o decimal places
+hist(s$sex, col='grey', xlab='sex', main='Sex distribution')
+```
+Comments:- In This histogram, 0= **Female** and 1= **Male**
+
+```{r}
+summary(s$age)
+hist(s$age, col='grey',xlab='Age', main='Age of patients')
+```
+
+```{r}
+s %>% select(sbp,dbp,rr,spo2,hr)
+bp=s %>% select(sbp,dbp,rr,spo2,hr)
+summary(bp)
+```
+
+```{r}
+round(prop.table(table(s$moi)),2)*100     # Give percentages w/o decimal places
+round(prop.table(table(s$mot)),2)*100
+```
+
+```{r}
+round(prop.table(table(s$egcs)),2)*100     # Give percentages w/o decimal places
+round(prop.table(table(s$vgcs)),2)*100     # Give percentages w/o decimal places
+round(prop.table(table(s$mgcs)),2)*100     # Give percentages w/o decimal places
+```
+
+```{r}
+hist(s$tyi, xlab='Injury', ylab='Frequency', main='Type of injury')
+round(prop.table(table(s$tyi)),2)*100     # Give percentages w/o decimal places
+```
+
+```{r}
+summary(s$hd)
+round(prop.table(table(s$hd)),2)*100     # Give percentages w/o decimal places
+```
+
+Where 0= Blunt Injuries and 1= Penetrating Injuries.
+
+## Conclusion
+Road traffic accidents and falls are the major causes of trauma. Most of the patients in this category are between the age of 18-30 (49%). Mortality range of patiens triage orange is less than 1% (0.2%). Increasing awareness, early management and proper training of trauma care team and physicians are the need of today`s time. So that, the right patient gets right treatment in shortest duration.

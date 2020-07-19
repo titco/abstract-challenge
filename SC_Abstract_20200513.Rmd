@@ -7,6 +7,16 @@ output:
   pdf_document: default
   html_document: default
 ---
+```{r setup, include=FALSE}
+library(dplyr)
+library(rio)
+library(knitr)
+library(data.table)
+library(psych)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
 
 # Abstract
 
