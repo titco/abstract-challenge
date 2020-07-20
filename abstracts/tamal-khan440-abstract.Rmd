@@ -63,5 +63,8 @@ mean(red$hd == 1)*100
 mean(red$age <61)*100
 ```
 
-## Conclusion
-Total number patients available for analysis 5618, triage red category patients are 272 under this category so 4% patients are triage red, adult age patients under this triage are 219 percentage is 80. Number of patients death occured in this triage category are 158, percentage is 74.26.
+Total number patients available for analysis 5618, triage red category patients are 272 under this category so 4% patients are triage red, adult age patients under this triage are 219 percentage is 80. 
+
+##Conclusion
+
+So from this report we conclude that Number of patients death occured in this triage category are 158, percentage is 74.26.
