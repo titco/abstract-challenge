@@ -20,18 +20,14 @@ knitr::opts_chunk$set(echo = TRUE)
 # Aim
      To study the a demographic factors associated in the thoracic trauma patients and their outcomes.
 
-# Design
-In our study we included patients 18 years and above with trauma admitted to the hospital. <!--This is part of the Methods section, please move it there. This is your study population. Design would be retrospective or prospective -->
-
 # Methods
-<!--Try to structure the Methods section into:
-Design
-Population
-Setting (the type of hospital,its location)
-Analysis (what tests will you include, what statistical software will you use)-->
- Present study would be quantitative in nature. <!-- Please remove this line, not required-->
+  
+# Design 
+  This present study is based on 248 patients that has been already collected.The study would be based on retrospective design.In our study we included patients 18 years and above with trauma admitted to the hospital.This study has been completed at Maulana Azad Medical Collage, New Delhi as a tertiary care hospital.Current data analysis will be analyzed with R Statistical software.Study would be based on quantitative analysis.  
+ 
+
 ```{r}
-TAFTDATA <- read.csv("D:/taft r/TAFTDATA.csv")
+TAFTDATA <- read.csv("C:/Users/HP/Desktop/git abscract/taft-dataset-9825-20200608232208.csv")
 summary(TAFTDATA$tyi)
 ```
 ```{r}
