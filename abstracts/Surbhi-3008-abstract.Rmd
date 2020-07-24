@@ -6,7 +6,17 @@ output:
   html_document: default
   pdf_document: default
   word_document: default
----
+  
+```{r setup, include=FALSE}
+library(dplyr)
+library(rio)
+library(knitr)
+library(data.table)
+library(psych)
+library(epiDisplay)
+knitr::opts_chunk$set(echo = TRUE)
+```
+  
 
 # Abstract
 
@@ -33,62 +43,87 @@ The inclusion criteria were all patients who had trauma through RTA, falls, elec
 Patients with minor injuries were discharged from the ED after observation.
 
 ## Results
-<!-- Use inline r instead of pasting the numbers. -->
+
 
 ```{r}
-TTRIS <- read.csv("~/TTRIS.csv")
-s <- read.csv("~/Triage_Orange.csv")
+# Read csv file
 
+s <- read.csv("~/TTRIS.csv")
+
+# Created a subset of triage orange
+
+o <- subset (x = s,subset = s$tc == 2)
 ```
 
-We recorded total 3436 patients during the study period with 15.22% of triaged orange. The gender distribution was 78.9% males and 21.2% females. The mean age was 34.6 years. Road Traffic Accident (RTA ) 48.6% was the most common mechanism of injury, followed by Assault (26.2%), fall on ground (11.5%), fall from stairs (11%), fall from height (3.2%), work place injuries (1%). Brain injury was seen in (2.1%).Patients comes directly (87.4%) and 12.4% are referred from other hospital.
-Majority of the patients 98.8% with mild head injury GCS (13-15), 0.6% had moderate head injury (9-12) and 0.6% had severe head injury. Median of SBP and DBP (80,120), Median of HR 84bpm, median RR was 19.
-1 patient(0.2%) was intubated in our ED. Upper and lower limb were the most common injuries seen (50.7%) of patients followed by facial and head injuries (37.3%), Thoracic injuries(2.7%), Back injuries(2.7%), Abdominal injuries(1.1%) and others (8%).
-Among all the adult trauma patients came in ED, 95.5% were discharged in stable condition, 4.2% were discharged against medical advice, 0.6% were transferred to other hospital, Only 1 patient(0.2%) died within the first 24 hour of trauma and the remaining (1.3%) were admitted in the hospital for surgical interventions or conservative management.
+```{r}
+# To summarize the age of patients
 
+summary(o$age)
 
+# Categorizing age in groups
+Agebreaks <- c(17,25,45,65,95)
+Agelabels <- c("18-24","25-44","45-64","65+")
 
+setDT(o)[,agegroup := cut(o$age,
+                           breaks = Agebreaks,
+                           right = FALSE,
+                           labels = agelabels)]
+tab1(o$agegroup, main = "Distribution of patients `s age")
+```           
 
 ```{r}
-summary(s$sex)
-round(prop.table(table(s$sex)),2)*100     # Give percentages w/o decimal places
-hist(s$sex, col='grey', xlab='sex', main='Sex distribution')
+# To calculate %age of male and female patients
+
+summary(o$sex)
+round(prop.table(table(o$sex)),2)*100     # Give percentages w/o decimal places
+tab1(o$sex,  main='Sex distribution')
 ```
 Comments:- In This histogram, 0= **Female** and 1= **Male**
 
-```{r}
-summary(s$age)
-hist(s$age, col='grey',xlab='Age', main='Age of patients')
-```
 
 ```{r}
-s %>% select(sbp,dbp,rr,spo2,hr)
-bp=s %>% select(sbp,dbp,rr,spo2,hr)
+# To find vitals
+
+o %>% select(sbp,dbp,rr,spo2,hr)
+bp=o %>% select(sbp,dbp,rr,spo2,hr)
 summary(bp)
 ```
 
 ```{r}
-round(prop.table(table(s$moi)),2)*100     # Give percentages w/o decimal places
-round(prop.table(table(s$mot)),2)*100
+# To calculate %age of mechanism ofinjury
+
+round(prop.table(table(o$moi)),2)*100     # Give percentages w/o decimal places
+# To calculate %age of mode of transport
+
+round(prop.table(table(o$mot)),2)*100
 ```
 
 ```{r}
-round(prop.table(table(s$egcs)),2)*100     # Give percentages w/o decimal places
-round(prop.table(table(s$vgcs)),2)*100     # Give percentages w/o decimal places
-round(prop.table(table(s$mgcs)),2)*100     # Give percentages w/o decimal places
+# To find GCS
+round(prop.table(table(o$egcs)),2)*100     # Give percentages w/o decimal places
+round(prop.table(table(o$vgcs)),2)*100     # Give percentages w/o decimal places
+round(prop.table(table(o$mgcs)),2)*100     # Give percentages w/o decimal places
 ```
 
 ```{r}
-hist(s$tyi, xlab='Injury', ylab='Frequency', main='Type of injury')
+o$tyi <- replace(o$tyi, o$tyi == 999, NA)
+tab1(o$tyi,  main='Type of injury')
 round(prop.table(table(s$tyi)),2)*100     # Give percentages w/o decimal places
 ```
 
 ```{r}
-summary(s$hd)
-round(prop.table(table(s$hd)),2)*100     # Give percentages w/o decimal places
+o$hd <- replace(o$hd, o$hd == 999, NA)
+summary(o$hd)
+round(prop.table(table(o$hd)),2)*100     # Give percentages w/o decimal places
 ```
 
 Where 0= Blunt Injuries and 1= Penetrating Injuries.
+
+We recorded total 3436 patients during the study period with 15.22% of triaged orange. The gender distribution was 78.9% males and 21.2% females. The mean age was 34.6 years. Road Traffic Accident (RTA ) 48.6% was the most common mechanism of injury, followed by Assault (26.2%), fall on ground (11.5%), fall from stairs (11%), fall from height (3.2%), work place injuries (1%). Brain injury was seen in (2.1%).Patients comes directly (87.4%) and 12.4% are referred from other hospital.
+Majority of the patients 98.8% with mild head injury GCS (13-15), 0.6% had moderate head injury (9-12) and 0.6% had severe head injury. Median of SBP and DBP (80,120), Median of HR 84bpm, median RR was 19.
+1 patient(0.2%) was intubated in our ED. Upper and lower limb were the most common injuries seen (50.7%) of patients followed by facial and head injuries (37.3%), Thoracic injuries(2.7%), Back injuries(2.7%), Abdominal injuries(1.1%) and others (8%).
+Among all the adult trauma patients came in ED, 95% were discharged in stable condition, 4.2% were discharged against medical advice, 0.6% were transferred to other hospital, Only 1 patient(0.2%) died within the first 24 hour of trauma and the remaining (1.3%) were admitted in the hospital for surgical interventions or conservative management.
+
 
 ## Conclusion
 Road traffic accidents and falls are the major causes of trauma. Most of the patients in this category are between the age of 18-30 (49%). Mortality range of patiens triage orange is less than 1% (0.2%). Increasing awareness, early management and proper training of trauma care team and physicians are the need of today`s time. So that, the right patient gets right treatment in shortest duration.
