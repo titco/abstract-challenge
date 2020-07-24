@@ -3,11 +3,11 @@ title: Profile of patients triaged green in the Emergency Department (ED) of a s
 author: "Anna"
 date: "12/05/2020"
 output:
+  word_document: default
   html_document: 
     fig_caption: yes
     fig_height: 3
     fig_width: 5
-  word_document: default
 ---
 
 
@@ -281,17 +281,22 @@ sort_most_common <- function(v) {
 sorted_mot <- sort_most_common(kbbh$mot)
 mot1 <- sorted_mot[[1]][]
 
+library(rlist)
 # MOI
-calculate_n_p <- function(level.name, factor.var) {
+calculate_n_p <- function(level.name, factor.var){
     assert_that(is.character(level.name))
     assert_that(is.factor(factor.var))
     nm <- sum(factor.var == level.name)
     percent <- round((nm/dm) * 100,2)
-    return.list <- list(nm = nm, percent = percent)
-    return (return.list)
+    return.list <-list(nm = nm, percent = percent)
+    list.sort(return.list, nm, decreasing = TRUE) ## Trying to not use the sort_most_common function seperately. It works when I run in on moi.data.. But not in the function.
 }
 
 moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p, factor.var = kbbh$moi.collapsed)
+
+print(moi.data)
+
+list.sort(moi.data, nm, decreasing = TRUE)
 
 moiv <- unlist(moi.data)
 p_animalbite <- moiv["Animal bite.percent"]
@@ -330,14 +335,30 @@ kable(Table1,
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
 
-myvars <- c("age", "agegrp", "sex", "moi.collapsed", "tyi", "mot",
-"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs",  "valid", "isspv", "rts")
+#Factor labels
+kbbh$sex <- factor(kbbh$sex, levels = c(0,1), labels = c("Female","Male"))
+kbbh$tyi <- factor(kbbh$tyi, levels = c(0,1,2), 
+                   labels = c("Blunt","Penetrating","Blunt & penetrating"))
+kbbh$mot <- factor(kbbh$mot, levels = c(0,1,2,3), 
+                   labels = c("Ambulance","Police","Private Vehicle","On foot"))
+kbbh$tran <- factor(kbbh$tran, levels = c(0,1), 
+                    labels = c("Direct","Transferred"))
+kbbh$avpu <- factor(kbbh$avpu, levels = c(0,1,2,3), 
+                    labels = c("Unresponsive","Pain","Verbal","Alert"))
+kbbh$vo2 <- factor(kbbh$vo2, levels = c(0,1), 
+                   labels = c("Not on oxygen support","On oxygen support"))
+kbbh$nsi <- factor(kbbh$nsi, levels = c(0,1,2), 
+                   labels = c("No serious injury","Single","Multiple"))
+kbbh$hd <- factor(kbbh$hd, levels = c(0,1,2,3), 
+                  labels = c("Discharged","Dead","Transferred","Abscond/ DAMA"))
 
-catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "gcs",  "valid", "rts")
+myvars <- c("age", "agegrp", "sex", "moi.collapsed", "tyi", "mot",
+"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs", "isspv", "rts")
+
+catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "gcs", "rts")
 
 Table2 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
-
-print(Table2, showAllLevels = TRUE)
+knitr::kable(print(Table2, caption = "Table 2. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE))
 
 p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
 p_iss_mi <- round(mean(kbbh$isspv == "Minor") * 100,2)
@@ -348,3 +369,5 @@ p_rts_8 <- round(mean(kbbh$rts == 8) * 100,2)
 ## Conclusion
 
 Among the patients triaged green, injury due to assualt and transport accidents were predominant. `r p_rts_8`% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are `r p_iss_mi`% and `r p_iss_nd`% respectively. 
+
+# Introduction
