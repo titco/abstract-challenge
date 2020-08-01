@@ -28,8 +28,6 @@ Data of triaged red patients extract out from the data set of TTRIS study projec
 ```{r}
 TTRIS_1515 <- read.csv("C:/Users/Tamal/Documents/TTRIS_1515.csv")
 summary(TTRIS_1515$tyi)
-```
-```{r}
 summary(TTRIS_1515$age)
 hist(TTRIS_1515$age, col='grey',xlab='Age', main='Age of patients')
 n.patients <- nrow(TTRIS_1515)
