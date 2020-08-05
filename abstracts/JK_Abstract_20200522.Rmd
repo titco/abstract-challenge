@@ -6,6 +6,7 @@ output:
   word_document: default
   html_document: default
 ---
+New 6 Aug 2020
 #Introduction :  Fall is an important cause and second leading cause  of injury morbidity and mortality in older adults world wide [1]. The 2010 Global Burden of Disease and Injury Study estimated that 12% of all unintentional injury deaths are due to falls [2]. However, epidemiological information on fall is limited in low and middle income countries like India. High mortality due to fall injury amongst older ages is indicative of the need for a public health response to the issue.
 ##Aim: To investigate the pattern, characteristics and the context(This study is coding injuries as per ICD 10 so the reason for fall will be clear. This study uses time, activity(as per ICD 10) and the injury that will define context.) of falls in Mumbai based on ICD -10 coding.
 
