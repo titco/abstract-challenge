@@ -28,7 +28,7 @@ Data of patients from TAFT data set have been analyse with the help of R. Some o
 
 ##Result
 ```{r}
-TAFT_2736 <- read.csv("C:/Users/Tamal/Documents/TAFT_2736.csv")
+TAFT_2736 <- read.csv("C:/Users/Welcome/Documents/TAFT_2736.csv")
 summary(TAFT_2736$tyi)
 ```
 ```{r}
