@@ -23,6 +23,7 @@ library(splitstackshape)
 library(tidyverse)
 library(tidyr)
 library(assertthat)
+library(rlist)
 opts_chunk$set(echo = FALSE)
 ```
 
@@ -255,48 +256,40 @@ stddev_age <- round(sd(kbbh$age),2)
 nm_age <- sum(kbbh$agegrp != "65+")
 percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 2)
 
-# Sex
-nm_male <- sum(kbbh$sex == 1)
-percent_male <- round(mean(kbbh$sex == 1) * 100,2)
-
-nm_female <- sum(kbbh$sex == 0)
-percent_female <- round(mean(kbbh$sex == 0) * 100,2)
-
-# Type of Injury
-nm_blunt <- sum(kbbh$tyi == 0)
-percent_blunt <- round(mean(kbbh$tyi == 0) * 100,2)
-
-# Mode of Transport
-nm_pvt <- sum(kbbh$mot == 2)
-percent_mot_pvt <- round(mean(kbbh$mot == 2) * 100,2)
-
-nm_onfoot <- sum(kbbh$mot == 3)
-percent_mot_onfoot <- round(mean(kbbh$mot == 3) * 100,2)
-
-sort_most_common <- function(v) {
-   uniqv <- unique(v)
-   uniqv[sort.list(tabulate(match(v, uniqv)), decreasing = TRUE)]
-}
-
-sorted_mot <- sort_most_common(kbbh$mot)
-mot1 <- sorted_mot[[1]][]
-
-library(rlist)
-# MOI
 calculate_n_p <- function(level.name, factor.var){
     assert_that(is.character(level.name))
     assert_that(is.factor(factor.var))
     nm <- sum(factor.var == level.name)
     percent <- round((nm/dm) * 100,2)
     return.list <-list(nm = nm, percent = percent)
-    list.sort(return.list, nm, decreasing = TRUE) ## Trying to not use the sort_most_common function seperately. It works when I run in on moi.data.. But not in the function.
+    return.list
 }
 
-moi.data <- lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p, factor.var = kbbh$moi.collapsed)
+# Sex
+sex.data <- list.sort(lapply(setNames(nm = levels(kbbh$sex)), calculate_n_p, factor.var = kbbh$sex), nm, decreasing = TRUE)
 
-print(moi.data)
+sexv <- unlist(sex.data)
+nm_male <- sexv["Male.nm"]
+p_male <- sexv["Male.percent"]
+nm_female <- sexv["Female.nm"]
+p_female <- sexv["Female.percent"]
 
-list.sort(moi.data, nm, decreasing = TRUE)
+# Type of Injury
+nm_blunt <- sum(kbbh$tyi == 0)
+percent_blunt <- round(mean(kbbh$tyi == 0) * 100,2)
+
+# Mode of Transport
+mot.data <- list.sort(lapply(setNames(nm = levels(kbbh$mot)), calculate_n_p, factor.var = kbbh$mot), nm, decreasing = TRUE)
+
+motv <- unlist(mot.data)
+nm_pvt <- motv["Private Vehicle.nm"]
+p_mot_pvt <- motv["Private Vehicle.percent"]
+nm_mot_onfoot <- motv["On foot.nm"]
+p_mot_onfoot <- motv["On foot.percent"]
+mot1 <- names(mot.data[1])
+
+# MOI
+moi.data <- list.sort(lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p, factor.var = kbbh$moi.collapsed), nm, decreasing = TRUE)
 
 moiv <- unlist(moi.data)
 p_animalbite <- moiv["Animal bite.percent"]
@@ -305,28 +298,41 @@ p_fall <- moiv["Fall.percent"]
 p_other <- moiv["Other.percent"]
 p_tra <- moiv["Transport accident.percent"]
 
-sorted_moi <- sort_most_common(kbbh$moi.collapsed)
-
-## Have used column numbers here since checking most common
-moi1 <- sorted_moi[[1]][]
-moi2 <- sorted_moi[[2]][]
-moi3 <- sorted_moi[[3]][]
+moi1 <- names(moi.data[1])
+moi2 <- names(moi.data[2])
+moi3 <- names(moi.data[3])
 
 # Outcome
 kbbh$s6m <- as.factor(kbbh$s6m)
 outcome.data <- lapply(setNames(nm = levels(kbbh$s6m)), calculate_n_p, factor.var = kbbh$s6m)
-
 p_outcome_alive <- outcome.data[["0"]]["percent"]
 p_outcome_dead <- outcome.data[["1"]]["percent"]
 n_outcome_dead <- outcome.data[["1"]]["nm"]
 
 p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
 
+# Grouping patients wrt to injury
+
+crush_inj <- c("S07","S17","S280","S380","S381","T041","S47","S57","S67","T042","S770","S771","S772","S87","S97","T043","T048","T049")
+
+internal_inj <- c("S06","T905","S140","S141","S240","S241","S340","S341","S343","T093","T913","S142","S260","S270","S271","S272","S273","S274","S275","S276","S278","S279","T914","S36","S37","S396","S397","T065","T915")
+
+bv_inj <- c("S090","S150","S512","S153","S154","S155","S156","S157","S158","S159","S151","S25","S350","S351","S352","S353","S354","S355","S357","S358","S359","S45","S55","S65","T114","S75","S85","S95","T134","T063","T145")
+
+amp_inj <- c("S081","S082","S083","S084","S085","S086","S087","S088","S089","S18","S281","S382","S383","T096","S48","S58","S68","T050","T052","S780","T058","T059")
+
+frac_inj <- c("S020","S021","S023","S027","S029","T902","S022","S024","S025","S026","S128","S129","S120","S121","S122","S123","S124","S125","S126","S127","S220","S221","S320","S321","S322","T08","T911","S222","S223","S224","S225","S226","S227","S228","S229","S323","S324","S325","S326","S327","S328","T021","T912","S42","S52","S62","T022","T024","T10","T921","T922","S720","S721","S722","S723","S")
+
+apply(kbbh, 1, function(x) if(any(x %in% crush_inj)) cat("Crush Injury"))
+apply(kbbh, 1, function(x) if(any(x %in% internal_inj)) cat("Internal organ Injury"))
+apply(kbbh, 1, function(x) if(any(x %in% bv_inj)) cat("Blood Vessel Injury"))
+apply(kbbh, 1, function(x) if(any(x %in% amp_inj)) cat("Amputation"))
+
 ```
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury `r p_assualt`% followed by `r moi2` `r p_tra`% and `r moi3` `r p_fall`%. Injury due to animal bites were. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. 
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r p_male`% patients were male, while `r p_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r p_mot_pvt`)%. `r p_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
 ```{r tables}
 
@@ -335,6 +341,36 @@ kable(Table1,
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
 
+```
+
+## Conclusion
+
+Among the patients triaged green, injury due to assualt and transport accidents were predominant. `r p_rts_8`% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are `r p_iss_mi`% and `r p_iss_nd`% respectively. 
+
+# Introduction
+Trauma is one of the leading causes of emergency department visits. 
+
+Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. 
+
+Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. 
+
+Although these patients are triaged green they consume significant resources.
+
+It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
+
+The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
+
+# Methods
+
+Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective cohort analysis of the data was performed using R.
+
+# Results
+
+There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
+
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
+
+```{r}
 #Factor labels
 kbbh$sex <- factor(kbbh$sex, levels = c(0,1), labels = c("Female","Male"))
 kbbh$tyi <- factor(kbbh$tyi, levels = c(0,1,2), 
@@ -366,8 +402,3 @@ p_rts_8 <- round(mean(kbbh$rts == 8) * 100,2)
 
 ```
 
-## Conclusion
-
-Among the patients triaged green, injury due to assualt and transport accidents were predominant. `r p_rts_8`% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are `r p_iss_mi`% and `r p_iss_nd`% respectively. 
-
-# Introduction
