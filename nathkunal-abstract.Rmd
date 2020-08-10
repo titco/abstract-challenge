@@ -4,6 +4,7 @@ author: "KUNAL NATH"
 date: "June 2, 2020"
 output:
   html_document: default
+  pdf_document: default
   word_document: default
 ---
 
@@ -27,7 +28,7 @@ Data of patients from TAFT data set have been analyse with the help of R. Some o
 
 ##Result
 ```{r}
-TAFT_2736 <- read.csv("C:/Users/Welcome/Documents/TAFT_2736.csv")
+TAFT_2736 <- read.csv("C:/Users/Tamal/Documents/TAFT_2736.csv")
 summary(TAFT_2736$tyi)
 ```
 ```{r}
@@ -91,5 +92,7 @@ mean(TAFT_2736$einj1icd == "S320")*100
 ```{r}
 mean(TAFT_2736$einj1icd == "S39")*100
 ```
+Total number of available patients for analysis is 1154. By analysis in R I findout that total 21 patient having abdominal trauma in this data set. ICD code "S31", "S32", "S320", "S39" is found only here using for abdominal trauma So the percentage is 0.17, 0.08, 1.12, 0.43. 
+
 ##Conclusion
-Total number of available patients for analysis is 1154. By analysis in R I findout that total 21 patient having abdominal trauma in this data set. ICD code "S31", "S32", "S320", "S39" is found only here using for abdominal trauma So the percentage is 0.17, 0.08, 1.12, 0.43. So It is conclude that very less number of patients having avdominal trauma in this dataset.
+So It is conclude that very less number of traumatic patients found having abdominal trauma in this dataset.
