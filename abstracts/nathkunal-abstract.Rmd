@@ -1,0 +1,98 @@
+---
+title: "ABDOMINAL TRAUMA AND SURVIVAL"
+author: "KUNAL NATH"
+date: "June 2, 2020"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+Abdominal injuries are common in trauma cases, but sometimes it is costly, deadly too. Abdominal trauma is one of the major challenging issue in the trauma care. Blunt abdominal trauma is found in most of the trauma cases.In some cases Signs and symptoms are not seen in early days and after some days initial pain is seen. Motor vehicle collisions are a common source of blunt abdominal trauma.abdominal injury affects internal organs like pancreas, intestine and some times spleen, kidneys also affect. In sharp abdominal trauma cases like gunshot injury and stab injury cases gunshot wounds are higher energy than stab wounds, are usually more damaging than the latter. Gunshot wounds that penetrate the peritoneum result in significant damage to major intra-abdominal structure in some cases. 
+ 
+# Aim
+
+To study the demographic analysis of abdominal trauma cases and servival rate from trauma data set presented at tertiary care hospital in Kolkata.
+
+# Design
+This research study is based on quantitative approach and retrospective in nature. Data collected from Tertiary care hospital emergency department kolkata. Participants aged 18 or above have been enrolled for the study those had history of trauma presented to emergency department and then filtre out abdominal wounds history and analyse the survival rate.
+
+# Methods
+Data of patients from TAFT data set have been analyse with the help of R. Some of the basic informations are analyse to check survival rate.Some graphical representation has been done.
+
+##Result
+```{r}
+TAFT_2736 <- read.csv("C:/Users/Welcome/Documents/TAFT_2736.csv")
+summary(TAFT_2736$tyi)
+```
+```{r}
+summary(TAFT_2736$tyi)
+hist(TAFT_2736$tyi, col='green',xlab='tyi', main='Type of injury')
+table(TAFT_2736$tyi)
+```
+```{r}
+summary(TAFT_2736$uinj1icd)
+table(TAFT_2736$uinj1icd)
+```
+```{r}
+summary(TAFT_2736$einj1icd)
+table(TAFT_2736$einj1icd)
+```
+```{r}
+summary(TAFT_2736$einj2icd)
+table(TAFT_2736$einj2icd)
+```
+```{r}
+summary(TAFT_2736$einj3icd)
+table(TAFT_2736$einj3icd)
+```
+```{r}
+summary(TAFT_2736$einj4icd)
+table(TAFT_2736$einj4icd)
+```
+```{r}
+summary(TAFT_2736$einj5icd)
+table(TAFT_2736$einj5icd)
+```
+```{r}
+summary(TAFT_2736$einj6icd)
+table(TAFT_2736$einj6icd)
+```
+```{r}
+summary(TAFT_2736$einj1icd == "S31")
+table(TAFT_2736$einj1icd == "S31")
+```
+```{r}
+summary(TAFT_2736$einj1icd == "S32")
+table(TAFT_2736$einj1icd == "S32")
+```
+```{r}
+summary(TAFT_2736$einj1icd == "S320")
+table(TAFT_2736$einj1icd == "S320")
+```
+```{r}
+summary(TAFT_2736$einj1icd == "S39")
+table(TAFT_2736$einj1icd == "S39")
+```
+```{r}
+mean(TAFT_2736$einj1icd == "S31")*100
+```
+```{r}
+mean(TAFT_2736$einj1icd == "S32")*100
+```
+```{r}
+mean(TAFT_2736$einj1icd == "S320")*100
+```
+```{r}
+mean(TAFT_2736$einj1icd == "S39")*100
+```
+Total number of available patients for analysis is 1154. By analysis in R I findout that total 21 patient having abdominal trauma in this data set. ICD code "S31", "S32", "S320", "S39" is found only here using for abdominal trauma So the percentage is 0.17, 0.08, 1.12, 0.43. 
+
+##Conclusion
+So It is conclude that very less number of traumatic patients found having abdominal trauma in this dataset.
