@@ -312,7 +312,9 @@ n_outcome_dead <- outcome.data[["1"]]["nm"]
 p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
 
 # Grouping patients wrt to injury
-
+#1
+if (substr(kbbh$einj1icd,start=3, stop=3) == 1) {"Open Wound"}
+#2
 crush_inj <- c("S07","S17","S280","S380","S381","T041","S47","S57","S67","T042","S770","S771","S772","S87","S97","T043","T048","T049")
 
 internal_inj <- c("S06","T905","S140","S141","S240","S241","S340","S341","S343","T093","T913","S142","S260","S270","S271","S272","S273","S274","S275","S276","S278","S279","T914","S36","S37","S396","S397","T065","T915")
@@ -327,7 +329,6 @@ apply(kbbh, 1, function(x) if(any(x %in% crush_inj)) cat("Crush Injury"))
 apply(kbbh, 1, function(x) if(any(x %in% internal_inj)) cat("Internal organ Injury"))
 apply(kbbh, 1, function(x) if(any(x %in% bv_inj)) cat("Blood Vessel Injury"))
 apply(kbbh, 1, function(x) if(any(x %in% amp_inj)) cat("Amputation"))
-
 ```
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
@@ -371,6 +372,10 @@ There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomp
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
 ```{r}
+#column labels
+
+
+
 #Factor labels
 kbbh$sex <- factor(kbbh$sex, levels = c(0,1), labels = c("Female","Male"))
 kbbh$tyi <- factor(kbbh$tyi, levels = c(0,1,2), 
