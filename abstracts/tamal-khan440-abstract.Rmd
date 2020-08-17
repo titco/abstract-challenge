@@ -26,7 +26,7 @@ Data of triaged red patients extract out from the data set of TTRIS study projec
 
 ## Result
 ```{r}
-TTRIS_1515 <- read.csv("C:/Users/Tamal/Documents/TTRIS_1515.csv")
+TTRIS_1515 <- read.csv("C:/Users/Tamal/OneDrive/Documents/TTRIS_1515.csv")
 summary(TTRIS_1515$tyi)
 summary(TTRIS_1515$age)
 hist(TTRIS_1515$age, col='grey',xlab='Age', main='Age of patients')
@@ -40,6 +40,11 @@ red <- subset(x=TTRIS_1515, subset = TTRIS_1515$tc == 3)
 table(red$tc)
 fd_red <- subset(x=red, subset = red$age <61)
 table(fd_red$age)
+table(fd_red$sex == 1)
+mean(fd_red$sex == 1)*100
+table(fd_red$sex == 0)
+mean(fd_red$sex == 0)*100
+table(fd_red$moi)
 death <- subset(x=fd_red, subset = fd_red$hd == 1)
 table(death$hd)
 mean(TTRIS_1515$tc == 3)*100
@@ -47,7 +52,7 @@ mean(red$hd == 1)*100
 mean(red$age <61)*100
 ```
 
-Total number patients available for analysis n= 5618, triage red category patients are 272 under this category so 4% patients are triage red, adult age patients under this triage are 219 percentage is 80 and Number of patients death occured in this triage category are 158, percentage is 74.26. 
+Total number patients available for analysis n= 5618, triage red category patients are 272 under this category so 4% patients are triage red, adult age patients under this triage are 219 percentage is 80, male patients are 187 i.e 85.38% and female patients are 32 i.e 14.61%. and Number of patients death occured in this triage category are 158, percentage is 74.26. 
 
 ##Conclusion
 
