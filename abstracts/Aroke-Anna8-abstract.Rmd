@@ -454,9 +454,9 @@ kbbh$hd <- factor(kbbh$hd, levels = c(0,1,2,3),
                   labels = c("Discharged","Dead","Transferred","Abscond/ DAMA"))
 
 myvars <- c("age", "agegrp", "sex", "moi.collapsed", "tyi", "mot",
-"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs", "isspv", "rts")
+"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs", "isspv", "rts","inj_type")
 
-catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "gcs", "rts")
+catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "gcs", "rts", "inj_type")
 
 Table2 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
 knitr::kable(print(Table2, caption = "Table 2. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE))
