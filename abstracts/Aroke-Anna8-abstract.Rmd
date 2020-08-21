@@ -402,6 +402,11 @@ kable(Table1,
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
 
+Table2 <- xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh)
+kable(Table2, 
+      caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
+)
+
 ```
 
 ## Conclusion
