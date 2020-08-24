@@ -28,8 +28,10 @@ Data of patients from TAFT data set have been analyse with the help of R. Some o
 
 ##Result
 ```{r}
-TAFT_2736 <- read.csv("C:/Users/Welcome/Documents/TAFT_2736.csv")
+TAFT_2736 <- read.csv("C:/Users/TAMAL/Documents/TAFT.csv")
 summary(TAFT_2736$tyi)
+table(TAFT_2736$tyi)
+table(TAFT_2736$hd)
 ```
 ```{r}
 summary(TAFT_2736$tyi)
@@ -65,19 +67,10 @@ summary(TAFT_2736$einj6icd)
 table(TAFT_2736$einj6icd)
 ```
 ```{r}
-summary(TAFT_2736$einj1icd == "S31")
+summary(TAFT_2736$einj1icd == "S31", "S32", "S320", "S39")
 table(TAFT_2736$einj1icd == "S31")
-```
-```{r}
-summary(TAFT_2736$einj1icd == "S32")
 table(TAFT_2736$einj1icd == "S32")
-```
-```{r}
-summary(TAFT_2736$einj1icd == "S320")
 table(TAFT_2736$einj1icd == "S320")
-```
-```{r}
-summary(TAFT_2736$einj1icd == "S39")
 table(TAFT_2736$einj1icd == "S39")
 ```
 ```{r}
