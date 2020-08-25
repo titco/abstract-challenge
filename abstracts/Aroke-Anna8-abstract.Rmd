@@ -316,7 +316,6 @@ p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
 #if (substr(kbbh$einj1icd,start=3, stop=3) == 1) {"Open Wound"}
 
 kbbh <- unite(kbbh, allinj, contains("icd"), sep = ",", remove = FALSE)
-nrow(kbbh)
 
 crush_inj <- str_c(c("S07","S070","S071","S078","S079","S17","S170","S178","S179","S280","S380","S381","T041","S47","S57","S570","S578","S579","S67","S670","S678","T042","S770","S771","S772","S87","S870","S878","S97","S970","S971","S978","T043","T048","T049"),collapse = "|")
 
@@ -388,7 +387,26 @@ no_def_inj <- rest %>% anti_join(supf)
 no_def_inj$inj_type <- "No defined Injury"
 
 kbbh1 <- rbind(no_def_inj,supf,open,unspe,multiple,other,burn,disl,frac,amputation,bv,internal,crush)
-kbbh<- cbind(kbbh1,kbbh)
+kbbh<- merge(kbbh,kbbh1)
+
+kbbh$inj_type <- as.factor(kbbh$inj_type)
+
+inj.data <- list.sort(lapply(setNames(nm = levels(kbbh$inj_type)), calculate_n_p, factor.var = kbbh$inj_type), nm, decreasing = TRUE)
+
+injv <- unlist(inj.data)
+p_supf <- injv["Superficial Injury.percent"]
+nm_supf <- injv["Superficial Injury.nm"]
+p_ndi <- injv["No defined Injury.percent"]
+nm_ndi <- injv["No defined Injury.nm"]
+p_ow <- injv["Open WOund.percent"]
+nm_ow <- injv["Open WOund.nm"]
+p_frac <- injv["Fracture.percent"]
+nm_frac <- injv["Fracture.nm"]
+inj1 <- names(inj.data[1])
+inj2 <- names(inj.data[2])
+inj3 <- names(inj.data[3])
+inj4 <- names(inj.data[4])
+
 ```
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
@@ -435,6 +453,8 @@ Data of patients triaged green were extracted from the Trauma Triage Study in In
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
+
+
 
 ```{r}
 #column labels
