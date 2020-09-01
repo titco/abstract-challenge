@@ -24,6 +24,7 @@ library(tidyverse)
 library(tidyr)
 library(assertthat)
 library(rlist)
+library(labelled)
 opts_chunk$set(echo = FALSE)
 ```
 
@@ -407,12 +408,13 @@ inj2 <- names(inj.data[2])
 inj3 <- names(inj.data[3])
 inj4 <- names(inj.data[4])
 
+
 ```
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r p_male`% patients were male, while `r p_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r p_mot_pvt`)%. `r p_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
-Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`), followed by `r inj2` (`r p_ndi`), `r inj3` (`r p_ow`) and `r inj4` (`r p_frac`). 
+Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`), followed by `r inj2` (`r p_ndi`), `r inj3` (`r p_ow`) and `r inj4` (`r p_frac`).
 
 ```{r tables}
 
@@ -421,7 +423,7 @@ kable(Table1,
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
 
-Table2 <- xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh)
+Table2 <- colPerc(xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh))
 kable(Table2, 
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
@@ -458,10 +460,6 @@ In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these 
 
 
 ```{r}
-#column labels
-
-#label(kbbh$mot) <- "Mode of Transport"
-
 #Factor labels
 kbbh$sex <- factor(kbbh$sex, levels = c(0,1), labels = c("Female","Male"))
 kbbh$tyi <- factor(kbbh$tyi, levels = c(0,1,2), 
@@ -479,13 +477,15 @@ kbbh$nsi <- factor(kbbh$nsi, levels = c(0,1,2),
 kbbh$hd <- factor(kbbh$hd, levels = c(0,1,2,3), 
                   labels = c("Discharged","Dead","Transferred","Abscond/ DAMA"))
 
+var_label(kbbh) <- list(age = "Age", agegrp = "Age Group", sex = "Sex", moi.collapsed = "Mode of Injury", tyi = "Type of injury", mot = "Mode of transport", tran = "Transfer status", avpu = "AVPU", sbp = "Systolic blood pressure", dbp = "Distolic blood pressure", hr = "Heart rate", spo2 = "Oxygen saturation", vo2 = "Need for oxygen support", rr = "Respiratory rate", nsi = "Number of serious injuries", hd = "Hospital disposition", gcs = "GCS", isspv = "ISS", rts = "RTS", inj_type = "Characteristic of Injury")
+
 myvars <- c("age", "agegrp", "sex", "moi.collapsed", "tyi", "mot",
 "tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs", "isspv", "rts","inj_type")
 
 catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "gcs", "rts", "inj_type")
 
 Table2 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
-knitr::kable(print(Table2, caption = "Table 2. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE))
+knitr::kable(print(Table2, caption = "Table 2. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 
 p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
 p_iss_mi <- round(mean(kbbh$isspv == "Minor") * 100,2)
