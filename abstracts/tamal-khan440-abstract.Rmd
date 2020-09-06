@@ -41,13 +41,25 @@ table(red$tc)
 fd_red <- subset(x=red, subset = red$age <61)
 table(fd_red$doa)
 table(fd_red$doa == 0)
-```
+table(fd_red$toa == 0)
+table(fd_red$doa == 999)
+mean(fd_red$doa == 0)*100
 table(fd_red$age)
 table(fd_red$sex == 1)
 mean(fd_red$sex == 1)*100
 table(fd_red$sex == 0)
 mean(fd_red$sex == 0)*100
 table(fd_red$moi)
+table(fd_red$mot)
+hist(fd_red$mot, col='red',xlab='mot', main='Mode of transport')
+mean(fd_red$mot == 0)*100
+mean(fd_red$mot == 1)*100
+mean(fd_red$mot == 2)*100
+mean(fd_red$mot == 3)*100
+mean(fd_red$mot == 999)*100
+table(fd_red$tran)
+mean(fd_red$tran == 0)*100
+mean(fd_red$tran == 1)*100
 death <- subset(x=fd_red, subset = fd_red$hd == 1)
 table(death$hd)
 mean(TTRIS_1515$tc == 3)*100
