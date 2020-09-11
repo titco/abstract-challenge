@@ -415,7 +415,22 @@ assault_noinj.p <- injvmoi[["Assault"]][8]
 assault_ow.p <- injvmoi[["Assault"]][9]
 assault_total.p <- assault_noinj.p+assault_ow.p+assault_sup.p
 
+tr_sup.p <- injvmoi[["Transport accident"]][11]
+tr_noinj.p <- injvmoi[["Transport accident"]][8]
+tr_ow.p <- injvmoi[["Transport accident"]][9]
+tr_frac.p <- injvmoi[["Transport accident"]][6]
+tr_total.p <- tr_noinj.p+tr_ow.p+tr_sup.p
 
+fall_sup.p <- injvmoi[["Fall"]][11]
+fall_noinj.p <- injvmoi[["Fall"]][8]
+fall_ow.p <- injvmoi[["Fall"]][9]
+fall_frac.p <- injvmoi[["Fall"]][6]
+fall_total.p <- fall_noinj.p+fall_ow.p+fall_sup.p
+
+ab_sup.p <- injvmoi[["Animal bite"]][11]
+ab_noinj.p <- injvmoi[["Animal bite"]][8]
+ab_ow.p <- injvmoi[["Animal bite"]][9]
+ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
  
 view(injvmoi)
 
@@ -424,8 +439,6 @@ view(injvmoi)
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r p_male`% patients were male, while `r p_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r p_mot_pvt`)%. `r p_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
-Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`), followed by `r inj2` (`r p_ndi`), `r inj3` (`r p_ow`) and `r inj4` (`r p_frac`).
-
 
 ## Conclusion
 
@@ -453,6 +466,8 @@ Data of patients triaged green were extracted from the Trauma Triage Study in In
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
+
+Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`), followed by `r inj2` (`r p_ndi`), `r inj3` (`r p_ow`) and `r inj4` (`r p_frac`).
 
 ```{r}
 #Factor labels
