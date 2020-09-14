@@ -49,7 +49,6 @@ table(fd_red$sex == 1)
 mean(fd_red$sex == 1)*100
 table(fd_red$sex == 0)
 mean(fd_red$sex == 0)*100
-table(fd_red$moi)
 table(fd_red$mot)
 hist(fd_red$mot, col='red',xlab='mot', main='Mode of transport')
 mean(fd_red$mot == 0)*100
@@ -60,6 +59,34 @@ mean(fd_red$mot == 999)*100
 table(fd_red$tran)
 mean(fd_red$tran == 0)*100
 mean(fd_red$tran == 1)*100
+table(fd_red$moi)
+
+get_icd_range <- function(first.char, start.number, end.number) {
+    icd.range <- paste0(
+        paste0(
+            "^",
+            first.char,
+            stringr::str_pad(start.number:end.number, 2, pad = "0"),
+            "[0-9]?$"),
+        collapse = "|")
+    return (icd.range)
+}
+icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("Animal bite" = get_icd_range("W", 50, 64)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+table(fd_red$avpu == 0)
+table(fd_red$avpu == 1)
+table(fd_red$avpu == 2)
+table(fd_red$avpu == 3)
+table(fd_red$avpu == 99)
+table(fd_red$avpu == 999)
+mean(fd_red$avpu == 0)*100
+mean(fd_red$avpu == 1)*100
+mean(fd_red$avpu == 2)*100
+mean(fd_red$avpu == 3)*100
+mean(fd_red$avpu == 99)*100
+mean(fd_red$avpu == 999)*100
 death <- subset(x=fd_red, subset = fd_red$hd == 1)
 table(death$hd)
 mean(TTRIS_1515$tc == 3)*100
