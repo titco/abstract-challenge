@@ -41,20 +41,35 @@ library(rio)
 ## direcctory where the data is in an option called data.dir. You do
 ## that by running options(data.dir = "<path to data directory>"). You
 ## need to replace the <path to data directory> with the actual path.
+## Data Directory 
 data.dir <- getOption("C:/Users/CP Verma/Desktop/Git R abstract/abstract-challenge")
 taft <- import(file.path("C:/Users/CP Verma/Desktop/Git R abstract", "taft-dataset-9825-20200608232208.csv")) %>% as_tibble()
 
 ## Age distribution 
 summary(taft$age)
-agegrup<-cut(taft$age, c(17,25,45,65,80),labels=c("18-24","25-44","45-64","65+"))
-agegrup
-head(agegrup[c("age", "agegrup")], 4)
+agebreaks <- c(17,25,45,65,80)
+agelabels <- c("18-24","25-44","45-64","65+")
+agegrup <-cut(taft$age,
+                breaks = agebreaks,
+                right = FALSE,
+               labels = agelabels)
+table1 <- table(agegrup)
+table1
+
+
+## Sex Distribution
 
 summary(taft$sex) 
-prop.table(table(taft$sex)) # It shows 79 percent are male and 21 percent female patients out of 248 patients.
+
 ## Get percentage males
 
 p.males <- round(mean(taft$sex == 1, na.rm = TRUE) * 100)
+p.males
+
+## Get percentage females
+p.females <- round(mean(taft$sex == 0, na.rm = TRUE) * 100)
+p.females
+
 ## ggplot2 is a good package for visualizing data. If you want to put
 ## a plot into your results, do this:
 
@@ -66,8 +81,47 @@ plot.sex <- ggplot(taft, aes(sex.cat, fill = sex.cat)) +
     theme(legend.position = "none") 
 plot.sex
 
+## Type of Injury
 
-## Macehinism of Injury
+
+## Mechanism of Injury
+
+
+## Mode of Transportation
+ambulance <- taft$mot == 0
+n.ambulance <- sum(ambulance)
+n.ambulance
+p.ambulance <- round(mean(ambulance)*100)
+p.ambulance
+
+
+police <- taft$mot == 1
+n.police <- sum(police)
+n.police
+p.police <- round(mean(police)*100)
+p.police
+
+on_feet <- taft$mot == 3
+n.on_feet <- sum(on_feet)
+n.on_feet
+p.on_feet <- round(mean(on_feet)*100)
+p.on_feet
+
+unknown <- taft$mot == 999
+n.unknown <- sum(unknown)
+n.unknown
+p.unknown <- round(mean(unknown)*100)
+p.unknown
+
+
+## Transfer Status of Patients
+
+trans_status <- taft$tran == 1
+n.trans_status <- sum(trans_status)
+p.trans_status <- round(mean(trans_status)*100)
+p.trans_status
+
+
 ```
 
 
