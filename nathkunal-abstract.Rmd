@@ -32,57 +32,34 @@ TAFT_2736 <- read.csv("C:/Users/TAMAL/Documents/TAFT.csv")
 summary(TAFT_2736$tyi)
 table(TAFT_2736$tyi)
 table(TAFT_2736$hd)
-```
-```{r}
 summary(TAFT_2736$tyi)
 hist(TAFT_2736$tyi, col='green',xlab='tyi', main='Type of injury')
 table(TAFT_2736$tyi)
-```
-```{r}
 summary(TAFT_2736$uinj1icd)
 table(TAFT_2736$uinj1icd)
-```
-```{r}
 summary(TAFT_2736$einj1icd)
 table(TAFT_2736$einj1icd)
-```
-```{r}
 summary(TAFT_2736$einj2icd)
 table(TAFT_2736$einj2icd)
-```
-```{r}
 summary(TAFT_2736$einj3icd)
 table(TAFT_2736$einj3icd)
-```
-```{r}
 summary(TAFT_2736$einj4icd)
 table(TAFT_2736$einj4icd)
-```
-```{r}
 summary(TAFT_2736$einj5icd)
 table(TAFT_2736$einj5icd)
-```
-```{r}
 summary(TAFT_2736$einj6icd)
 table(TAFT_2736$einj6icd)
-```
-```{r}
-summary(TAFT_2736$einj1icd == "S31", "S32", "S320", "S39")
+summary(TAFT_2736$einj1icd == "S31")
+summary(TAFT_2736$einj1icd == "S32")
+summary(TAFT_2736$einj1icd == "S320")
+summary(TAFT_2736$einj1icd == "S39")
 table(TAFT_2736$einj1icd == "S31")
 table(TAFT_2736$einj1icd == "S32")
 table(TAFT_2736$einj1icd == "S320")
 table(TAFT_2736$einj1icd == "S39")
-```
-```{r}
 mean(TAFT_2736$einj1icd == "S31")*100
-```
-```{r}
 mean(TAFT_2736$einj1icd == "S32")*100
-```
-```{r}
 mean(TAFT_2736$einj1icd == "S320")*100
-```
-```{r}
 mean(TAFT_2736$einj1icd == "S39")*100
 ```
 Total number of available patients for analysis is 1154. By analysis in R I findout that total 21 patient having abdominal trauma in this data set. ICD code "S31", "S32", "S320", "S39" is found only here using for abdominal trauma So the percentage is 0.17, 0.08, 1.12, 0.43. 
