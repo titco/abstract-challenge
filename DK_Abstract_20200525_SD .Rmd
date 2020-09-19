@@ -68,6 +68,7 @@ trying with icd coding but not showing result.
   
 # Result
   The TAFT study data analysis of 249 patients at Lok Nayak Hospital, New Delhi shows around 99% patients having blunt injury, most of these patients are injured in road accidents Its shows the main reason of thoracic injury is blunt trauma.<!-- First report how many total patients are there. Second what is the percentage of thoracic injuries. Then report the gender, age distribution, mechanism of injury, type of injury (blunt or penetrating) and most importantly mortality rate in thoracic patients.--> 
+  
     
 # Conclusion
 The Present study has concluded majority of thoracic trauma is due blunt injury among road accident patients.All would be added after analysis.<!--Good. You'll also be able to describe what is main mechanism of thoracic injury, mortality rate after you run codes for them-->
