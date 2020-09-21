@@ -87,6 +87,16 @@ mean(fd_red$avpu == 2)*100
 mean(fd_red$avpu == 3)*100
 mean(fd_red$avpu == 99)*100
 mean(fd_red$avpu == 999)*100
+table(fd_red$vo2)
+table(fd_red$vo2 == 0)
+table(fd_red$vo2 == 1)
+mean(fd_red$vo2 == 0)*100
+mean(fd_red$vo2 == 1)*100
+table(fd_red$nsi)
+table(fd_red$nsi == 1)
+table(fd_red$nsi == 2)
+mean(fd_red$nsi == 1)*100
+mean(fd_red$nsi == 2)*100
 death <- subset(x=fd_red, subset = fd_red$hd == 1)
 table(death$hd)
 mean(TTRIS_1515$tc == 3)*100
