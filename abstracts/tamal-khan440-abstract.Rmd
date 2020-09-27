@@ -26,85 +26,177 @@ Data of triaged red patients extract out from the data set of TTRIS study projec
 
 ## Result
 ```{r}
+# Select data directory
+
 TTRIS_1515 <- read.csv("C:/Users/Tamal/OneDrive/Documents/TTRIS_1515.csv")
-summary(TTRIS_1515$tyi)
+
+# Summary of age in selected data set with histogram
+
 summary(TTRIS_1515$age)
 hist(TTRIS_1515$age, col='grey',xlab='Age', main='Age of patients')
-n.patients <- nrow(TTRIS_1515)
-mean.age <- mean(TTRIS_1515$age, na.rm = TRUE)
+
+# Summary of triage category with histogram
+
 summary(TTRIS_1515$tc)
 hist(TTRIS_1515$tc, col='grey',xlab='tc', main='Triage of patients')
+
+##  Selection of triage category
+
 summary(TTRIS_1515$tc == 3)
 table(TTRIS_1515$tc == 3)
 red <- subset(x=TTRIS_1515, subset = TTRIS_1515$tc == 3)
 table(red$tc)
+
+## Percentage
+
+mean(TTRIS_1515$tc == 3)*100
+
+# Selection of adult age in this specified triage category
+table(red$age <61)
+mean(red$age <61)*100 
 fd_red <- subset(x=red, subset = red$age <61)
+
+# Not admitted patients in this triage
+
 table(fd_red$doa)
 table(fd_red$doa == 0)
 table(fd_red$toa == 0)
 table(fd_red$doa == 999)
+
+## Percentage of patients not admitted
+
 mean(fd_red$doa == 0)*100
-table(fd_red$age)
+mean(fd_red$doa == 999)*100
+
+# Sex
+
 table(fd_red$sex == 1)
-mean(fd_red$sex == 1)*100
 table(fd_red$sex == 0)
+
+## Percentage
+
+mean(fd_red$sex == 1)*100
 mean(fd_red$sex == 0)*100
+
+# Mode of transport
+
 table(fd_red$mot)
 hist(fd_red$mot, col='red',xlab='mot', main='Mode of transport')
+table(fd_red$mot == 0)
+table(fd_red$mot == 1)
+table(fd_red$mot == 2)
+table(fd_red$mot == 3)
+table(fd_red$mot == 999)
+
+## percentage
+
 mean(fd_red$mot == 0)*100
 mean(fd_red$mot == 1)*100
 mean(fd_red$mot == 2)*100
 mean(fd_red$mot == 3)*100
 mean(fd_red$mot == 999)*100
+
+# Transfer status
+
 table(fd_red$tran)
+
+## percentage
+
 mean(fd_red$tran == 0)*100
 mean(fd_red$tran == 1)*100
+
+# Type of Injury
+
+table(fd_red$tyi)
+table(fd_red$tyi == 0)
+table(fd_red$tyi == 1)
+
+## Percentage
+
+mean(fd_red$tyi == 0)*100
+mean(fd_red$tyi == 1)*100
+
+# Mode of Injury
+
 table(fd_red$moi)
 
-get_icd_range <- function(first.char, start.number, end.number) {
-    icd.range <- paste0(
-        paste0(
-            "^",
-            first.char,
-            stringr::str_pad(start.number:end.number, 2, pad = "0"),
-            "[0-9]?$"),
-        collapse = "|")
-    return (icd.range)
-}
-icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
-                   c("Fall" = get_icd_range("W", 0, 19)),
-                   c("Animal bite" = get_icd_range("W", 50, 64)),
-                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+# AVPU
+
 table(fd_red$avpu == 0)
 table(fd_red$avpu == 1)
 table(fd_red$avpu == 2)
 table(fd_red$avpu == 3)
 table(fd_red$avpu == 99)
 table(fd_red$avpu == 999)
+
+## Percentage
+
 mean(fd_red$avpu == 0)*100
 mean(fd_red$avpu == 1)*100
 mean(fd_red$avpu == 2)*100
 mean(fd_red$avpu == 3)*100
 mean(fd_red$avpu == 99)*100
 mean(fd_red$avpu == 999)*100
+
+# Oxygen Support
+
 table(fd_red$vo2)
 table(fd_red$vo2 == 0)
 table(fd_red$vo2 == 1)
+
+## Percentage
+
 mean(fd_red$vo2 == 0)*100
 mean(fd_red$vo2 == 1)*100
 table(fd_red$nsi)
+
+# Serious Injury
+
 table(fd_red$nsi == 1)
 table(fd_red$nsi == 2)
+
+## Percentage
+
 mean(fd_red$nsi == 1)*100
 mean(fd_red$nsi == 2)*100
-death <- subset(x=fd_red, subset = fd_red$hd == 1)
-table(death$hd)
-mean(TTRIS_1515$tc == 3)*100
+
+# Hospital Disposition in red triage
+table(red$hd == 0)
+table(red$hd == 1)
+table(red$hd == 2)
+table(red$hd == 3)
+table(red$hd == 999)
+
+## Percentage
+
+mean(red$hd == 0)*100
 mean(red$hd == 1)*100
-mean(red$age <61)*100
+mean(red$hd == 2)*100
+mean(red$hd == 3)*100
+mean(red$hd == 999)*100
+
+## Adult Age
+
+table(fd_red$hd == 0)
+table(fd_red$hd == 1)
+table(fd_red$hd == 2)
+table(fd_red$hd == 3)
+table(fd_red$hd == 999)
+
+### Percentage
+
+mean(fd_red$hd == 0)*100
+mean(fd_red$hd == 1)*100
+mean(fd_red$hd == 2)*100
+mean(fd_red$hd == 3)*100
+mean(fd_red$hd == 999)*100
 ```
 
-Total number patients available for analysis n= 5618, triage red category patients are 272 under this category so 4% patients(red dataset) are triage red, adult age patients under this triage are 219 percentage is 80(fd_red data set),Admitted patients are 183 patients non admitted 36 patients, male patients are 187 i.e 85.38% and female patients are 32 i.e 14.61%. and Number of patients death occured in this triage category are 158, percentage is 74.26. 
+Total number patients available for analysis n= 5618, triage red category patients are 272 under this category so 4% patients(red dataset) are triage red, adult age patients under this triage are 219 percentage is 80(fd_red data set),male patients are 187 i.e 85.38% and female patients are 32 i.e 14.61%. Admitted patients are 183 patients i.e 83.66% and non admitted 36 patients i.e 16.34%. Patients . 
+
+Patients Patients Discharged Alive after treatment is  11 i.e 4%, Number of patients death occured in this triage category are 202 i.e 74.26, Transfered to another hospital 23 i.e 8.45%, Discharge against medical advise 16 i.e 5.88%, unknown 20 i.e 7.35%.
+
+In adult age in red triage Discharged Alive after treatment is  10 i.e 4.56%, Number of patients death occured in this triage category are 158 i.e 72.14, Transfered to another hospital 19 i.e 8.67%, Discharge against medical advise 15 i.e 6.84%, unknown 17 i.e 7.76%.   
 
 ##Conclusion
 
