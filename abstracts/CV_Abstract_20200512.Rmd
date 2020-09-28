@@ -144,7 +144,6 @@ p.trans_status
 
 ```
 
-
 # Result
 The demography of the road accident victims `r p.males` percent are male and remaining `r 100 - p.males` percent are female (Figure 1). According to their age distribution it shows majority of the road accident victims are among age-group 18-40 years and majority of them  presented emergency department with blunt trauma. (Though I have not checked missing value if found some missing data from data set will try to explain my analysis on that basis after excluding missing items.  )
 
