@@ -107,6 +107,7 @@ for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.ra
 moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
 moi.collapsed
 
+
 ## Mode of Transportation
 ambulance <- taft$mot == 0
 n.ambulance <- sum(ambulance)
