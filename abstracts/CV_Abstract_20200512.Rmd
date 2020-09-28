@@ -37,6 +37,8 @@ library(data.table)
 library(tidyverse)
 library(ggplot2)
 library(rio)
+library(stringr)
+library(dplyr)
 ## Let whoever runs this script, including you, put the path to the
 ## direcctory where the data is in an option called data.dir. You do
 ## that by running options(data.dir = "<path to data directory>"). You
@@ -85,7 +87,25 @@ plot.sex
 
 
 ## Mechanism of Injury
+moi.collapsed <- moi <- as.character(taft$moi)
 
+get_icd_range <- function(first.char, start.number, end.number) {
+  icd.range <- paste0(
+    paste0(
+      "^",
+      first.char,
+      stringr::str_pad(start.number:end.number, 2, pad = "0"),
+      "[0-9]?$"),
+    collapse = "|")
+  return (icd.range)
+}
+icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("others" = get_icd_range("W", 20, 64)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
+moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
+moi.collapsed
 
 ## Mode of Transportation
 ambulance <- taft$mot == 0
