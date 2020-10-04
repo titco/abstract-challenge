@@ -5,6 +5,8 @@ date: "06/06/2020"
 output:
   word_document: default
   html_document: default
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -117,10 +119,53 @@ mean(fd_red$tyi == 0)*100
 mean(fd_red$tyi == 1)*100
 
 # Mode of Injury
-
 table(fd_red$moi)
 
-# AVPU
+## GCS range selection
+table(fd_red$gcs <15)
+table(fd_red$gcs <13)
+table(fd_red$gcs <10)
+table(fd_red$gcs <8)
+table(fd_red$gcs <6)
+table(fd_red$gcs <4)
+table(fd_red$egcs ==1)
+mean(fd_red$egcs == 1)*100
+mean(fd_red$egcs == 2)*100
+mean(fd_red$egcs == 3)*100
+mean(fd_red$egcs == 4)*100
+mean(fd_red$vgcs == 1)*100
+mean(fd_red$vgcs == 2)*100
+mean(fd_red$vgcs == 3)*100
+mean(fd_red$vgcs == 4)*100
+mean(fd_red$vgcs == 5)*100
+mean(fd_red$mgcs == 1)*100
+mean(fd_red$mgcs == 2)*100
+mean(fd_red$mgcs == 3)*100
+mean(fd_red$mgcs == 4)*100
+mean(fd_red$mgcs == 5)*100
+mean(fd_red$mgcs == 6)*100
+
+## RR parameter value
+
+table(fd_red$rr)
+hist(fd_red$rr, col='blue',xlab='rr', main='Respiratory rate')
+
+## SBP parameter
+
+table(fd_red$sbp)
+hist(fd_red$sbp, col='grey',xlab='sbp', main='Systolic Blood pressure')
+
+## DBP parameter
+
+table(fd_red$dbp)
+hist(fd_red$dbp, col='violet',xlab='dbp', main='Diastolic Blood pressure')
+
+## Hr parameter
+
+table(fd_red$hr)
+hist(fd_red$hr, col='green',xlab='hr', main='Heart Rate')
+
+## AVPU
 
 table(fd_red$avpu == 0)
 table(fd_red$avpu == 1)
@@ -129,7 +174,7 @@ table(fd_red$avpu == 3)
 table(fd_red$avpu == 99)
 table(fd_red$avpu == 999)
 
-## Percentage
+### Percentage
 
 mean(fd_red$avpu == 0)*100
 mean(fd_red$avpu == 1)*100
@@ -138,27 +183,66 @@ mean(fd_red$avpu == 3)*100
 mean(fd_red$avpu == 99)*100
 mean(fd_red$avpu == 999)*100
 
-# Oxygen Support
+## Oxygen Support
 
 table(fd_red$vo2)
 table(fd_red$vo2 == 0)
 table(fd_red$vo2 == 1)
 
-## Percentage
+### Percentage
 
 mean(fd_red$vo2 == 0)*100
 mean(fd_red$vo2 == 1)*100
 table(fd_red$nsi)
 
-# Serious Injury
+## Serious Injury
 
 table(fd_red$nsi == 1)
 table(fd_red$nsi == 2)
 
-## Percentage
+### Percentage
 
 mean(fd_red$nsi == 1)*100
 mean(fd_red$nsi == 2)*100
+
+## Intubation not done
+
+table(fd_red$di == 0)
+table(fd_red$di == 999)
+mean(fd_red$di == 0)*100
+mean(fd_red$di == 999)*100
+
+## Mechanical ventilation not done
+
+table(fd_red$dmv == 0)
+table(fd_red$dmv == 999)
+mean(fd_red$dmv == 0)*100
+mean(fd_red$dmv == 999)*100
+
+## ICU admission not done
+
+table(fd_red$daicu == 0)
+table(fd_red$daicu == 999)
+mean(fd_red$daicu == 0)*100
+mean(fd_red$daicu == 999)*100
+
+## Surgery not done
+
+table(fd_red$dos == 0)
+table(fd_red$dos == 999)
+mean(fd_red$dos == 0)*100
+mean(fd_red$dos == 999)*100
+
+## Injuries
+
+### External Injury
+
+table(fd_red$einj1)
+table(fd_red$einj2)
+table(fd_red$einj3)
+table(fd_red$einj4)
+table(fd_red$einj5)
+table(fd_red$einj6)
 
 # Hospital Disposition in red triage
 table(red$hd == 0)
@@ -175,7 +259,7 @@ mean(red$hd == 2)*100
 mean(red$hd == 3)*100
 mean(red$hd == 999)*100
 
-## Adult Age
+##In case of Adult Age
 
 table(fd_red$hd == 0)
 table(fd_red$hd == 1)
