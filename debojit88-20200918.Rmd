@@ -307,36 +307,21 @@ table3 <- knitr::kable(print(table3, caption = "Table 1. Demography of TBI Patie
 # finding time of death or discharge from date of admission
 
 
-col4 <- c("doa","toa")
-s<- tbi$date_time_admission <- apply (tbi[,col4],1, paste,collapse ="")
-dtoa<- as.POSIXct(s)
-
-
-col5 <- c("dodd","todd")
-t <- tbi$date_time_deathordischarge <- apply (tbi[,col5],1,paste,collapse ="")
-dtodd <- as.POSIXct(t)
-
-delay <-difftime(date_time_deathordischarge, date_time_admission)
-
-tbi["delay"] <- delay_hours <- as.numeric(delay/60)
-
+s30days <- tbi %>%
+                filter(s24h == "0")
+s30days$s30d <- replace(s30d,s30d == 999 , NA)
 
 ## i want to create a table to compare characterics of dead and alive patients(30 days mortality characteristics)
 
-hd1 <- tbi$hd1
-
-tbi$hd1 <- ifelse(hd == 0,"discharge",
-                 ifelse(hd == 1,"death",NA)
-)
-                        
+         
 
 myvars <- c("age", "sex", "moi.collapsed", "tyi", "mot",
             "tran", "avpu", "sbp", "dbp", "hr", "spo2", "rr","mapfinal","GCS", "delay", "surgery")
 catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "surgery")
 
-table4 <- CreateTableOne(vars = myvars, strata = "hd1" ,data=tbi, factorVars = catvars)
+table4 <- CreateTableOne(vars = myvars, strata = "s30d" ,data=s30days, factorVars = catvars)
 
-table4 <- knitr::kable(print(table4, caption = "Table 1. Demography of TBI Patients", showAllLevels = TRUE, printToggle = FALSE))
+table4 <- knitr::kable(print(table4, caption = "Table 1. Characteristics of Survivors and NOnsurvivors for 30 days mortality among TBI patients", showAllLevels = TRUE, printToggle = FALSE))
 
 
 ## calculation for different score
