@@ -1,0 +1,646 @@
+---
+title: Epidemiology of traumatic brain injury patients attending a tertiary care centre
+  in eastern India
+author: "Debojit Basak"
+date: "05/06/2020"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+# Abstract
+Trauma is one of the leading causes of death in India. Road traffic accidents cause about 60% of all traumatic brain injuries (TBI) in India. According to an estimate 50% of trauma deaths in India is caused by TBI.  The purpose of this study is to assess the prevalence, severity, cause, and outcome of admitted TBI patients.
+
+## Method:
+We will retrospectively analyse data from the Trauma Audit Filter Trial (TAFT). The data was collected from the tertiary care centre Seth Sukhlal Karnani Memorial Hospital (SSKM), Kolkata, West Bengal. The data collection period was October 2017 to January 2020. One project officer was appointed to collect data prospectively for eight hours per day in the emergency room. We included all patients who were 18 years or older and presented to the emergency department (ED) and was admitted for TBI.
+
+## Results:
+
+```{r}
+
+## Always start by loading the packages you use
+library(rio)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(tableone)
+
+## Loading the csv file
+options(data.dir = "C:/Users/Debojit/Desktop/corsera/")
+
+data.dir <- getOption("data.dir")
+if (is.null(data.dir))
+    stop ("Please set the data directory using options(data.dir = \"<path to data>\").")
+data_taft <- import(file.path(data.dir, "taft-dataset-2736-20200525172700.csv")) %>% as_tibble()
+
+
+
+## Sorting file based on PID from smallest to largest
+PID_order <- order(data_taft$pid)
+a <- data_taft[PID_order,]
+
+## Apply filter to find all TBI patients in dataset using ICD 10 codes
+icd.codes <- c("S065", "S063", "S020", "S008", "S021","S026", "S032", "S053",
+               "S056", "S061", "S062", "S064", "S066", "S068", "S035")
+pattern <- str_c(icd.codes, collapse = "|")
+a <- unite(a, allinj, contains("icd"), sep = ",", remove = FALSE)
+tbi <- filter(a, str_detect(allinj, pattern))
+
+#sample size
+nrow(tbi)
+
+## To find no of male female and there percentage
+males <- tbi$sex == 1
+n.male <- sum(males)
+p.male <- round(mean(males) * 100)
+
+#summary of age 
+
+age <- as.numeric(as.character(tbi$age))
+
+m.age <- median(age)
+q1.age <- quantile(age,0.25)
+q3.age <- quantile (age,0.75)
+range.age <- range(age)
+
+#breaking age into groups
+
+tbi["agegroups"] <- age_groups <- cut(age, breaks = c(17,25,45,65,85), labels =  c("18-24","25-44","45-64","65+"))  
+
+table1 <- table(age_groups)
+
+
+
+##to find percentage transferred
+
+transferred <- tbi$tran == 1
+n.tran <- sum(transferred)
+p.tran <- round(mean(transferred)*100)
+
+##to find mode of transport 
+
+ambulance <- tbi$mot == 0
+n.ambulance <- sum(ambulance)
+p.ambulance <- round(mean(ambulance)*100)
+
+## to find average delay in arrival to the hospital
+
+col2 <- c("doi","toi")
+y <- tbi$date_time_injury <- apply (tbi[,col2],1, paste,collapse ="")
+
+date.time.injury <- as.POSIXct(y)
+
+
+col3 <- c("doar","toar")
+x <- tbi$date_time_arrival <- apply (tbi[,col3],1,paste,collapse ="")
+date.time.arrival <- as.POSIXct(x)
+
+delay <-difftime(date.time.arrival, date.time.injury)
+
+tbi["delay"] <- delay_hours <- as.numeric(delay/60)
+
+summary(delay_hours)
+m.delay <- median(delay_hours)
+q1.delay <- quantile(delay_hours,0.25)
+q3.delay <- quantile(delay_hours,0.75)
+
+range.delay <- range(delay_hours)
+
+
+
+##to find mean arterial pressure 
+
+sbp <- tbi["sbp"] <- (tbi$sbp1+tbi$sbp2)/2
+dbp <- tbi["dbp"] <- (tbi$dbp1+tbi$dbp2)/2
+
+bp1  <- sbp + dbp
+bp2 <- bp1 + dbp
+mean_arterial_pressure <- tbi["mapfinal"] <- bp2/3
+
+
+summary (mean_arterial_pressure) 
+m.ap <- median(mean_arterial_pressure)
+q1.ap <- quantile(mean_arterial_pressure,0.25)
+q3.ap <- quantile(mean_arterial_pressure,0.75)
+range.ap <- range(mean_arterial_pressure)
+
+##creating a new column with colname GCS which will contain total gcs
+
+G <- tbi["GCS"] <- tbi$egcs+tbi$vgcs+tbi$mgcs
+gcs <- tbi["GCS"] <- replace(G,G > 15 ,NA)
+
+#breaking gcs into groups
+
+tbi["gcsgroups"] <- gcs_groups <- cut(gcs, breaks = c(2,8,13,15), labels = c( "3-8","9-13","14-15"))
+
+#creating table of GCS distribution
+table2 <-table(gcs_groups)
+
+#to find no of patients alert 
+
+
+alert <- tbi$avpu == 3
+n.alert <- sum(alert)
+p.alert <- round(mean(alert)*100)
+
+#to find number of ot done
+
+
+s <- tbi$s 
+surg<- ifelse(s == 0, 0,
+              ifelse(s == 999, 0, 1)
+              )
+surgery <- tbi["Surgery"] <- surg == 1
+n.surg <- sum(surgery)
+p.surg <- round(mean(surgery)*100)
+
+# Mechanism of Injury
+dm <- as.numeric(nrow(tbi))
+
+moi.collapsed <- moi <- as.character(tbi$moi)
+## Method 2
+## You can probably see how you could create a function to do some work for you
+get_icd_range <- function(first.char, start.number, end.number) {
+  icd.range <- paste0(
+    paste0(
+      "^",
+      first.char,
+      stringr::str_pad(start.number:end.number, 2, pad = "0"),
+      "[0-9]?$"),
+    collapse = "|")
+  return (icd.range)
+}
+icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("others" = get_icd_range("W", 20, 64)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
+moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
+
+#to find number of rta and percentage
+
+tbi$moi.collapsed <- as.factor(moi.collapsed)
+moi.transport <- dplyr::filter(tbi, tbi$moi.collapsed == "Transport accident")
+nm.moi.transport <- nrow(moi.transport)
+moi_transport <- round((nm.moi.transport/ dm) * 100,2)
+
+
+#to find number of fall and percentage
+
+moi.fall <- dplyr::filter(tbi, tbi$moi.collapsed == "Fall")
+nm.moi.fall <- nrow(moi.fall)
+moi_fall <- round((nm.moi.fall/ dm) * 100,2)
+
+# to find prevelance of two wheeler accidents in RTA
+
+moi.collapsed1 <- moi <- as.character(tbi$moi)
+
+
+icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Two wheeler accident" = get_icd_range("V", 20, 29)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("others" = get_icd_range("W", 20, 64)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+for(icd.range in icd.ranges) moi.collapsed1[grep(icd.range, moi)] <- names(icd.range)
+moi.collapsed1[!(moi.collapsed1 %in% sapply(icd.ranges, attr, "names"))] <- "Other1"
+
+#to find number of rta and percentage
+
+tbi$moi.collapsed1 <- as.factor(moi.collapsed1)
+moi.twowheelers <- dplyr::filter(tbi, tbi$moi.collapsed1 == "Two wheeler accident")
+nm.moi.twowheelers <- nrow(moi.twowheelers)
+moi_twowheelers <- round((nm.moi.twowheelers/ dm) * 100,2)
+
+
+#to find % mortality
+death <- tbi$hd == 1
+n.death <- sum(death)
+p.death <- round(mean(death)*100)
+
+
+## Creating Table for TBI patients demography 
+
+# Gender: Replace 0= female 1= male
+
+gender <- tbi$sex <-ifelse(tbi$sex == 0,"Female","Male")
+
+
+# hospital disposition
+hd <- tbi$hd
+tbi$hd <- replace(hd,hd>3,NA)
+tbi$hd <- ifelse(hd == 0,"discharge",
+                 ifelse(hd == 1,"death",
+                        ifelse(hd == 2, "alive and tranferred",
+                               ifelse(hd == 3, "DAMA",NA)
+                        )
+                 )
+)
+
+# transfer status
+tran <- tbi$tran
+tbi$tran <- ifelse(tran == 0,"direct","transferred")
+
+# type of injury
+ty <- tbi$tyi
+tbi$tyi <- ifelse(ty == 0, "Blunt",
+                  ifelse(ty == 1, "Penetrating",
+                         ifelse(ty == 2, "Both Blunt and Penetrating",NA)
+                  )
+)
+
+# mechanism of transport
+transport <- tbi$mot
+tbi$mot <- ifelse(transport == 0, "ambulance","police")
+
+# AVPU
+
+
+avpu <- tbi$avpu
+tbi$avpu <-  ifelse(avpu == 0,"Unresponsive",
+                    ifelse(avpu == 1,"Pain responsive",
+                           ifelse(avpu == 2, "Voice responsive",
+                                  ifelse(avpu == 3, "Alert",NA)
+                           )
+                    )
+)
+
+
+# Heart Rate
+
+hr <- tbi["hr"] <- (tbi$hr1+tbi$hr2)/2
+
+# SPO2
+
+Spo2 <- tbi["spo2"] <- (tbi$spo21+tbi$spo22)/2
+
+## respiratory Rate
+
+rr <- tbi["rr"] <- (tbi$rr1+tbi$rr2)/2
+
+
+
+
+
+# surgery
+
+s <- tbi$s
+surg <- replace(s,s==0,999)
+
+surgery <- tbi["surgery"] <- ifelse(surg == 999,"conservative","Operative")
+
+
+# Creating Table for tbi patients caracteristics using tableone
+
+myvars <- c("age", "agegroups", "sex", "moi.collapsed", "tyi", "mot",
+            "tran", "avpu", "sbp", "dbp", "hr", "spo2", "rr","mapfinal", "delay", "surgery", "hd","gcsgroups")
+catvars <- c("sex","agegroups", "moi.collapsed", "tyi", "mot", "tran", "avpu", "surgery","hd", "gcsgroups")
+table3 <- CreateTableOne(vars = myvars, data=tbi, factorVars = catvars)
+table3 <- knitr::kable(print(table3, caption = "Table 1. Demography of TBI Patients", showAllLevels = TRUE, printToggle = FALSE))
+
+
+
+## Analysis
+
+# characteristics of patients (30 days mortality)
+
+# creating tbi dataset with 30days mortality
+
+
+s30days <- tbi %>%
+                filter(s24h == "0")
+
+s30d <- s30days$s30d
+
+s30days$s30d  <- s30d <- replace(s30d,s30d == 999 , NA)
+nrow(s30days)
+
+
+# creating tbi dataset with 24h mortality
+
+s24hrs <- tbi %>% filter(s24h == "1")
+
+s24h <- s24hrs$s24h <- replace(s24h,s24h == 999 , NA)
+
+nrow(s24h)
+
+## i want to create a table to compare characterics of 30 days mortality 
+
+         
+
+myvars <- c("age", "sex", "moi.collapsed", "tyi", "mot",
+            "tran", "avpu", "sbp", "dbp", "hr", "spo2", "rr","mapfinal","GCS", "delay", "surgery")
+catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "surgery")
+
+table4 <- CreateTableOne(vars = myvars, strata = "s30d" ,data=s30days, factorVars = catvars)
+
+table4 <- knitr::kable(print(table4, caption = "Table 1. Characteristics of Survivors and NOnsurvivors for 30 days mortality among TBI patients", showAllLevels = TRUE, printToggle = FALSE))
+
+## Calculating Mean arterial pressure for 30 days mortality
+
+sbps30 <- s30days["sbps30"] <- (s30days$sbp1+s30days$sbp2)/2
+dbps30 <- s30days["dbps30"] <- (s30days$dbp1+s30days$dbp2)/2
+
+bps301  <- sbps30 + dbps30
+bps302 <- bps301 + dbps30
+mean_arterial_pressures30 <- s30days["mapfinals30"] <- bps302/3
+
+
+
+## calculation for different trauma score for 30 days mortality using dataset s30days
+
+## calculating average of sbp1 and sbp2 for s30days dataset
+
+
+
+## calculating Total GCS for s30days dataset
+
+gcss30<- s30days["gcss30"] <- s30days$egcs+s30days$vgcs+s30days$mgcs
+gcss30 <- s30days["gcss30"] <- replace(gcss30,gcss30 > 15 ,NA)
+
+## calculating average of rr for s30days dataset
+
+rrs30 <- s30days["rrs30"] <- (s30days$rr1+s30days$rr2)/2
+
+
+## MGAP score
+
+
+# type of injury 
+
+
+tymgap <- s30days$tyi
+tymgap <- s30days$tyi <- ifelse(tymgap == "Blunt", 5,
+                  ifelse(tymgap == "Penetrating", 0, NA)
+                  )
+
+tymgap <- as.numeric(tymgap)
+
+## age
+
+agemgap <- s30days$age
+
+agemgap <- s30days$age <- ifelse(agemgap >= 60, 0,
+                  ifelse(agemgap < 60,5, NA)
+                  )
+
+## systolic BP
+
+sbpmgap <- s30days$sbps30
+
+sbpmgap <- s30days$sbps30 <- ifelse(sbpmgap >= 120, 5,
+                  ifelse(sbpmgap >= 60 & sbpmgap < 120, 3,
+                         ifelse(sbpmgap < 60,0 ,NA)
+                  )
+)
+
+
+## GCS
+
+gcsmgap <- s30days$gcss30
+
+## calculation for mgap
+x <- tymgap 
+y <- as.numeric(gcsmgap) 
+z <- as.numeric(agemgap)
+w <- as.numeric(sbpmgap)
+
+
+s30days["mgap"] <- mgap <- tymgap + as.numeric(gcsmgap) + as.numeric(agemgap) + as.numeric(sbpmgap)
+
+summary(mgap)
+
+
+## GAP Score
+
+## age
+
+agegap <- s30days$age<- ifelse(agegap >= 60, 0,
+                    ifelse(agegap < 60,3, NA)
+                  )
+
+
+## systolic BP
+
+sbpgap <- s30days$sbps30 <- ifelse(sbpgap >= 120, 6,
+                                   ifelse(sbpgap >= 60 & sbpgap < 120, 4,
+                                          ifelse(sbpgap < 60, 0, NA)
+                                          )
+                                   )
+
+
+## GCS 
+gcsgap <- s30days$gcss30
+
+a <- as.numeric(gcsgap) 
+b <- as.numeric(agegap) 
+c <- as.numeric(sbpgap)
+
+s30days["gap"] <- gap <-  a + b + c
+
+summary(gap)
+
+
+## RTS score
+
+# coding gcs according to RTS codes
+gcsrts <- s30days$gcss30
+gcsrts[gcsrts >= 13] <- 4
+gcsrts[gcsrts >= 9 & gcsrts < 13] <- 3
+gcsrts[gcsrts >= 6 & gcsrts < 9] <- 2
+gcsrts[gcsrts >= 4 & gcsrts < 6] <- 1
+gcsrts[gcsrts < 4] <- 0
+
+## RR parameter value for calculating RTS
+
+rrrts <- s30days$rrs30
+rrrts[rrrts >= 10 & rrrts <= 29] = 4
+rrrts[rrrts > 29] = 3
+rrrts[rrrts >= 6 & rrrts <= 9] = 2
+rrrts[rrrts >= 1 & rrrts <= 5] = 1
+rrrts[rrrts == 0] = 0
+## SBP parameter value for calculating RTS
+
+sbprts <- s30days$sbps30
+sbprts[sbprts > 89] <- 4
+sbprts[sbprts >=76 & sbprts <= 89] <- 3
+sbprts[sbprts >= 50 & sbprts <= 75] <- 2
+sbprts[sbprts >= 1 & sbprts <= 49] <- 1
+sbprts[sbprts == 0] <- 0
+## Formula for calculating RTS
+
+gcsrts <-  0.9368*as.numeric(gcsrts)
+
+sbprts <-  0.7326*as.numeric(sbprts)
+
+rrrts <- 0.2908*as.numeric(rrrts)
+
+rts  <- round((gcsrts + sbprts + rrrts),1)
+
+summary(rts)
+s30days["RTS"] <- rts
+
+
+
+
+
+
+
+
+
+
+
+## Calculating Mean arterial pressure for 24hrs mortality
+
+sbps24 <- s24hrs["sbps24"] <- (s24hrs$sbp1+s24hrs$sbp2)/2
+dbps24 <- s24hrs["dbps24"] <- (s24hrs$dbp1+s24hrs$dbp2)/2
+
+bps241  <- sbps24 + dbps24
+bps242 <- bps241 + dbps24
+mean_arterial_pressures24 <- s24hrs["mapfinals24"] <- bps242/3
+
+
+##calculation for different trauma score for 24 hrs mortality
+
+
+## calculating average of sbp1 and sbp2 for s30days dataset
+
+sbps24 <- s24hrs["sbps24"] <- (s24hrs$sbp1+s24hrs$sbp2)/2
+
+## calculating Total GCS for s30days dataset
+
+gcss24<- s24hrs["gcss24"] <- s24hrs$egcs+s24hrs$vgcs+s24hrs$mgcs
+gcss24 <- s24hrs["gcss24"] <- replace(gcss24,gcss24 > 15 ,NA)
+
+## calculating average of rr for s30days dataset
+
+rrs24 <- s24hrs["rrs24"] <- (s24hrs$rr1+s24hrs$rr2)/2
+
+## MGAP score
+
+# type of injury 
+
+
+tymgap24 <- s24hrs$tyi
+tymgap24 <- s24hrs$tyi <- ifelse(tymgap24 == "Blunt", 5,
+                  ifelse(tymgap24 == "Penetrating", 0, NA)
+                  )
+
+tymgap24 <- as.numeric(tymgap24)
+
+
+## age
+
+agemgap24 <- s24hrs$age
+
+agemgap24 <- s24hrs$age <- ifelse(agemgap24 >= 60, 0,
+                  ifelse(agemgap24 < 60,5, NA)
+                  )
+
+## systolic BP
+
+sbpmgap24 <- s24hrs$sbps24
+
+sbpmgap24 <- s24hrs$sbps24 <- ifelse(sbpmgap24 >= 120, 5,
+                  ifelse(sbpmgap24 >= 60 & sbpmgap24 < 120, 3,
+                         ifelse(sbpmgap24 < 60,0 ,NA)
+                  )
+)
+
+## GCS
+
+gcsmgap24 <- s24hrs$gcss24
+
+
+## calculation for mgap
+x <- tymgap24 
+y <- as.numeric(gcsmgap24) 
+z <- as.numeric(agemgap24)
+w <- as.numeric(sbpmgap24)
+
+
+s24hrs["mgap24"] <- mgap24 <- tymgap24 + as.numeric(gcsmgap24) + as.numeric(agemgap24) + as.numeric(sbpmgap24)
+
+summary(mgap24)
+
+## GAP Score
+
+## age
+
+agegap24 <- s24hrs$age<- ifelse(agegap24 >= 60, 0,
+                    ifelse(agegap24 < 60,3, NA)
+                  )
+
+## systolic BP
+sbpgap24 <- s24hrs$sbps24 <- ifelse(sbpgap24 >= 120, 6,
+                                   ifelse(sbpgap24 >= 60 & sbpgap24 < 120, 4,
+                                          ifelse(sbpgap24 < 60, 0, NA)
+                                          )
+                                   )
+
+## GCS 
+gcsgap24 <- s24hrs$gcss24
+
+a <- as.numeric(gcsgap24) 
+b <- as.numeric(agegap24) 
+c <- as.numeric(sbpgap24)
+
+s24hrs["gap24"] <- gap24 <-  a + b + c
+
+summary(gap)
+
+
+## RTS score
+
+# coding gcs according to RTS codes
+gcsrts24 <- s24hrs$gcss24
+gcsrts24[gcsrts24 >= 13] <- 4
+gcsrts24[gcsrts24 >= 9 & gcsrts24 < 13] <- 3
+gcsrts24[gcsrts24 >= 6 & gcsrts24 < 9] <- 2
+gcsrts24[gcsrts24 >= 4 & gcsrts24 < 6] <- 1
+gcsrts24[gcsrts24 < 4] <- 0
+
+## RR parameter value for calculating RTS
+
+rrrts24 <- s24hrs$rrs24
+rrrts24[rrrts24 >= 10 & rrrts24 <= 29] = 4
+rrrts24[rrrts24 > 29] = 3
+rrrts24[rrrts24 >= 6 & rrrts24 <= 9] = 2
+rrrts24[rrrts24 >= 1 & rrrts24 <= 5] = 1
+rrrts24[rrrts24 == 0] = 0
+## SBP parameter value for calculating RTS
+
+sbprts24 <- s24hrs$sbps24
+sbprts24[sbprts24 > 89] <- 4
+sbprts24[sbprts24 >=76 & sbprts24 <= 89] <- 3
+sbprts24[sbprts24 >= 50 & sbprts24 <= 75] <- 2
+sbprts24[sbprts24 >= 1 & sbprts24 <= 49] <- 1
+sbprts24[sbprts24 == 0] <- 0
+## Formula for calculating RTS
+
+gcsrts <-  0.9368*as.numeric(gcsrts24)
+
+sbprts <-  0.7326*as.numeric(sbprts24)
+
+rrrts <- 0.2908*as.numeric(rrrts24)
+
+rts24  <- round((gcsrts24 + sbprts24 + rrrts24),1)
+s24hrs["RTS"] <- rts24
+summary(rts24)
+
+
+
+
+
+
+
+
+```
+
+A total of `r nrow(tbi)` TBI patients were admitted during the period of our study. `r n.male` (`r p.male`%) were male. Median age of patients was `r m.age` (quantile range: `r q1.age` to `r q3.age` & range: `r range.age`).Majority of the patients were within the age group 25-44 (Table no.1: `r table1`).Of all the TBI patients `r n.tran`(`r p.tran`%) were transferred from other hospitals. `r n.ambulance`(`r p.ambulance`%) patients were brought to SSKM via ambulance. There was median delay of `r m.delay`hrs (quantile range: `r q1.delay` to `r q3.delay`hrs, range: `r range.delay`hrs) from time of injury to arrival in hospital. Mean arterial pressure among TBI patients were `r m.ap` (quantile range: `r q1.ap` to `r q3.ap`; range: `r range.ap`).  Majority of the patients were within the GCS range 14-15 (Table no.2 : `r table2`) . A total of `r n.alert`(`r p.alert`%) were alert on presentation. Among the TBI patients admitted, `r n.surg` (`r p.surg`%) operative intervention was needed. Road traffic accident (RTA) accounts for majority of TBIs `r nm.moi.transport`(`r moi_transport`%) followed by fall `r nm.moi.fall`( `r moi_fall`%). Of all the RTA’s, two wheeler accident consist of `r nm.moi.twowheelers`(`r moi_twowheelers`%). Mortality was `r n.death`(`r p.death`%) among these patients.  
+
+## Conclusion
+Road traffic accidents (RTA) is one of the main cause of TBI. Amoung RTA, two wheeler accidents (`r moi_twowheelers`%) were predominant. Majority of TBI patients were male (`r p.male`%). As SSKM is a tertiary care hospital majority of the patients were transferred (`r p.tran`%) from other hospitals.Therefore, median delay in arrival to the hospital is also high (`r m.delay`hrs).  Although `r p.alert`% were alert on presentation at the emergency department `r p.surg`% required operative intervention. Moratlity among the TBI patients was `r p.death`%. 
+
+
+
+
