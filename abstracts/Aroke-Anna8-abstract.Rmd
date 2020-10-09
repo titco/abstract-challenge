@@ -291,9 +291,11 @@ mot1 <- names(mot.data[1])
 # MOI
 moi.data <- list.sort(lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p, factor.var = kbbh$moi.collapsed), nm, decreasing = TRUE)
 
+print(moi.data)
+
 moiv <- unlist(moi.data)
 p_animalbite <- moiv["Animal bite.percent"]
-p_assualt <- moiv["Assualt.percent"]
+p_assault <- moiv["Assault.percent"]
 p_fall <- moiv["Fall.percent"]
 p_other <- moiv["Other.percent"]
 p_tra <- moiv["Transport accident.percent"]
@@ -434,7 +436,7 @@ ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r p_male`% patients were male, while `r p_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r p_mot_pvt`)%. `r p_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r p_male`% patients were male, while `r p_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r p_mot_pvt`)%. `r p_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
 ```{r}
 p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
