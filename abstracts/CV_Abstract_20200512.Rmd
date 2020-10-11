@@ -83,8 +83,29 @@ plot.sex <- ggplot(taft, aes(sex.cat, fill = sex.cat)) +
 plot.sex
 
 ## Type of Injury
+blunt <- taft$tyi == 0
+n.blunt <- sum(blunt)
+n.blunt
+p.blunt <- round(mean(blunt)*100)
+p.blunt
 
+pene <- taft$tyi == 1
+n.pene <- sum(pene)
+n.pene
+p.pene <- round(mean(pene)*100)
+p.pene
 
+both <- taft$tyi == 2
+n.both <- sum(both)
+n.both
+p.both <- round(mean(both)*100)
+p.both
+
+unkn <- taft$tyi == 999
+n.unkn <- sum(unkn)
+n.unkn
+p.unkn <- round(mean(unkn)*100)
+p.unkn
 ## Mechanism of Injury
 moi.collapsed <- moi <- as.character(taft$moi)
 
@@ -140,6 +161,28 @@ trans_status <- taft$tran == 1
 n.trans_status <- sum(trans_status)
 p.trans_status <- round(mean(trans_status)*100)
 p.trans_status
+
+## Vital Sign of the Patients
+
+## To find mean arterial pressure 
+
+sbp_avg <- taft["sbpfinal"] <- (taft$sbp1+taft$sbp2)/2
+dbp_avg <- taft["dbpfinal"] <- (taft$dbp1+taft$dbp2)/2
+bp1 <- taft["map1"] <- sbp_avg + dbp_avg
+bp2 <- taft["map2"] <- bp1 + dbp_avg
+
+mean_arterial_pressure <- taft["mapfinal"] <- bp2/3
+summary (mean_arterial_pressure) 
+m.ap <- median(mean_arterial_pressure)
+m.ap
+
+q1.ap <- quantile(mean_arterial_pressure,0.25)
+q1.ap
+
+q3.ap <- quantile(mean_arterial_pressure,0.75)
+q3.ap
+
+range.ap <- range(mean_arterial_pressure)
 
 
 ```
