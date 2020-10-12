@@ -274,6 +274,56 @@ mean(fd_red$hd == 1)*100
 mean(fd_red$hd == 2)*100
 mean(fd_red$hd == 3)*100
 mean(fd_red$hd == 999)*100
+
+## Followups of patients not done in this perticular data set
+
+### In 24 hours
+
+table(fd_red$s24h == 999)
+
+#### Percentage
+
+mean(fd_red$s24h == 999)*100
+
+### In 30 days
+
+table(fd_red$s30d == 999)
+
+#### Percentage
+
+mean(fd_red$s30d == 999)*100
+
+### In 6 months
+
+table(fd_red$s6m == 999)
+
+#### Percentage
+
+mean(fd_red$s6m == 999)*100
+
+## patients dead in 24 hour of arrival
+
+table(fd_red$s24h == 1)
+
+### Percentage
+
+mean(fd_red$s24h == 1)*100
+
+## Patients dead in 30 days of arrival
+
+table(fd_red$s30d == 1)
+
+### Percentage
+
+mean(fd_red$s30d == 1)*100
+
+## Patients dead in 6 months of arrival
+
+table(fd_red$s6m == 1)
+
+### Percentage
+
+mean(fd_red$s6m == 1)*100
 ```
 
 Total number patients available for analysis n= 5618, triage red category patients are 272 under this category so 4% patients(red dataset) are triage red, adult age patients under this triage are 219 percentage is 80(fd_red data set),male patients are 187 i.e 85.38% and female patients are 32 i.e 14.61%. Admitted patients are 183 patients i.e 83.66% and non admitted 36 patients i.e 16.34%. Patients . 
