@@ -205,6 +205,41 @@ table(fd_red$nsi == 2)
 mean(fd_red$nsi == 1)*100
 mean(fd_red$nsi == 2)*100
 
+## CT unavailable
+
+### Not done
+table(fd_red$dct == 0)
+table(fd_red$tct == 0)
+#### Percentage
+mean(fd_red$dct == 0)*100
+mean(fd_red$tct == 0)*100
+
+### Report unknown
+table(fd_red$dct == 999)
+table(fd_red$tct == 999)
+
+#### Percentage
+mean(fd_red$dct == 999)*100
+mean(fd_red$tct == 999)*100
+
+## USG Unavailable
+
+### Not done
+table(fd_red$dus == 0)
+table(fd_red$tus == 0)
+
+#### Percentage
+mean(fd_red$dus == 0)*100
+mean(fd_red$tus == 0)*100
+
+### Report unknown
+table(fd_red$dus == 999)
+table(fd_red$tus == 999)
+
+#### Percentage
+mean(fd_red$dus == 999)*100
+mean(fd_red$tus == 999)*100
+
 ## Intubation not done
 
 table(fd_red$di == 0)
