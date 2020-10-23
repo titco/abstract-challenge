@@ -471,7 +471,10 @@ There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomp
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
-Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`%), followed by `r inj2` (`r p_ndi`%), `r inj3` (`r p_ow`%) and `r inj4` (`r p_frac`%). 
+Table1 shows Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`%), followed by `r inj2` (`r p_ndi`%), `r inj3` (`r p_ow`%) and `r inj4` (`r p_frac`%). As per the Injury Severity Score (ISS) 50.2% of the patients had minor injuries and 49.4% patients had no defined injuries, the reamining 0.4% patients were classified into patients with moderately injuries. 
+
+Table3 shows, The mechanism of injury of patients with moderate injuries were Fall, Assualt and others. 90.5% patients with animal bites had superficial injuries, while 6.75% had no defined injuries and 2.34% patients had open wound. In patients with assualt, 42.18% has superficial injuries followed by no defined injuries in 30.68% patients and 24.48% patients having open wound injuries. 
+
 
 ```{r}
 #Factor labels
@@ -498,17 +501,17 @@ myvars <- c("age", "agegrp", "sex", "moi.collapsed", "tyi", "mot",
 
 catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "gcs", "rts", "inj_type")
 
-Table2 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
-knitr::kable(print(Table2, caption = "Table 2. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+Table1 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
+knitr::kable(print(Table1, caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 
 ```
 
 
 
 ```{r}
-Table1 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
-kable(Table1, 
-      caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
+Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
+kable(Table2, 
+      caption = "Table 2. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
 
 Table3 <- colPerc(xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh))
