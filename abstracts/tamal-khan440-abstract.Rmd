@@ -9,8 +9,20 @@ editor_options:
   chunk_output_type: inline
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, results='asis', message=FALSE}
+library(knitr)
+library(dplyr)
+library(psych)
+library(data.table) 
+library(tableone)
+library(epiDisplay)
+library(tigerstats)
+library(splitstackshape)
+library(tidyverse)
+library(tidyr)
+opts_chunk$set(echo = FALSE)
+```
+```
 ```
 
 ## Introduction
@@ -370,3 +382,132 @@ In adult age in red triage Discharged Alive after treatment is  10 i.e 4.56%, Nu
 ##Conclusion
 
 So from this data set it can conclude that death rate of of triage red is very much high in this perticular hospital.
+
+
+## Results using method 2
+
+```{r Data_cleaning_manipulation, warning=FALSE, results='hide'}
+
+# Get data directory
+
+data.dir <- getOption("data.dir")
+if (is.null(data.dir))
+    stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
+
+## datatable with ICD
+a <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
+
+## Rearranging columns
+dt <- a %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:tvsr,dus:testvar,locked,doi_toi:valid)
+
+extra_col <- dt %>% dplyr::select(doi_toi:valid)
+
+# Creating age groups
+agebreaks <- c(17,25,45,65,98)
+agelabels <- c("18-24","25-44","45-64","65+")
+dt$agegrp <-cut(dt$age,
+                breaks = agebreaks,
+                right = FALSE,
+                labels = agelabels)
+
+# Mechanism of Injury
+moi.collapsed <- moi <- as.character(dt$moi)
+ get_icd_range <- function(first.char, start.number, end.number) {
+    icd.range <- paste0(
+        paste0(
+            "^",
+            first.char,
+            stringr::str_pad(start.number:end.number, 2, pad = "0"),
+            "[0-9]?$"),
+        collapse = "|")
+    return (icd.range)
+ }
+ 
+ icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("Animal bite" = get_icd_range("W", 50, 64)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
+moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
+a$moi.collapsed <- as.factor(moi.collapsed)
+
+## New variable 'GCS' to the dataset
+gcs <- with(dt, egcs + vgcs + mgcs)
+gcs <- replace(gcs, gcs > 15, NA)
+gcspv <- gcs
+gcspv[gcs >= 13] <- 4
+gcspv[gcs >= 9 & gcs < 13] <- 3
+gcspv[gcs >= 6 & gcs < 9] <- 2
+gcspv[gcs >= 4 & gcs < 6] <- 1
+gcspv[gcs < 4] <- 0
+
+## RR parameter value for calculating RTS
+rr <- with(dt,replace(rr, rr == 999, NA))
+rrpv <- rr
+rrpv[rr >= 10 & rr <= 29] = 4
+rrpv[rr > 29] = 3
+rrpv[rr >= 6 & rr <= 9] = 2
+rrpv[rr >= 1 & rr <= 5] = 1
+rrpv[rr == 0] = 0
+
+## SBP parameter value for calculating RTS
+sbp <- with(dt,replace(sbp, sbp == 999, NA))
+sbppv <- sbp
+sbppv[sbp > 89] <- 4
+sbppv[sbp >=76 & sbp <= 89] <- 3
+sbppv[sbp >= 50 & sbp <= 75] <- 2
+sbppv[sbp >= 1 & sbp <= 49] <- 1
+sbppv[sbp == 0] <- 0
+
+## Formula for calculating RTS
+dt$rts = round(0.9368*as.numeric(gcspv) + 
+               0.7326*as.numeric(sbppv) + 
+               0.2908*as.numeric(rrpv), digits = 0)
+
+## Complete record results
+
+dt$s24h <- replace(dt$s24h, dt$s24h == 999, 888) ## follow up not done
+dt$s30d <- replace(dt$s30d, dt$s30d == 999, 888)
+dt$s6m <- replace(dt$s6m, dt$s6m == 999, 888)
+dt$s <- replace(dt$s, dt$s == 999, 888)
+
+## Converting rest of the 999s to NA
+dt[] <- dt[] %>% 
+    mutate_all(funs(na_if(.,"999")))
+missing.data.list <- lapply(dt, function(column) {
+    n.na <- sum(is.na(column))
+    p.na <- round((n.na/length(column)) * 100)
+    missing <- data.frame("Count" = n.na, "Percentage" = p.na)
+    return (missing)
+})
+missing.data <- do.call(rbind, missing.data.list)
+maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data$Count)]
+complete.index <- complete.cases(dt)
+n.incomplete <- sum(!complete.index)
+p.incomplete <- round((n.incomplete/nrow(dt)) * 100)
+
+dtt <- dt[complete.index, ]
+
+```
+
+```{r result, warning=FALSE, message=FALSE}
+
+# Created a dataframe of triage category red
+sskm <- subset(x=dtt,subset = dtt$tc == 3)
+
+# Number of records
+dm <- as.numeric(nrow(sskm))
+
+# Age
+mean_age <- round(mean(sskm$age),2)
+stddev_age <- round(sd(sskm$age),2)
+nm_age <- sum(sskm$agegrp != "65+")
+percent_agebelow65 <- round(mean(sskm$agegrp != "65+") * 100, 2)
+calculate_n_p <- function(level.name, factor.var){
+    assert_that(is.character(level.name))
+    assert_that(is.factor(factor.var))
+    nm <- sum(factor.var == level.name)
+    percent <- round((nm/dm) * 100,2)
+    return.list <-list(nm = nm, percent = percent)
+    return.list
+}
