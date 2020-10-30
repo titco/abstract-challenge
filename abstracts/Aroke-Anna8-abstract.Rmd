@@ -519,5 +519,14 @@ Table3 <- colPerc(xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh))
 kable(Table3, 
       caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
 )
+
+#Chi-square test
+
+chisq.test(kbbh$agegrp,kbbh$inj_type)
+
+#	Pearson's Chi-squared test
+# data:  kbbh$agegrp and kbbh$inj_type
+# X-squared = 80.859, df = 30, p-value = 1.486e-06
+
 ```
 
