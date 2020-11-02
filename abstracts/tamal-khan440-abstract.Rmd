@@ -1,5 +1,5 @@
 ---
-title: "Adult age and Red triage"
+title: "Profile of patients triage red"
 author: "TAMAL"
 date: "06/06/2020"
 output:
@@ -26,13 +26,13 @@ opts_chunk$set(echo = FALSE)
 ```
 
 ## Introduction
-It is important to triage trauma patients because proper triaging indicate level of care required for the patients. The red triage level is used for very serious patients where green triage is for minor injury.So triaging is very important part of trauma care system.Present data shows that trauma increasing in adult age rather than senior adult.
+It is important to triage trauma patients because proper triaging indicate level of care required for the patients.Different triage category are present based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, The red triage level is used for very serious patients, yellow triage level used for moderate injury where green triage is for minor injury.So triaging is very important part of trauma care system because based on the triage level treatment will provide.Present analysis shows different profile of patients triage red.
 
 ## Aim
-Aim of the study is To characterise trauma patients triaged red with special reference to their age distribution.
+Aim of the study is To characterise trauma patients triaged red with different profiling.
 
 ## Study design
-Data patients triage red were extracted from TTRIS data set of centre 1515 then retrospective analysis of a prospective cohort of trauma patients with age division.
+Data patients triage red were extracted from TTRIS data set of centre 1515, A tertiary care hospital in Kolkata, West Bengal, India then retrospective analysis of a prospective cohort of trauma patients with triage red.
 
 
 ## Methods
@@ -65,22 +65,236 @@ table(red$tc)
 
 mean(TTRIS_1515$tc == 3)*100
 
+# Not admitted patients in this triage
+
+table(red$doa)
+table(red$doa == 0)
+table(red$toa == 0)
+table(red$doa == 999)
+
+## Percentage of patients not admitted
+
+mean(red$doa == 0)*100
+mean(red$doa == 999)*100
+
+# Sex
+
+table(red$sex == 1)
+table(red$sex == 0)
+
+## Percentage
+
+mean(red$sex == 1)*100
+mean(red$sex == 0)*100
+
+# Mode of transport
+
+table(red$mot)
+hist(red$mot, col='red',xlab='mot', main='Mode of transport')
+table(red$mot == 0)
+table(red$mot == 1)
+table(red$mot == 2)
+table(red$mot == 3)
+table(red$mot == 999)
+
+## percentage
+
+mean(red$mot == 0)*100
+mean(red$mot == 1)*100
+mean(red$mot == 2)*100
+mean(red$mot == 3)*100
+mean(red$mot == 999)*100
+
+# Transfer status
+
+table(red$tran)
+hist(red$tran, col= 'blue',xlab='transfer', main='transfer status')
+
+## percentage
+
+mean(red$tran == 0)*100
+mean(red$tran == 1)*100
+
+# Type of Injury
+
+table(red$tyi)
+table(red$tyi == 0)
+table(red$tyi == 1)
+
+## Percentage
+
+mean(red$tyi == 0)*100
+mean(red$tyi == 1)*100
+
+# Mode of Injury
+table(red$moi)
+
+## GCS range selection
+table(red$gcs <15)
+table(red$gcs <13)
+table(red$gcs <10)
+table(red$gcs <8)
+table(red$gcs <6)
+table(red$gcs <4)
+table(red$egcs ==1)
+mean(red$egcs == 1)*100
+mean(red$egcs == 2)*100
+mean(red$egcs == 3)*100
+mean(red$egcs == 4)*100
+mean(red$vgcs == 1)*100
+mean(red$vgcs == 2)*100
+mean(red$vgcs == 3)*100
+mean(red$vgcs == 4)*100
+mean(red$vgcs == 5)*100
+mean(red$mgcs == 1)*100
+mean(red$mgcs == 2)*100
+mean(red$mgcs == 3)*100
+mean(red$mgcs == 4)*100
+mean(red$mgcs == 5)*100
+mean(red$mgcs == 6)*100
+
+## RR parameter value
+
+table(red$rr)
+hist(red$rr, col='blue',xlab='rr', main='Respiratory rate')
+
+## SBP parameter
+
+table(red$sbp)
+hist(red$sbp, col='grey',xlab='sbp', main='Systolic Blood pressure')
+
+## DBP parameter
+
+table(red$dbp)
+hist(red$dbp, col='violet',xlab='dbp', main='Diastolic Blood pressure')
+
+## Hr parameter
+
+table(red$hr)
+hist(red$hr, col='green',xlab='hr', main='Heart Rate')
+
+## AVPU
+
+table(red$avpu == 0)
+table(red$avpu == 1)
+table(red$avpu == 2)
+table(red$avpu == 3)
+table(red$avpu == 99)
+table(red$avpu == 999)
+
+### Percentage
+
+mean(red$avpu == 0)*100
+mean(red$avpu == 1)*100
+mean(red$avpu == 2)*100
+mean(red$avpu == 3)*100
+mean(red$avpu == 99)*100
+mean(red$avpu == 999)*100
+
+## Oxygen Support
+
+table(red$vo2)
+table(red$vo2 == 0)
+table(red$vo2 == 1)
+
+### Percentage
+
+mean(red$vo2 == 0)*100
+mean(red$vo2 == 1)*100
+
+## Serious Injury
+
+table(red$nsi == 1)
+table(red$nsi == 2)
+
+### Percentage
+
+mean(red$nsi == 1)*100
+mean(red$nsi == 2)*100
+
+## CT unavailable
+
+### Not done
+
+table(red$dct == 0)
+table(red$tct == 0)
+
+#### Percentage
+
+mean(red$dct == 0)*100
+mean(red$tct == 0)*100
+
+### Report unknown
+table(red$dct == 999)
+table(red$tct == 999)
+
+#### Percentage
+mean(red$dct == 999)*100
+mean(red$tct == 999)*100
+
+## USG Unavailable
+
+### Not done
+table(red$dus == 0)
+table(red$tus == 0)
+
+#### Percentage
+mean(red$dus == 0)*100
+mean(red$tus == 0)*100
+
+### Report unknown
+table(red$dus == 999)
+table(red$tus == 999)
+
+#### Percentage
+mean(red$dus == 999)*100
+mean(red$tus == 999)*100
+
+## Intubation not done
+
+table(red$di == 0)
+table(red$di == 999)
+mean(red$di == 0)*100
+mean(red$di == 999)*100
+
+## Mechanical ventilation not done
+
+table(red$dmv == 0)
+table(red$dmv == 999)
+mean(red$dmv == 0)*100
+mean(red$dmv == 999)*100
+
+## ICU admission not done
+
+table(red$daicu == 0)
+table(red$daicu == 999)
+mean(red$daicu == 0)*100
+mean(red$daicu == 999)*100
+
+## Surgery not done
+
+table(red$dos == 0)
+table(red$dos == 999)
+mean(red$dos == 0)*100
+mean(red$dos == 999)*100
+
+## Injuries
+
+### External Injury
+
+table(red$einj1)
+table(red$einj2)
+table(red$einj3)
+table(red$einj4)
+table(red$einj5)
+table(red$einj6)
+
+
 # Selection of adult age in this specified triage category
 table(red$age <61)
 mean(red$age <61)*100 
 fd_red <- subset(x=red, subset = red$age <61)
 
-# Not admitted patients in this triage
-
-table(fd_red$doa)
-table(fd_red$doa == 0)
-table(fd_red$toa == 0)
-table(fd_red$doa == 999)
-
-## Percentage of patients not admitted
-
-mean(fd_red$doa == 0)*100
-mean(fd_red$doa == 999)*100
 
 # Sex
 
