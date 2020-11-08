@@ -20,7 +20,10 @@ library(tigerstats)
 library(splitstackshape)
 library(tidyverse)
 library(tidyr)
-opts_chunk$set(echo = FALSE)
+library(assertthat)
+library(rlist)
+library(labelled)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 ```
 ```
@@ -725,3 +728,93 @@ calculate_n_p <- function(level.name, factor.var){
     return.list <-list(nm = nm, percent = percent)
     return.list
 }
+
+# Sex
+sex.data <- list.sort(lapply(setNames(nm = levels(sskm$sex)), calculate_n_p, factor.var = sskm$sex), nm, decreasing = TRUE)
+sexv <- unlist(sex.data)
+nm_male <- sexv["Male.nm"]
+p_male <- sexv["Male.percent"]
+nm_female <- sexv["Female.nm"]
+p_female <- sexv["Female.percent"]
+
+# Type of Injury
+nm_blunt <- sum(sskm$tyi == 0)
+percent_blunt <- round(mean(sskm$tyi == 0) * 100,2)
+nm_penetrating <- sum(sskm$tyi == 1)
+percent_penetrating <- round(mean(sskm$tyi == 1) * 100,2)
+nm_blunt_and_penetrating <- sum(sskm$tyi == 2)
+percent_blunt_and_penetrating <- round(mean(sskm$tyi == 2) * 100,2)
+
+
+# Mode of Transport
+mot.data <- list.sort(lapply(setNames(nm = levels(sskm$mot)), calculate_n_p, factor.var = sskm$mot), nm, decreasing = TRUE)
+motv <- unlist(mot.data)
+nm_pvt <- motv["Private Vehicle.nm"]
+p_mot_pvt <- motv["Private Vehicle.percent"]
+nm_mot_onfoot <- motv["On foot.nm"]
+p_mot_onfoot <- motv["On foot.percent"]
+mot1 <- names(mot.data[1])
+
+# MOI
+moi.data <- list.sort(lapply(setNames(nm = levels(sskm$moi.collapsed)), calculate_n_p, factor.var = sskm$moi.collapsed), nm, decreasing = TRUE)
+
+print(moi.data)
+moiv <- unlist(moi.data)
+p_animalbite <- moiv["Animal bite.percent"]
+p_assault <- moiv["Assault.percent"]
+p_fall <- moiv["Fall.percent"]
+p_other <- moiv["Other.percent"]
+p_tra <- moiv["Transport accident.percent"]
+moi1 <- names(moi.data[1])
+moi2 <- names(moi.data[2])
+moi3 <- names(moi.data[3])
+
+# Outcome
+sskm$s6m <- as.factor(sskm$s6m)
+outcome.data <- lapply(setNames(nm = levels(sskm$s6m)), calculate_n_p, factor.var = sskm$s6m)
+p_outcome_alive <- outcome.data[["0"]]["percent"]
+p_outcome_dead <- outcome.data[["1"]]["percent"]
+n_outcome_dead <- outcome.data[["1"]]["nm"]
+
+p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
+
+# Grouping patients wrt to injury
+
+#if (substr(sskm$einj1icd,start=3, stop=3) == 1) {"Open Wound"}
+sskm <- suppressWarnings(suppressMessages(unite(sskm, allinj, contains("icd"), sep = ",", remove = FALSE)))
+crush_inj <- str_c(c("S07","S070","S071","S078","S079","S17","S170","S178","S179","S280","S380","S381","T041","S47","S57","S570","S578","S579","S67","S670","S678","T042","S770","S771","S772","S87","S870","S878","S97","S970","S971","S978","T043","T048","T049"),collapse = "|")
+
+#mutate(sskm$inj_type = case_when(sskm, str_detect(allinj, crush_inj)~Crush Injury))
+
+crush <- filter(sskm, str_detect(allinj, crush_inj))
+crush$inj_type <- "Crush Injury"
+rest <- suppressWarnings(suppressMessages(sskm %>% anti_join(crush)))
+
+internal_inj <- str_c(c("S06","S060","S061","S062","S063","S064","S065","S066","S067","S068","S069","T905","S140","S141","S240","S241","S340","S341","S343","T093","T913","S142","S260","S270","S271","S272","S273","S274","S275","S276","S278","S279","T914","S36","S360","S361","S362","S363","S364","S365","S366","S367","S368","S369","S37","S370","S371","S372","S373","S374","S375","S376","S377","S378","S379","S396","S397","T065","T915"),collapse = "|")
+
+internal <- filter(rest, str_detect(allinj, internal_inj))
+internal$inj_type <- "Internal Injury"
+rest <- suppressWarnings(suppressMessages(rest %>% anti_join(internal)))
+bv_inj <- str_c(c("S090","S150","S512","S153","S154","S155","S156","S157","S158","S159","S151","S25","S250","S251","S252","S253","S254","S255","S257","S258","S259","S350","S351","S352","S353","S354","S355","S357","S358","S359","S45","S450","S451","S452","S453","S457","S458","S459","S55","S550","S551","S552","S557","S558","S559","S65","S650","S651","S652","S653","S654","S655","S657","S658","S659","T114","S75","S750","S751","S752","S757","S758","S759","S85","S850","S851","S852","S853","S854","S855","S857","S858","S859","S95","S950","S951","S952","S957","S958","S959","T134","T063","T145"),collapse = "|")
+
+bv <- filter(rest, str_detect(allinj, bv_inj))
+bv$inj_type <- "Blood Vessel"
+rest <- suppressWarnings(suppressMessages(rest %>% anti_join(bv)))
+amp_inj <- str_c(c("S08","S081","S082","S083","S084","S085","S086","S087","S088","S089","S18","S281","S382","S383","T096","S48","S480","S481","S489","S58","S580","S581","S589","S68","S680","S681","S682","S683","S684","S688","S689","T050","T052","T116","S780","S781","S782","S783","S784","S785","S786","S787","S788","S789","S88","S880","S881","S889","S98","S980","S981","S982","S983","S984","S780","T053","T055","T136","T058","T059"),collapse = "|")
+
+amputation <- filter(rest, str_detect(allinj, amp_inj))
+amputation$inj_type <- "Amputation"
+rest <- suppressWarnings(suppressMessages(rest %>% anti_join(amputation)))
+frac_inj <- str_c(c("S020","S021","S023","S027","S029","T902","S022","S024","S025","S026","S128","S129","S120","S121","S122","S123","S124","S125","S126","S127","S220","S221","S320","S321","S322","T08","T911","S222","S223","S224","S225","S226","S227","S228","S229","S323","S324","S325","S326","S327","S328","T021","T912","S42","S420","S421","S422","S423","S424","S427","S428","S429","S52","S520","S521","S522","S523","S524","S525","S526","S527","S528","S529","S62","S620","S621","S622","S623","S624","S625","S626","S627","S628","T022","T024","T10","T921","T922","S72","S720","S721","S722","S723","S724","S725","S726","S727","S728","S729","S82","S820","S821","S822","S823","S824","S825","S826","S827","S828","S829","S92","S920","S921","S922","S923","S924","S925","S927","S929","T023","T025","T12","T931","T932","T028","T029","T142"),collapse = "|")
+
+frac <- filter(rest, str_detect(allinj, frac_inj))
+frac$inj_type <- "Fracture"
+rest <- suppressWarnings(suppressMessages(rest %>% anti_join(frac)))
+disl_inj <- str_c(c("S030","S031","S032","S033","S130","S131","S132","S133","S230","S231","S330","S331","S332","S232","S333","S334","S430","S431","S432","S433","S530","S531","S630","S631","S632","S730","S830","S831","S93","S930","S931","S933"),collapse = "|")
+
+disl <- filter(rest, str_detect(allinj, disl_inj))
+disl$inj_type <- "Dislocation"
+rest <- suppressWarnings(suppressMessages(rest %>% anti_join(disl)))
+burn_inj <- str_c(c("T26","T260","T261","T262","T263","T264","T265","T266","T267","T268","T269","T270","T274","T20","T200","T201","T202","T203","T204","T205","T206","T207","T280","T285","T950","T281","T286","T283","T288","T21","T211","T212","T213","T214","T215","T216","T217","T272","T273","T276","T277","T282","T287","T951","T22","T220","T221","T222","T223","T224","T225","T226","T227","T23","T230","T231","T232","T233","T234","T235","T236","T237","T952","T24","T240","T241","T242","T243","T244","T245","T246","T247","T25","T250","T251","T252","T253","T254","T255","T256","T257","T271","T275","T289","T284","T29","T290","T291","T292","T293","T294","T295","T296","T297","T30","T300","T301","T302","T303","T304","T305","T306","T307","T32","T320","T321","T322","T323","T324","T325","T326","T327","T328","T329","T954","T958","T959"),collapse = "|")
+
+```
