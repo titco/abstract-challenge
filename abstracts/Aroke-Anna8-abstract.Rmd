@@ -465,13 +465,17 @@ The aim of this study is to describe the demographic, physiological and injury c
 
 Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. Data was collected prospectively from the year 2016 to 2019. Follow-up was done 6months from the day of injury. A retrospective cohort analysis of the data was performed using R. 
 
+
+
 # Results
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
-Table1 shows Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`%), followed by `r inj2` (`r p_ndi`%), `r inj3` (`r p_ow`%) and `r inj4` (`r p_frac`%). As per the Injury Severity Score (ISS) 50.2% of the patients had minor injuries and 49.4% patients had no defined injuries, the reamining 0.4% patients were classified into patients with moderately injuries. 
+Table1 shows Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`%), followed by `r inj2` (`r p_ndi`%), `r inj3` (`r p_ow`%) and `r inj4` (`r p_frac`%). The Injury Severity Score (ISS) indicated that 50.2% were 'minor', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. 
+
+Table2 shows, as per the iss scores there were no patients with severe injuries. Among patients with animal bites, 67.36% had no defined injuries while 32.64% had minor. 
 
 Table3 shows, The mechanism of injury of patients with moderate injuries were Fall, Assualt and others. 90.5% patients with animal bites had superficial injuries, while 6.75% had no defined injuries and 2.34% patients had open wound. In patients with assualt, 42.18% has superficial injuries followed by no defined injuries in 30.68% patients and 24.48% patients having open wound injuries. 
 
@@ -512,7 +516,7 @@ knitr::kable(print(Table1, caption = "Table 1. Demographic, Physiological parame
 Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
 kable(Table2, 
       caption = "Table 2. Percentage distribution of Injury severity among different Mechanism of Injury",
-)
+      )
 
 Table3 <- colPerc(xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh))
 
@@ -522,11 +526,21 @@ kable(Table3,
 
 #Chi-square test
 
-chisq.test(kbbh$agegrp,kbbh$inj_type)
+## null hypothesis: The proportion of injury types do not differ across the age groups
+
+cstageg <- table(kbbh$agegrp,kbbh$inj_type)
+cstageg
+chisq <- chisq.test(cstageg)
 
 #	Pearson's Chi-squared test
 # data:  kbbh$agegrp and kbbh$inj_type
 # X-squared = 80.859, df = 30, p-value = 1.486e-06
+
+## We reject the null hypothesis 
+## The proportion of injury types does differ across the age groups
+
+library(corrplot)
+corrplot(chisq$residuals, is.cor = FALSE)
 
 ```
 
