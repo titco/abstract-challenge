@@ -67,7 +67,7 @@ dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:t
 extra_col <- dt %>% dplyr::select(doi_toi:valid)
 
 ## Adding the extra columns to g
-g <- cbind(g,extra_col) # So here you are putting in data in g from dt. Why do you want to do that? We need same number of columns in both the dataset to be able to change the class, along with them being in the same order.
+g <- cbind(g,extra_col)
 
 ## Changing class of the data
 g <- as.data.frame(g)
@@ -463,13 +463,27 @@ The aim of this study is to describe the demographic, physiological and injury c
 
 # Methods
 
-Setting: This study took place in the Emergency Department at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in the city of Mumbai.The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergency. Being located near a police station the ED also serves a stop for health-checkup's of prisoners or arrested personnels.The ED has 5 bed's and is staffed by one physician/Casualty Medical Officer (CMO) two On-duty nurses, two dressers and two ward boys. 
+## Setting
+This study took place in the Emergency Department at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in the city of Mumbai.The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergency. Being located near a police station the ED also serves a stop for health-checkup's of prisoners or arrested personnels.The ED has 5 bed's and is staffed by one physician/Casualty Medical Officer (CMO) two On-duty nurses, two dressers and two ward boys. 
 
-Data extraction: Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. Data was collected prospectively from the year 2016 to 2019. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. A retrospective cohort analysis of the data was performed using R. 
+## Data extraction
+Data of patients triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Data was collected prospectively from the year 2016 to 2019. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. A retrospective cohort analysis of the data was performed using R. 
+
+## Data Manipulation
+
+- Age:
+
+- Mechanism of Injury:
+
+- ISS:
+
+- RTS:
+
+- Injuries: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. Patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury. If no crush injury was present then the patient was categorized into the next most critical injury.
 
 # Results
 
-There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
+There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and were excluded from the study population.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
