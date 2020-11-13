@@ -529,7 +529,6 @@ kable(Table3,
 ## null hypothesis: The proportion of injury types do not differ across the age groups
 
 cstageg <- table(kbbh$agegrp,kbbh$inj_type)
-cstageg
 chisq <- chisq.test(cstageg)
 
 #	Pearson's Chi-squared test
@@ -541,6 +540,18 @@ chisq <- chisq.test(cstageg)
 
 library(corrplot)
 corrplot(chisq$residuals, is.cor = FALSE)
+
+# Time difference between injury and arrival
+
+start.time <- paste(kbbh$doi, kbbh$toi)
+end.time <- paste(kbbh$doar, kbbh$toar)
+injar.time <- round(difftime(end.time,start.time, units = "days"),0)
+d <- chisq.test(injar.time,kbbh$inj_type)
+
+# data:  injar.time and kbbh$inj_type
+# X-squared = 265.86, df = 220, p-value = 0.01868
+
+corrplot(d$residuals, is.cor = FALSE)
 
 ```
 
