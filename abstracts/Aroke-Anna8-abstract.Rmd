@@ -3,13 +3,11 @@ title: Profile of patients triaged green in the Emergency Department (ED) of a s
 author: "Anna"
 date: "12/05/2020"
 csl: american-medical-association.csl
+link-citations: yes
 output:
+  bookdown::word_document2: default
   bookdown::html_document2:
     number_sections: false
-    fig_caption: yes
-    fig_height: 3
-    fig_width: 5
-  bookdown::word_document2: default
   bookdown::pdf_document2:
     number_sections: false
     toc: false
