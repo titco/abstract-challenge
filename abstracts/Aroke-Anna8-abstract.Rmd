@@ -8,6 +8,7 @@ output:
     fig_caption: yes
     fig_height: 3
     fig_width: 5
+bibliography: abstract.bib
 ---
 
 ```{r setup, include=FALSE, results='asis', message=FALSE}
@@ -24,24 +25,11 @@ library(tidyr)
 library(assertthat)
 library(rlist)
 library(labelled)
+library(corrplot)
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-# Abstract
 
-## Introduction
-
-Trauma is one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. Although these patients are triaged green they consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
-
-## Aim
-
-The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
-
-## Methods
-
-Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective cohort analysis of the data was performed using R. 
-
-## Results
 ```{r Data_cleaning_manipulation, warning=FALSE, results='hide'}
 
 # Get data directory
@@ -291,8 +279,6 @@ mot1 <- names(mot.data[1])
 # MOI
 moi.data <- list.sort(lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p, factor.var = kbbh$moi.collapsed), nm, decreasing = TRUE)
 
-print(moi.data)
-
 moiv <- unlist(moi.data)
 p_animalbite <- moiv["Animal bite.percent"]
 p_assault <- moiv["Assault.percent"]
@@ -432,21 +418,70 @@ ab_sup.p <- injvmoi[["Animal bite"]][11]
 ab_noinj.p <- injvmoi[["Animal bite"]][8]
 ab_ow.p <- injvmoi[["Animal bite"]][9]
 ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
+
+#Chi-square test
+
+## null hypothesis: The proportion of injury types do not differ across the age groups
+
+cstageg <- table(kbbh$agegrp,kbbh$inj_type)
+chisq <- chisq.test(cstageg)
+
+#	Pearson's Chi-squared test
+# data:  kbbh$agegrp and kbbh$inj_type
+# X-squared = 80.859, df = 30, p-value = 1.486e-06
+
+## We reject the null hypothesis 
+## The proportion of injury types does differ across the age groups
+
+corrplot(chisq$residuals, is.cor = FALSE, method = "ellipse")
+
+# Time difference between injury and arrival
+
+start.time <- paste(kbbh$doi, kbbh$toi)
+end.time <- paste(kbbh$doar, kbbh$toar)
+injar.time <- round(difftime(end.time,start.time, units = "days"),0)
+kbbh$inj_arr <- if_else(injar.time<2,"0-1",">1")
+
+d <- chisq.test(kbbh$inj_arr,kbbh$inj_type)
+
+# data:  injar.time and kbbh$inj_type
+# X-squared = 265.86, df = 220, p-value = 0.01868
+
+corrplot(d$residuals, is.cor = FALSE, method = "ellipse")
+
 ```
+
+```{r conclusion}
+p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
+p_iss_mi <- round(mean(kbbh$isspv == "Minor") * 100,2)
+p_rts_8 <- round(mean(kbbh$rts == 8) * 100,2)
+
+```
+# Abstract
+
+## Introduction
+
+Trauma is one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. Although these patients are triaged green they consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
+
+## Aim
+
+The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
+
+## Methods
+
+Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective cohort analysis of the data was performed using R. 
+
+## Results
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
-```{r}
-p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
-p_iss_mi <- round(mean(kbbh$isspv == "Minor") * 100,2)
-p_rts_8 <- round(mean(kbbh$rts == 8) * 100,2)
-```
-
 ## Conclusion
 
 Among the patients triaged green, injury due to assualt and transport accidents were predominant. `r p_rts_8`% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are `r p_iss_mi`% and `r p_iss_nd`% respectively. 
+
+---------------------------------------------------------------------------
 
 # Introduction
 Trauma is one of the leading causes of emergency department visits. 
@@ -467,19 +502,19 @@ The aim of this study is to describe the demographic, physiological and injury c
 This study took place in the Emergency Department at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in the city of Mumbai.The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergency. Being located near a police station the ED also serves a stop for health-checkup's of prisoners or arrested personnels.The ED has 5 bed's and is staffed by one physician/Casualty Medical Officer (CMO) two On-duty nurses, two dressers and two ward boys. 
 
 ## Data extraction
-Data of patients triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Data was collected prospectively from the year 2016 to 2019. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. A retrospective cohort analysis of the data was performed using R. 
+Data of patients triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. A retrospective cohort analysis of the data was performed using R. 
 
 ## Data Manipulation
 
-- Age:
+- Mechanism of Injury: Mechanism of injury codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others. 
 
-- Mechanism of Injury:
+Severity of Injury was assesed using ISS and RTS scores[@champion1989]
 
-- ISS:
+- ISS: The Injury Severity Score (ISS) was categorized 'No defined injuries' (ISS=0 ), 'minor' (ISS<9), 'moderate' (ISS<15), 'severe' (ISS<25), 'profound' (ISS>=25).
 
-- RTS:
+- RTS: RTS was calculated using the GCS, RR and SBP values in the TTRIS dataset. 
 
-- Injuries: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. Patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury. If no crush injury was present then the patient was categorized into the next most critical injury.
+- Injuries: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury. If no crush injury was present then the patient was categorized into the next most critical injury.
 
 # Results
 
@@ -487,7 +522,7 @@ There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomp
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male, while `r percent_female`% patients were female. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` were the most common cause of injury (`r p_assualt`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
-Table1 shows Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`%), followed by `r inj2` (`r p_ndi`%), `r inj3` (`r p_ow`%) and `r inj4` (`r p_frac`%). The Injury Severity Score (ISS) indicated that 50.2% were 'minor', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. 
+Table1 shows Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`%), followed by `r inj2` (`r p_ndi`%), `r inj3` (`r p_ow`%) and `r inj4` (`r p_frac`%). The Injury Severity Score (ISS) indicated that 50.2% were 'minor', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. Patients with ISS severe than 'moderate' were not present in those triaged green.
 
 Table2 shows, as per the iss scores there were no patients with severe injuries. Among patients with animal bites, 67.36% had no defined injuries while 32.64% had minor. 
 
@@ -522,11 +557,6 @@ catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi",
 Table1 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
 knitr::kable(print(Table1, caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 
-```
-
-
-
-```{r}
 Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
 kable(Table2, 
       caption = "Table 2. Percentage distribution of Injury severity among different Mechanism of Injury",
@@ -535,37 +565,8 @@ kable(Table2,
 Table3 <- colPerc(xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh))
 
 kable(Table3, 
-      caption = "Table 1. Percentage distribution of Injury severity among different Mechanism of Injury",
+      caption = "Table 3. Percentage distribution of Injury type among different Mechanism of Injury",
 )
-
-#Chi-square test
-
-## null hypothesis: The proportion of injury types do not differ across the age groups
-
-cstageg <- table(kbbh$agegrp,kbbh$inj_type)
-chisq <- chisq.test(cstageg)
-
-#	Pearson's Chi-squared test
-# data:  kbbh$agegrp and kbbh$inj_type
-# X-squared = 80.859, df = 30, p-value = 1.486e-06
-
-## We reject the null hypothesis 
-## The proportion of injury types does differ across the age groups
-
-library(corrplot)
-corrplot(chisq$residuals, is.cor = FALSE)
-
-# Time difference between injury and arrival
-
-start.time <- paste(kbbh$doi, kbbh$toi)
-end.time <- paste(kbbh$doar, kbbh$toar)
-injar.time <- round(difftime(end.time,start.time, units = "days"),0)
-d <- chisq.test(injar.time,kbbh$inj_type)
-
-# data:  injar.time and kbbh$inj_type
-# X-squared = 265.86, df = 220, p-value = 0.01868
-
-corrplot(d$residuals, is.cor = FALSE)
 
 ```
 
