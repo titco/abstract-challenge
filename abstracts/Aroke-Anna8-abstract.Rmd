@@ -2,12 +2,18 @@
 title: Profile of patients triaged green in the Emergency Department (ED) of a secondary care hospital in Mumbai
 author: "Anna"
 date: "12/05/2020"
+csl: american-medical-association.csl
 output:
-  word_document: default
-  html_document: 
+  bookdown::html_document2:
+    number_sections: false
     fig_caption: yes
     fig_height: 3
     fig_width: 5
+  bookdown::word_document2: default
+  bookdown::pdf_document2:
+    number_sections: false
+    toc: false
+    keep_tex: yes
 bibliography: abstract.bib
 ---
 
@@ -419,35 +425,7 @@ ab_noinj.p <- injvmoi[["Animal bite"]][8]
 ab_ow.p <- injvmoi[["Animal bite"]][9]
 ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
 
-#Chi-square test
 
-## null hypothesis: The proportion of injury types do not differ across the age groups
-
-cstageg <- table(kbbh$agegrp,kbbh$inj_type)
-chisq <- chisq.test(cstageg)
-
-#	Pearson's Chi-squared test
-# data:  kbbh$agegrp and kbbh$inj_type
-# X-squared = 80.859, df = 30, p-value = 1.486e-06
-
-## We reject the null hypothesis 
-## The proportion of injury types does differ across the age groups
-
-corrplot(chisq$residuals, is.cor = FALSE, method = "ellipse")
-
-# Time difference between injury and arrival
-
-start.time <- paste(kbbh$doi, kbbh$toi)
-end.time <- paste(kbbh$doar, kbbh$toar)
-injar.time <- round(difftime(end.time,start.time, units = "days"),0)
-kbbh$inj_arr <- if_else(injar.time<2,"0-1",">1")
-
-d <- chisq.test(kbbh$inj_arr,kbbh$inj_type)
-
-# data:  injar.time and kbbh$inj_type
-# X-squared = 265.86, df = 220, p-value = 0.01868
-
-corrplot(d$residuals, is.cor = FALSE, method = "ellipse")
 
 ```
 
@@ -557,10 +535,14 @@ catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi",
 Table1 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
 knitr::kable(print(Table1, caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 
+
+
 Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
 kable(Table2, 
       caption = "Table 2. Percentage distribution of Injury severity among different Mechanism of Injury",
       )
+
+
 
 Table3 <- colPerc(xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh))
 
@@ -568,5 +550,35 @@ kable(Table3,
       caption = "Table 3. Percentage distribution of Injury type among different Mechanism of Injury",
 )
 
-```
+#Chi-square test
 
+## null hypothesis: The proportion of injury types do not differ across the age groups
+
+cstageg <- table(kbbh$agegrp,kbbh$inj_type)
+chisq <- chisq.test(cstageg)
+
+#	Pearson's Chi-squared test
+# data:  kbbh$agegrp and kbbh$inj_type
+# X-squared = 80.859, df = 30, p-value = 1.486e-06
+
+## We reject the null hypothesis 
+## The proportion of injury types does differ across the age groups
+
+corrplot(chisq$residuals, is.cor = FALSE, method = "ellipse")
+
+# Time difference between injury and arrival
+
+start.time <- paste(kbbh$doi, kbbh$toi)
+end.time <- paste(kbbh$doar, kbbh$toar)
+injar.time <- round(difftime(end.time,start.time, units = "days"),0)
+kbbh$inj_arr <- if_else(injar.time<2,"0-1",">1")
+
+d <- chisq.test(kbbh$inj_arr,kbbh$inj_type)
+
+# data:  injar.time and kbbh$inj_type
+# X-squared = 265.86, df = 220, p-value = 0.01868
+
+corrplot(d$residuals, is.cor = FALSE, method = "ellipse")
+
+```
+# References 
