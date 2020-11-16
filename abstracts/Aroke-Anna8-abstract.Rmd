@@ -458,11 +458,11 @@ Among the patients triaged green, injury due to assualt and transport accidents 
 ---------------------------------------------------------------------------
 
 # Introduction
-Trauma is one of the leading causes of emergency department visits. 
+Trauma is one of the leading causes of emergency department visits.[@Weiss2015] 
 
 Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. 
 
-Emergency departments are perceived to provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries.[@Uscher-Pines2013][@Coster2017]
+Emergency departments are perceived to provide quick and easy access to healthcare, although they are not. This leads to visits of patients with no injury or minor injuries.[@Uscher-Pines2013][@Coster2017]
 
 Although these patients are triaged green they consume significant resources.
 
@@ -552,6 +552,14 @@ kable(Table3,
       caption = "Percentage distribution of Injury type among different Mechanism of Injury",
 )
 ```
+```{r}
+table(kbbh$inj_type,kbbh$ardd)
+
+Table3 <- xtabs(~kbbh$inj_type+kbbh$ardd, data = kbbh)
+kable(Table3,
+      caption = "Percentage distribution of Injury type among different Mechanism of Injury",
+)
+```
 
 
 A chi-square test was performed to investigate the association between type of injury and age. A strong association with a p-value of (1.486e-06) was identified.
@@ -563,7 +571,6 @@ A chi-square test was performed to investigate the association between type of i
 ## null hypothesis: The proportion of injury types do not differ across the age groups
 
 cstageg <- table(kbbh$agegrp,kbbh$inj_type)
-chisq <- chisq.test(cstageg)
 
 #	Pearson's Chi-squared test
 # data:  kbbh$agegrp and kbbh$inj_type
@@ -579,8 +586,6 @@ end.time <- paste(kbbh$doar, kbbh$toar)
 injar.time <- round(difftime(end.time,start.time, units = "days"),0)
 kbbh$inj_arr <- if_else(injar.time<2,"0-1",">1")
 
-d <- chisq.test(kbbh$inj_arr,kbbh$inj_type)
-
 # data:  injar.time and kbbh$inj_type
 # X-squared = 265.86, df = 220, p-value = 0.01868
 
@@ -588,6 +593,8 @@ end.time <- paste(kbbh$dodd , kbbh$todd)
 start.time <- paste(kbbh$doar, kbbh$toar)
 ardd.time <- round(difftime(end.time,start.time, units = "hours"))
 kbbh$ardd <- if_else(ardd.time<2,"0-1",">1")
+
+
 
 ```
 # References
