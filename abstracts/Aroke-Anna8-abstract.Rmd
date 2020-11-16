@@ -149,7 +149,7 @@ dt$isspv <-cut(dt$iss,
 
 # Append a new variable 'GCS' to the dataset
 gcs <- with(dt, egcs + vgcs + mgcs)
-gcs <- replace(gcs, gcs > 15, NA)
+dt$gcs <- gcs <- replace(gcs, gcs > 15, NA)
 
 ## What's happening here? Assigning parameter value for calculating RTS. Something wrong?
 
@@ -246,7 +246,7 @@ mean_age <- round(mean(kbbh$age),2)
 stddev_age <- round(sd(kbbh$age),2)
 
 nm_age <- sum(kbbh$agegrp != "65+")
-percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 2)
+percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 1)
 
 calculate_n_p <- function(level.name, factor.var){
     assert_that(is.character(level.name))
@@ -268,7 +268,7 @@ p_female <- sexv["Female.percent"]
 
 # Type of Injury
 nm_blunt <- sum(kbbh$tyi == 0)
-percent_blunt <- round(mean(kbbh$tyi == 0) * 100,2)
+percent_blunt <- round(mean(kbbh$tyi == 0) * 100,1)
 
 # Mode of Transport
 mot.data <- list.sort(lapply(setNames(nm = levels(kbbh$mot)), calculate_n_p, factor.var = kbbh$mot), nm, decreasing = TRUE)
@@ -422,9 +422,6 @@ ab_sup.p <- injvmoi[["Animal bite"]][11]
 ab_noinj.p <- injvmoi[["Animal bite"]][8]
 ab_ow.p <- injvmoi[["Animal bite"]][9]
 ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
-
-
-
 ```
 
 ```{r conclusion}
@@ -580,4 +577,4 @@ d <- chisq.test(kbbh$inj_arr,kbbh$inj_type)
 corrplot(d$residuals, is.cor = FALSE, method = "ellipse")
 
 ```
-# References 
+# References
