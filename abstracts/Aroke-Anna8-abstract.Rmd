@@ -141,7 +141,7 @@ dt$iss <- as.numeric(iss)
 ## character, not numeric
 
 issbreaks <- c(0,1,9,16,25,109)
-isslabels <- c("ND","Minor","Moderate","Severe","Profound")
+isslabels <- c("ND","Mild","Moderate","Severe","Profound")
 dt$isspv <-cut(dt$iss,
                 breaks = issbreaks,
                 right = FALSE,
@@ -462,7 +462,7 @@ Trauma is one of the leading causes of emergency department visits.
 
 Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. 
 
-Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries.[@Uscher-Pines2013]
+Emergency departments are perceived to provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries.[@Uscher-Pines2013][@Coster2017]
 
 Although these patients are triaged green they consume significant resources.
 
@@ -482,21 +482,21 @@ Data of patients triaged green were extracted from the Trauma Triage Study in In
 
 - Mechanism of Injury: Mechanism of injury (ICD-10) codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others. 
 
-Severity of Injury was assesed using ISS and RTS scores[@champion1989]
+Severity of Injury was assesed using ISS and RTS scores[@champion1989] and further elaborated by identifying injury characteristics
 
 - ISS: The Injury Severity Score (ISS) was categorized 'No defined injuries' (0), 'mild' (3-8), 'moderate' (9-15), 'severe' (16-25), 'profound' (>25).
 
 - RTS: RTS was calculated using the GCS, RR and SBP values in the TTRIS dataset. 
 
-- Injuries: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury. If no crush injury was present then the patient was categorized into the next most critical injury.
+- Injury characteristics: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury. If no crush injury was present then the patient was categorized into the next most critical injury.
 
 # Results
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and were excluded from the study population.
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. `r p_rts_8`% patients had an RTS score of 8.
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age which mainly constitues the working population. Economically productive age group of 25-44 were the majority (49.4%), followed by patients between the age group of 18-24 (31.7%). `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. Of those transfered from other hospitals or local clinics (134), 61 had superficial injuries (40) or no defined injuries (21), 36 had fracture, 27 had open wound.
 
-The Injury Severity Score (ISS) indicated that 50.2% were 'mild', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. 
+The Injury Severity Score (ISS) indicated that 50.2% were 'mild', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. `r p_rts_8`% patients had an RTS score of 8.
 
 Patients with amputations had a single finger (8), thumb (2) or single toe amputations (2). Crush injuries were of unspecified part of the hand (3) the finger (1) and the toe (2). More than one third of the fractures were forearm and elbow fractures (73), followed by hand (53), foot fracture (50) and knee or lower leg fracture (44). Shoulder or upperarm fracture were 28, hip and thigh fractures were 19 and fracture of skull or facial bones were 19.
 
@@ -588,10 +588,6 @@ end.time <- paste(kbbh$dodd , kbbh$todd)
 start.time <- paste(kbbh$doar, kbbh$toar)
 ardd.time <- round(difftime(end.time,start.time, units = "hours"))
 kbbh$ardd <- if_else(ardd.time<2,"0-1",">1")
-
-table(kbbh$ardd, kbbh$inj_type)
-
-table(kbbh$inj_type == "Amputation", kbbh$iopinj6icd)
 
 ```
 # References
