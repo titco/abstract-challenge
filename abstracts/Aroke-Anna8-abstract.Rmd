@@ -331,10 +331,11 @@ rest <- suppressWarnings(suppressMessages(rest %>% anti_join(bv)))
 amp_inj <- str_c(c("S08","S081","S082","S083","S084","S085","S086","S087","S088","S089","S18","S281","S382","S383","T096","S48","S480","S481","S489","S58","S580","S581","S589","S68","S680","S681","S682","S683","S684","S688","S689","T050","T052","T116","S780","S781","S782","S783","S784","S785","S786","S787","S788","S789","S88","S880","S881","S889","S98","S980","S981","S982","S983","S984","S780","T053","T055","T136","T058","T059"),collapse = "|")
 
 amputation <- filter(rest, str_detect(allinj, amp_inj))
+
 amputation$inj_type <- "Amputation"
 rest <- suppressWarnings(suppressMessages(rest %>% anti_join(amputation)))
 
-frac_inj <- str_c(c("S020","S021","S023","S027","S029","T902","S022","S024","S025","S026","S128","S129","S120","S121","S122","S123","S124","S125","S126","S127","S220","S221","S320","S321","S322","T08","T911","S222","S223","S224","S225","S226","S227","S228","S229","S323","S324","S325","S326","S327","S328","T021","T912","S42","S420","S421","S422","S423","S424","S427","S428","S429","S52","S520","S521","S522","S523","S524","S525","S526","S527","S528","S529","S62","S620","S621","S622","S623","S624","S625","S626","S627","S628","T022","T024","T10","T921","T922","S72","S720","S721","S722","S723","S724","S725","S726","S727","S728","S729","S82","S820","S821","S822","S823","S824","S825","S826","S827","S828","S829","S92","S920","S921","S922","S923","S924","S925","S927","S929","T023","T025","T12","T931","T932","T028","T029","T142"),collapse = "|")
+frac_inj <- str_c(c("S02","S020","S021","S023","S027","S029","T902","S022","S024","S025","S026","S12","S128","S129","S120","S121","S122","S123","S124","S125","S126","S127","S22","S220","S221","S32","S320","S321","S322","T08","T911","S222","S223","S224","S225","S226","S227","S228","S229","S323","S324","S325","S326","S327","S328","T021","T912","S42","S420","S421","S422","S423","S424","S427","S428","S429","S52","S520","S521","S522","S523","S524","S525","S526","S527","S528","S529","S62","S620","S621","S622","S623","S624","S625","S626","S627","S628","T022","T024","T10","T921","T922","S72","S720","S721","S722","S723","S724","S725","S726","S727","S728","S729","S82","S820","S821","S822","S823","S824","S825","S826","S827","S828","S829","S92","S920","S921","S922","S923","S924","S925","S927","S929","T023","T025","T12","T931","T932","T028","T029","T142"),collapse = "|")
 
 frac <- filter(rest, str_detect(allinj, frac_inj))
 frac$inj_type <- "Fracture"
@@ -461,7 +462,7 @@ Trauma is one of the leading causes of emergency department visits.
 
 Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. 
 
-Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries.[Uscher-Pines2013]
+Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries.[@Uscher-Pines2013]
 
 Although these patients are triaged green they consume significant resources.
 
@@ -472,18 +473,18 @@ The aim of this study is to describe the demographic, physiological and injury c
 # Methods
 
 ## Setting
-This study took place in the Emergency Department at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in the city of Mumbai.The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergency. Being located near a police station the ED also serves a stop for health-checkup's of prisoners or arrested personnels.The ED has 5 bed's and is staffed by one physician/Casualty Medical Officer (CMO) two On-duty nurses, two dressers and two ward boys. 
+We performed this study in the Emergency Department at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergency. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders.The ED has 5 bed's and is staffed by one physician/Casualty Medical Officer (CMO) two On-duty nurses, two dressers and two ward boys. 
 
 ## Data extraction
-Data of patients triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. A retrospective cohort analysis of the data was performed using R. 
+Data of patients triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. Data analysis was performed using R statistical software.
 
 ## Data Manipulation
 
-- Mechanism of Injury: Mechanism of injury codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others. 
+- Mechanism of Injury: Mechanism of injury (ICD-10) codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others. 
 
 Severity of Injury was assesed using ISS and RTS scores[@champion1989]
 
-- ISS: The Injury Severity Score (ISS) was categorized 'No defined injuries' (ISS=0 ), 'minor' (ISS<9), 'moderate' (ISS<15), 'severe' (ISS<25), 'profound' (ISS>=25).
+- ISS: The Injury Severity Score (ISS) was categorized 'No defined injuries' (0), 'mild' (3-8), 'moderate' (9-15), 'severe' (16-25), 'profound' (>25).
 
 - RTS: RTS was calculated using the GCS, RR and SBP values in the TTRIS dataset. 
 
@@ -493,9 +494,11 @@ Severity of Injury was assesed using ISS and RTS scores[@champion1989]
 
 There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and were excluded from the study population.
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
+In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. `r p_rts_8`% patients had an RTS score of 8.
 
-The Injury Severity Score (ISS) indicated that 50.2% were 'minor', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. 
+The Injury Severity Score (ISS) indicated that 50.2% were 'mild', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. 
+
+Patients with amputations had a single finger (8), thumb (2) or single toe amputations (2). Crush injuries were of unspecified part of the hand (3) the finger (1) and the toe (2). More than one third of the fractures were forearm and elbow fractures (73), followed by hand (53), foot fracture (50) and knee or lower leg fracture (44). Shoulder or upperarm fracture were 28, hip and thigh fractures were 19 and fracture of skull or facial bones were 19.
 
 ```{r}
 #Factor labels
@@ -520,7 +523,7 @@ var_label(kbbh) <- list(age = "Age", agegrp = "Age Group", sex = "Sex", moi.coll
 myvars <- c("age", "agegrp", "sex", "moi.collapsed", "tyi", "mot",
 "tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs", "isspv", "rts","inj_type")
 
-catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "gcs", "rts", "inj_type")
+catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "inj_type")
 
 Table1 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
 knitr::kable(print(Table1,
@@ -569,8 +572,6 @@ chisq <- chisq.test(cstageg)
 ## We reject the null hypothesis 
 ## The proportion of injury types does differ across the age groups
 
-corrplot(chisq$residuals, is.cor = FALSE, method = "ellipse")
-
 # Time difference between injury and arrival
 
 start.time <- paste(kbbh$doi, kbbh$toi)
@@ -583,7 +584,16 @@ d <- chisq.test(kbbh$inj_arr,kbbh$inj_type)
 # data:  injar.time and kbbh$inj_type
 # X-squared = 265.86, df = 220, p-value = 0.01868
 
-corrplot(d$residuals, is.cor = FALSE, method = "ellipse")
+end.time <- paste(kbbh$dodd , kbbh$todd)
+start.time <- paste(kbbh$doar, kbbh$toar)
+ardd.time <- round(difftime(end.time,start.time, units = "hours"))
+kbbh$ardd <- if_else(ardd.time<2,"0-1",">1")
+
+table(kbbh$ardd, kbbh$inj_type)
+
+table(kbbh$inj_type == "Amputation", kbbh$iopinj6icd)
 
 ```
 # References
+
+
