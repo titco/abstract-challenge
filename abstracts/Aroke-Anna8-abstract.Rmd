@@ -425,9 +425,9 @@ ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
 ```
 
 ```{r conclusion}
-p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,2)
-p_iss_mi <- round(mean(kbbh$isspv == "Minor") * 100,2)
-p_rts_8 <- round(mean(kbbh$rts == 8) * 100,2)
+p_iss_nd <- round(mean(kbbh$isspv == "ND") * 100,1)
+p_iss_mi <- round(mean(kbbh$isspv == "Minor") * 100,1)
+p_rts_8 <- round(mean(kbbh$rts == 8) * 100,1)
 
 ```
 # Abstract
@@ -461,7 +461,7 @@ Trauma is one of the leading causes of emergency department visits.
 
 Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. 
 
-Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. 
+Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries.[Uscher-Pines2013]
 
 Although these patients are triaged green they consume significant resources.
 
@@ -496,11 +496,6 @@ There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomp
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
 The Injury Severity Score (ISS) indicated that 50.2% were 'minor', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. 
-Table2 shows, Among patients with animal bites, 67.36% had no defined injuries while 32.64% had 'minor' severity. Of fall, 63.85% patients had no defined injuries while 34.96 had 'minor' severity The mechanism of injury of patients with moderate injuries were Fall, Assualt and others.Patients with ISS severe than 'moderate' were not present in those triaged green.
-
-shows Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`%), followed by `r inj2` (`r p_ndi`%), `r inj3` (`r p_ow`%) that required suturing and `r inj4` (`r p_frac`%). . Characteristic of Injuries in Table3 shows,  90.5% patients with animal bites had superficial injuries, while 6.75% and 2.34% had no defined injuries and open wound respectively. In patients with assualt, 42.18% has superficial injuries followed by no defined injuries in 30.68% patients and 24.48% patients having open wound injuries. Most cases of fracture were found in patients with fall followed by Transport accidents.
-
-A chi-square test was performed to investigate the association between type of injury and age. A strong association with a p-value of (1.486e-06) was identified.
 
 ```{r}
 #Factor labels
@@ -530,7 +525,11 @@ catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi",
 Table1 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
 knitr::kable(print(Table1,
                    caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+```
 
+Table2 shows, Among patients with animal bites, 67.36% had no defined injuries while 32.64% had 'minor' severity. Of fall, 63.85% patients had no defined injuries while 34.96 had 'minor' severity The mechanism of injury of patients with moderate injuries were Fall, Assualt and others.Patients with ISS severe than 'moderate' were not present in those triaged green.
+
+```{r}
 Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
 kable(Table2,
       caption = "Percentage distribution of Injury severity among different Mechanism of Injury",
@@ -540,11 +539,21 @@ Table2 <- rowPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
 kable(Table2,
       caption = "Percentage distribution of Injury severity among different Mechanism of Injury",
       )
+```
 
+shows Characteristics of the patient injury were most commonly `r inj1` (`r p_supf`%), followed by `r inj2` (`r p_ndi`%), `r inj3` (`r p_ow`%) that required suturing and `r inj4` (`r p_frac`%). . Characteristic of Injuries in Table3 shows,  90.5% patients with animal bites had superficial injuries, while 6.75% and 2.34% had no defined injuries and open wound respectively. In patients with assualt, 42.18% has superficial injuries followed by no defined injuries in 30.68% patients and 24.48% patients having open wound injuries. Most cases of fracture were found in patients with fall followed by Transport accidents.
+
+```{r}
 Table3 <- colPerc(xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh))
 kable(Table3,
       caption = "Percentage distribution of Injury type among different Mechanism of Injury",
 )
+```
+
+
+A chi-square test was performed to investigate the association between type of injury and age. A strong association with a p-value of (1.486e-06) was identified.
+
+```{r}
 
 #Chi-square test
 
