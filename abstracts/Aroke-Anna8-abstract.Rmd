@@ -151,6 +151,11 @@ dt$isspv <-cut(dt$iss,
 gcs <- with(dt, egcs + vgcs + mgcs)
 dt$gcs <- gcs <- replace(gcs, gcs > 15, NA)
 
+dt$gcs.cat <- gcs
+dt$gcs.cat[gcs >= 13] <- "Mild"
+dt$gcs.cat[gcs >= 9 & gcs < 13] <- "Moderate"
+dt$gcs.cat[gcs >= 3 & gcs < 9] <- "Severe"
+
 ## What's happening here? Assigning parameter value for calculating RTS. Something wrong?
 
 gcspv <- gcs
@@ -465,7 +470,7 @@ Based on injury severity and physiological parameters patients are triaged as re
 Emergency departments are perceived to provide quick and easy access to healthcare, although they are not. This leads to visits of patients with no injury or minor injuries.[@Uscher-Pines2013][@Coster2017]
 
 Although these patients are triaged green they consume significant resources.
-
+In India, no objective data is available to understand the problem of overcrowding.[@Pines2011]
 It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
 
 The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
@@ -476,7 +481,7 @@ The aim of this study is to describe the demographic, physiological and injury c
 We performed this study in the Emergency Department at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergency. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders.The ED has 5 bed's and is staffed by one physician/Casualty Medical Officer (CMO) two On-duty nurses, two dressers and two ward boys. 
 
 ## Data extraction
-Data of patients triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. Data analysis was performed using R statistical software.
+Data of patients triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. Number of serious injuries was estimated by the treating pyhsician. A serious injury here was deinfed as injury that warrants hospitalization. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. Data analysis was performed using R statistical software.
 
 ## Data Manipulation
 
@@ -486,17 +491,17 @@ Severity of Injury was assesed using ISS and RTS scores[@champion1989] and furth
 
 - ISS: The Injury Severity Score (ISS) was categorized 'No defined injuries' (0), 'mild' (3-8), 'moderate' (9-15), 'severe' (16-25), 'profound' (>25).
 
-- RTS: RTS was calculated using the GCS, RR and SBP values in the TTRIS dataset. 
+- RTS: RTS was calculated using the GCS, RR and SBP values in the TTRIS dataset. They were further categorized into RTS < 4 and RTS > 4.
 
-- Injury characteristics: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury. If no crush injury was present then the patient was categorized into the next most critical injury.
+- Injury characteristics: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury.[@CDC1992] If no crush injury was present then the patient was categorized into the next most critical injury.
 
 # Results
 
-There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and were excluded from the study population.
+There was `r nrow(dt)` patients in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and were excluded from the study population.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age which mainly constitues the working population. Economically productive age group of 25-44 were the majority (49.4%), followed by patients between the age group of 18-24 (31.7%). `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. Of those transfered from other hospitals or local clinics (134), 61 had superficial injuries (40) or no defined injuries (21), 36 had fracture, 27 had open wound.
 
-The Injury Severity Score (ISS) indicated that 50.2% were 'mild', 49.4% patients had 'No defined injuries', the reamining 0.4% patients had 'moderate' severity. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. `r p_rts_8`% patients had an RTS score of 8.
+The Injury Severity Score (ISS) indicated that 50.2% were 'mild', 49.4% patients had 'No defined injuries', the remaining 0.4% patients had 'moderate' severity. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. All patients had an RTS score greater than 4. `r p_rts_8`% patients had an RTS score of 8.
 
 Patients with amputations had a single finger (8), thumb (2) or single toe amputations (2). Crush injuries were of unspecified part of the hand (3) the finger (1) and the toe (2). More than one third of the fractures were forearm and elbow fractures (73), followed by hand (53), foot fracture (50) and knee or lower leg fracture (44). Shoulder or upperarm fracture were 28, hip and thigh fractures were 19 and fracture of skull or facial bones were 19.
 
@@ -518,19 +523,19 @@ kbbh$nsi <- factor(kbbh$nsi, levels = c(0,1,2),
 kbbh$hd <- factor(kbbh$hd, levels = c(0,1,2,3), 
                   labels = c("Discharged","Dead","Transferred","Abscond/ DAMA"))
 
-var_label(kbbh) <- list(age = "Age", agegrp = "Age Group", sex = "Sex", moi.collapsed = "Mode of Injury", tyi = "Type of injury", mot = "Mode of transport", tran = "Transfer status", avpu = "AVPU", sbp = "Systolic blood pressure", dbp = "Distolic blood pressure", hr = "Heart rate", spo2 = "Oxygen saturation", vo2 = "Need for oxygen support", rr = "Respiratory rate", nsi = "Number of serious injuries", hd = "Hospital disposition", gcs = "GCS", isspv = "ISS", rts = "RTS", inj_type = "Characteristic of Injury")
+var_label(kbbh) <- list(age = "Age", agegrp = "Age Group", sex = "Sex", moi.collapsed = "Mode of Injury", tyi = "Type of injury", mot = "Mode of transport", tran = "Transfer status", avpu = "AVPU", sbp = "Systolic blood pressure", dbp = "Distolic blood pressure", hr = "Heart rate", spo2 = "Oxygen saturation", vo2 = "Need for oxygen support", rr = "Respiratory rate", nsi = "Number of serious injuries", hd = "Hospital disposition", gcs = "GCS", gcs.cat = "GCS",isspv = "ISS", rts = "RTS", inj_type = "Characteristic of Injury")
 
 myvars <- c("age", "agegrp", "sex", "moi.collapsed", "tyi", "mot",
-"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs", "isspv", "rts","inj_type")
+"tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs","gcs.cat", "isspv", "rts","inj_type")
 
-catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd", "inj_type")
+catvars <- c("sex", "moi.collapsed", "tyi", "mot", "tran", "avpu", "vo2", "nsi", "hd","gcs.cat", "inj_type")
 
 Table1 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
 knitr::kable(print(Table1,
                    caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 ```
 
-Table2 shows, Among patients with animal bites, 67.36% had no defined injuries while 32.64% had 'minor' severity. Of fall, 63.85% patients had no defined injuries while 34.96 had 'minor' severity The mechanism of injury of patients with moderate injuries were Fall, Assualt and others.Patients with ISS severe than 'moderate' were not present in those triaged green.
+Table2 shows, Among patients with animal bites, 67.36% had no defined injuries while 32.64% had 'minor' severity. Of fall, 63.85% patients had no defined injuries while 34.96 had 'minor' severity The mechanism of injury of patients with moderate injuries were Fall, Assualt and others.Patients with ISS severe were not present.
 
 ```{r}
 Table2 <- colPerc(xtabs(~kbbh$isspv+kbbh$moi.collapsed, data = kbbh))
@@ -553,16 +558,31 @@ kable(Table3,
 )
 ```
 ```{r}
-table(kbbh$inj_type,kbbh$ardd)
 
-Table3 <- xtabs(~kbbh$inj_type+kbbh$ardd, data = kbbh)
-kable(Table3,
-      caption = "Percentage distribution of Injury type among different Mechanism of Injury",
+doa <- kbbh$doa
+kbbh$admits <- ifelse(doa==0,"Not admitted","Admitted")
+
+nap <- subset(kbbh,kbbh$admits=="Not admitted")
+
+end.time <- paste(nap$dodd , nap$todd)
+start.time <- paste(nap$doar, nap$toar)
+ardd.time <- round(difftime(end.time,start.time, units = "hours"))
+nap$ardd <- if_else(ardd.time<2,"0-1",
+                    ifelse(ardd.time<3,">1",">2"))
+
+Table4 <- xtabs(~nap$inj_type+nap$ardd, data = nap)
+kable(Table4,
+      caption = "Time taken (in hours, 0-1 hour, more than one hour or more than 2 hours) for discharge for injury type",
 )
+
+# Pearson's Chi-squared test
+# data:  nap$inj_type and nap$ardd
+# X-squared = 500.47, df = 20, p-value < 2.2e-16
+
 ```
 
 
-A chi-square test was performed to investigate the association between type of injury and age. A strong association with a p-value of (1.486e-06) was identified.
+A chi-square test was performed to investigate the association between type of injury and age with confidence interval of 95%. The proportion of patients having different injury types differed by age (p<.001).Patients in the age group of 24-44 constituted approximately 50% of all injuries.
 
 ```{r}
 
@@ -579,24 +599,26 @@ cstageg <- table(kbbh$agegrp,kbbh$inj_type)
 ## We reject the null hypothesis 
 ## The proportion of injury types does differ across the age groups
 
+Table5 <- rowPerc(xtabs(~kbbh$inj_type+kbbh$agegrp, data = kbbh))
+kable(Table5,
+      caption = "Proportion of patients with different injury types w.r.t their age group",
+)
+
 # Time difference between injury and arrival
 
 start.time <- paste(kbbh$doi, kbbh$toi)
 end.time <- paste(kbbh$doar, kbbh$toar)
 injar.time <- round(difftime(end.time,start.time, units = "days"),0)
-kbbh$inj_arr <- if_else(injar.time<2,"0-1",">1")
+kbbh$inj_arr <- ifelse(injar.time<2,"0-1",">1")
 
 # data:  injar.time and kbbh$inj_type
 # X-squared = 265.86, df = 220, p-value = 0.01868
 
-end.time <- paste(kbbh$dodd , kbbh$todd)
-start.time <- paste(kbbh$doar, kbbh$toar)
-ardd.time <- round(difftime(end.time,start.time, units = "hours"))
-kbbh$ardd <- if_else(ardd.time<2,"0-1",">1")
-
-
-
 ```
+
+# Conclusion
+
+
 # References
 
 
