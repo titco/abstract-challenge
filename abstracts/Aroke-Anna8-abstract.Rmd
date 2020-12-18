@@ -13,7 +13,7 @@ output:
     toc: false
     keep_tex: yes
 bibliography: abstract.bib
----
+--- 
 
 ```{r setup, include=FALSE, results='asis', message=FALSE}
 library(knitr)
@@ -428,6 +428,26 @@ ab_sup.p <- injvmoi[["Animal bite"]][11]
 ab_noinj.p <- injvmoi[["Animal bite"]][8]
 ab_ow.p <- injvmoi[["Animal bite"]][9]
 ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
+
+# Time spent in ED
+
+doa <- kbbh$doa
+kbbh$admits <- ifelse(doa==0,"Not admitted","Admitted")
+
+nap <- subset(kbbh,kbbh$admits=="Not admitted")
+ardd.time <- round(difftime(paste(nap$dodd , nap$todd),paste(nap$doar, nap$toar), units = "hours"))
+nap$ardd <- if_else(ardd.time<2,"0-1",
+                    ifelse(ardd.time<3,"1-2",">2"))
+
+nnap <- subset(kbbh,kbbh$admits=="Admitted")
+nardd.time <- round(difftime(paste(nnap$doa , nnap$toa),paste(nnap$doar, nnap$toar), units = "hours"))
+nnap$ardd <- if_else(nardd.time<2,"0-1",
+                    ifelse(nardd.time<3,"1-2",">2"))
+
+kbbh.temp <- suppressWarnings(suppressMessages(rbind(nap,nnap)))
+kbbh<- merge(kbbh,kbbh.temp)
+kbbh$ardd <- as.factor(kbbh$ardd)
+
 ```
 
 ```{r conclusion}
@@ -559,18 +579,9 @@ kable(Table3,
 ```
 ```{r}
 
-doa <- kbbh$doa
-kbbh$admits <- ifelse(doa==0,"Not admitted","Admitted")
 
-nap <- subset(kbbh,kbbh$admits=="Not admitted")
 
-end.time <- paste(nap$dodd , nap$todd)
-start.time <- paste(nap$doar, nap$toar)
-ardd.time <- round(difftime(end.time,start.time, units = "hours"))
-nap$ardd <- if_else(ardd.time<2,"0-1",
-                    ifelse(ardd.time<3,">1",">2"))
-
-Table4 <- xtabs(~nap$inj_type+nap$ardd, data = nap)
+Table4 <- xtabs(~kbbh$inj_type+kbbh$ardd, data = nap)
 kable(Table4,
       caption = "Time taken (in hours, 0-1 hour, more than one hour or more than 2 hours) for discharge for injury type",
 )
