@@ -3,7 +3,8 @@ title: "Profile of patients triage red"
 author: "TAMAL"
 date: "06/06/2020"
 output:
-  word_document: default
+  word_document: 
+    toc: yes
   html_document: default
 editor_options: 
   chunk_output_type: inline
@@ -43,16 +44,16 @@ Data of triaged red patients extract out from the data set of TTRIS study projec
 
 ## Result
 ```{r}
-# Select data directory
+### Select data directory
 
 TTRIS_1515 <- read.csv("C:/Users/Tamal/OneDrive/Documents/TTRIS_1515.csv")
 
-# Summary of age in selected data set with histogram
+### Summary of age in selected data set with histogram
 
 summary(TTRIS_1515$age)
 hist(TTRIS_1515$age, col='grey',xlab='Age', main='Age of patients')
 
-# Summary of triage category with histogram
+### Summary of triage category with histogram
 
 summary(TTRIS_1515$tc)
 hist(TTRIS_1515$tc, col='grey',xlab='tc', main='Triage of patients')
@@ -62,13 +63,23 @@ hist(TTRIS_1515$tc, col='grey',xlab='tc', main='Triage of patients')
 summary(TTRIS_1515$tc == 3)
 table(TTRIS_1515$tc == 3)
 red <- subset(x=TTRIS_1515, subset = TTRIS_1515$tc == 3)
-table(red$tc)
 
 ## Percentage
 
 mean(TTRIS_1515$tc == 3)*100
 
-# Not admitted patients in this triage
+### Age range
+
+summary(red$age)
+
+### Selection of adult age in this specified triage category
+
+fd_red1 <- subset(x=red, subset = red$age <25)
+fd_red2 <- subset(x=red, subset = red$age <45)
+fd_red3 <- subset(x=red, subset = red$age <65)
+
+
+### Not admitted patients in this triage
 
 table(red$doa)
 table(red$doa == 0)
@@ -80,6 +91,7 @@ table(red$doa == 999)
 mean(red$doa == 0)*100
 mean(red$doa == 999)*100
 
+
 # Sex
 
 table(red$sex == 1)
@@ -90,7 +102,18 @@ table(red$sex == 0)
 mean(red$sex == 1)*100
 mean(red$sex == 0)*100
 
-# Mode of transport
+### Transfer status
+
+table(red$tran)
+hist(red$tran, col= 'blue',xlab='transfer', main='transfer status')
+trans_red <- subset(x=red, subset = red$tran == 1)
+### percentage
+
+mean(red$tran == 0)*100
+mean(red$tran == 1)*100
+
+
+### Mode of transport
 
 table(red$mot)
 hist(red$mot, col='red',xlab='mot', main='Mode of transport')
@@ -100,7 +123,7 @@ table(red$mot == 2)
 table(red$mot == 3)
 table(red$mot == 999)
 
-## percentage
+### percentage
 
 mean(red$mot == 0)*100
 mean(red$mot == 1)*100
@@ -108,38 +131,25 @@ mean(red$mot == 2)*100
 mean(red$mot == 3)*100
 mean(red$mot == 999)*100
 
-# Transfer status
-
-table(red$tran)
-hist(red$tran, col= 'blue',xlab='transfer', main='transfer status')
-
-## percentage
-
-mean(red$tran == 0)*100
-mean(red$tran == 1)*100
-
 # Type of Injury
 
 table(red$tyi)
 table(red$tyi == 0)
 table(red$tyi == 1)
 
-## Percentage
+
+### Percentage
 
 mean(red$tyi == 0)*100
 mean(red$tyi == 1)*100
 
-# Mode of Injury
+### Mode of Injury
 table(red$moi)
 
-## GCS range selection
-table(red$gcs <15)
-table(red$gcs <13)
-table(red$gcs <10)
-table(red$gcs <8)
-table(red$gcs <6)
-table(red$gcs <4)
-table(red$egcs ==1)
+
+### GCS range selection
+
+
 mean(red$egcs == 1)*100
 mean(red$egcs == 2)*100
 mean(red$egcs == 3)*100
@@ -156,27 +166,33 @@ mean(red$mgcs == 4)*100
 mean(red$mgcs == 5)*100
 mean(red$mgcs == 6)*100
 
-## RR parameter value
-
+### RR parameter value
+summary(red$rr)
 table(red$rr)
 hist(red$rr, col='blue',xlab='rr', main='Respiratory rate')
 
-## SBP parameter
 
+### SBP parameter
+summary(red$sbp)
 table(red$sbp)
 hist(red$sbp, col='grey',xlab='sbp', main='Systolic Blood pressure')
 
-## DBP parameter
+### DBP parameter
 
 table(red$dbp)
 hist(red$dbp, col='violet',xlab='dbp', main='Diastolic Blood pressure')
 
-## Hr parameter
-
+### Hr parameter
+summary(red$hr)
 table(red$hr)
 hist(red$hr, col='green',xlab='hr', main='Heart Rate')
 
-## AVPU
+
+### Spo2
+
+summary(red$spo2)
+
+### AVPU
 
 table(red$avpu == 0)
 table(red$avpu == 1)
@@ -184,6 +200,9 @@ table(red$avpu == 2)
 table(red$avpu == 3)
 table(red$avpu == 99)
 table(red$avpu == 999)
+
+summary(red$avpu)
+
 
 ### Percentage
 
@@ -194,7 +213,7 @@ mean(red$avpu == 3)*100
 mean(red$avpu == 99)*100
 mean(red$avpu == 999)*100
 
-## Oxygen Support
+### Oxygen Support
 
 table(red$vo2)
 table(red$vo2 == 0)
@@ -205,7 +224,7 @@ table(red$vo2 == 1)
 mean(red$vo2 == 0)*100
 mean(red$vo2 == 1)*100
 
-## Serious Injury
+### Serious Injury
 
 table(red$nsi == 1)
 table(red$nsi == 2)
@@ -214,6 +233,45 @@ table(red$nsi == 2)
 
 mean(red$nsi == 1)*100
 mean(red$nsi == 2)*100
+
+# Hospital Disposition in red triage
+
+
+### Hospital disposition
+
+table(red$hd == 0)
+table(red$hd == 1)
+table(red$hd == 2)
+table(red$hd == 3)
+table(red$hd == 999)
+
+#### Percentage
+
+mean(red$hd == 0)*100
+mean(red$hd == 1)*100
+mean(red$hd == 2)*100
+mean(red$hd == 3)*100
+mean(red$hd == 999)*100
+
+#### For transfer cases
+
+table(trans_red$hd == 1)
+mean(trans_red$hd == 1)*100
+
+#### Age group wise
+
+table(fd_red1$hd == 1)
+table(fd_red2$hd == 1)
+table(fd_red3$hd == 1)
+
+#### Percentage
+
+mean(fd_red1$hd == 1)*100
+mean(fd_red2$hd == 1)*100
+mean(fd_red3$hd == 1)*100
+
+
+
 
 ## CT unavailable
 
@@ -292,303 +350,42 @@ table(red$einj4)
 table(red$einj5)
 table(red$einj6)
 
+table(red$ctinj1icd)
 
-# Selection of adult age in this specified triage category
-table(red$age <61)
-mean(red$age <61)*100 
-fd_red <- subset(x=red, subset = red$age <61)
+### Followups of patients not done in this perticular data set
 
+#### Mortality
 
-# Sex
+table(red$s24h == 1)
+table(red$s30d == 1)
+table(red$s6m == 1)
 
-table(fd_red$sex == 1)
-table(fd_red$sex == 0)
+mean(red$s24h == 1)*100
+mean(red$s30d == 1)*100
+mean(red$s6m == 1)*100
 
-## Percentage
+alive_red <- subset(x=red, subset = red$hd == 0)
 
-mean(fd_red$sex == 1)*100
-mean(fd_red$sex == 0)*100
+table(alive_red$tran)
 
-# Mode of transport
+direct_red <- subset(x=red, subset = red$tran == 0)
 
-table(fd_red$mot)
-hist(fd_red$mot, col='red',xlab='mot', main='Mode of transport')
-table(fd_red$mot == 0)
-table(fd_red$mot == 1)
-table(fd_red$mot == 2)
-table(fd_red$mot == 3)
-table(fd_red$mot == 999)
+table(direct_red$hd)
 
-## percentage
 
-mean(fd_red$mot == 0)*100
-mean(fd_red$mot == 1)*100
-mean(fd_red$mot == 2)*100
-mean(fd_red$mot == 3)*100
-mean(fd_red$mot == 999)*100
+no_head_injury <- subset(x=red, subset = red$ctinj1icd == 999)
 
-# Transfer status
+table(no_head_injury$xrayinj1)
 
-table(fd_red$tran)
-
-## percentage
-
-mean(fd_red$tran == 0)*100
-mean(fd_red$tran == 1)*100
-
-# Type of Injury
-
-table(fd_red$tyi)
-table(fd_red$tyi == 0)
-table(fd_red$tyi == 1)
-
-## Percentage
-
-mean(fd_red$tyi == 0)*100
-mean(fd_red$tyi == 1)*100
-
-# Mode of Injury
-table(fd_red$moi)
-
-## GCS range selection
-table(fd_red$gcs <15)
-table(fd_red$gcs <13)
-table(fd_red$gcs <10)
-table(fd_red$gcs <8)
-table(fd_red$gcs <6)
-table(fd_red$gcs <4)
-table(fd_red$egcs ==1)
-mean(fd_red$egcs == 1)*100
-mean(fd_red$egcs == 2)*100
-mean(fd_red$egcs == 3)*100
-mean(fd_red$egcs == 4)*100
-mean(fd_red$vgcs == 1)*100
-mean(fd_red$vgcs == 2)*100
-mean(fd_red$vgcs == 3)*100
-mean(fd_red$vgcs == 4)*100
-mean(fd_red$vgcs == 5)*100
-mean(fd_red$mgcs == 1)*100
-mean(fd_red$mgcs == 2)*100
-mean(fd_red$mgcs == 3)*100
-mean(fd_red$mgcs == 4)*100
-mean(fd_red$mgcs == 5)*100
-mean(fd_red$mgcs == 6)*100
-
-## RR parameter value
-
-table(fd_red$rr)
-hist(fd_red$rr, col='blue',xlab='rr', main='Respiratory rate')
-
-## SBP parameter
-
-table(fd_red$sbp)
-hist(fd_red$sbp, col='grey',xlab='sbp', main='Systolic Blood pressure')
-
-## DBP parameter
-
-table(fd_red$dbp)
-hist(fd_red$dbp, col='violet',xlab='dbp', main='Diastolic Blood pressure')
-
-## Hr parameter
-
-table(fd_red$hr)
-hist(fd_red$hr, col='green',xlab='hr', main='Heart Rate')
-
-## AVPU
-
-table(fd_red$avpu == 0)
-table(fd_red$avpu == 1)
-table(fd_red$avpu == 2)
-table(fd_red$avpu == 3)
-table(fd_red$avpu == 99)
-table(fd_red$avpu == 999)
-
-### Percentage
-
-mean(fd_red$avpu == 0)*100
-mean(fd_red$avpu == 1)*100
-mean(fd_red$avpu == 2)*100
-mean(fd_red$avpu == 3)*100
-mean(fd_red$avpu == 99)*100
-mean(fd_red$avpu == 999)*100
-
-## Oxygen Support
-
-table(fd_red$vo2)
-table(fd_red$vo2 == 0)
-table(fd_red$vo2 == 1)
-
-### Percentage
-
-mean(fd_red$vo2 == 0)*100
-mean(fd_red$vo2 == 1)*100
-table(fd_red$nsi)
-
-## Serious Injury
-
-table(fd_red$nsi == 1)
-table(fd_red$nsi == 2)
-
-### Percentage
-
-mean(fd_red$nsi == 1)*100
-mean(fd_red$nsi == 2)*100
-
-## CT unavailable
-
-### Not done
-table(fd_red$dct == 0)
-table(fd_red$tct == 0)
-#### Percentage
-mean(fd_red$dct == 0)*100
-mean(fd_red$tct == 0)*100
-
-### Report unknown
-table(fd_red$dct == 999)
-table(fd_red$tct == 999)
-
-#### Percentage
-mean(fd_red$dct == 999)*100
-mean(fd_red$tct == 999)*100
-
-## USG Unavailable
-
-### Not done
-table(fd_red$dus == 0)
-table(fd_red$tus == 0)
-
-#### Percentage
-mean(fd_red$dus == 0)*100
-mean(fd_red$tus == 0)*100
-
-### Report unknown
-table(fd_red$dus == 999)
-table(fd_red$tus == 999)
-
-#### Percentage
-mean(fd_red$dus == 999)*100
-mean(fd_red$tus == 999)*100
-
-## Intubation not done
-
-table(fd_red$di == 0)
-table(fd_red$di == 999)
-mean(fd_red$di == 0)*100
-mean(fd_red$di == 999)*100
-
-## Mechanical ventilation not done
-
-table(fd_red$dmv == 0)
-table(fd_red$dmv == 999)
-mean(fd_red$dmv == 0)*100
-mean(fd_red$dmv == 999)*100
-
-## ICU admission not done
-
-table(fd_red$daicu == 0)
-table(fd_red$daicu == 999)
-mean(fd_red$daicu == 0)*100
-mean(fd_red$daicu == 999)*100
-
-## Surgery not done
-
-table(fd_red$dos == 0)
-table(fd_red$dos == 999)
-mean(fd_red$dos == 0)*100
-mean(fd_red$dos == 999)*100
-
-## Injuries
-
-### External Injury
-
-table(fd_red$einj1)
-table(fd_red$einj2)
-table(fd_red$einj3)
-table(fd_red$einj4)
-table(fd_red$einj5)
-table(fd_red$einj6)
-
-# Hospital Disposition in red triage
-table(red$hd == 0)
-table(red$hd == 1)
-table(red$hd == 2)
-table(red$hd == 3)
-table(red$hd == 999)
-
-## Percentage
-
-mean(red$hd == 0)*100
-mean(red$hd == 1)*100
-mean(red$hd == 2)*100
-mean(red$hd == 3)*100
-mean(red$hd == 999)*100
-
-##In case of Adult Age
-
-table(fd_red$hd == 0)
-table(fd_red$hd == 1)
-table(fd_red$hd == 2)
-table(fd_red$hd == 3)
-table(fd_red$hd == 999)
-
-### Percentage
-
-mean(fd_red$hd == 0)*100
-mean(fd_red$hd == 1)*100
-mean(fd_red$hd == 2)*100
-mean(fd_red$hd == 3)*100
-mean(fd_red$hd == 999)*100
-
-## Followups of patients not done in this perticular data set
-
-### In 24 hours
-
-table(fd_red$s24h == 999)
-
-#### Percentage
-
-mean(fd_red$s24h == 999)*100
-
-### In 30 days
-
-table(fd_red$s30d == 999)
-
-#### Percentage
-
-mean(fd_red$s30d == 999)*100
-
-### In 6 months
-
-table(fd_red$s6m == 999)
-
-#### Percentage
-
-mean(fd_red$s6m == 999)*100
-
-## patients dead in 24 hour of arrival
-
-table(fd_red$s24h == 1)
-
-### Percentage
-
-mean(fd_red$s24h == 1)*100
-
-## Patients dead in 30 days of arrival
-
-table(fd_red$s30d == 1)
-
-### Percentage
-
-mean(fd_red$s30d == 1)*100
-
-## Patients dead in 6 months of arrival
-
-table(fd_red$s6m == 1)
-
-### Percentage
-
-mean(fd_red$s6m == 1)*100
+no_fracture_injury <- subset(x=red, subset = red$xrayinj1icd == 999)
+table(no_fracture_injury$ctinj1icd)
 ```
+
+
+
+
+
+
 
 Total number patients available for analysis n= 5618, triage red category patients are 272 under this category so 4% patients(red dataset) are triage red, adult age patients under this triage are 219 percentage is 80(fd_red data set),male patients are 187 i.e 85.38% and female patients are 32 i.e 14.61%. Admitted patients are 183 patients i.e 83.66% and non admitted 36 patients i.e 16.34%. Patients . 
 
@@ -601,220 +398,11 @@ In adult age in red triage Discharged Alive after treatment is  10 i.e 4.56%, Nu
 So from this data set it can conclude that death rate of of triage red is very much high in this perticular hospital.
 
 
-## Results using method 2
-
-```{r Data_cleaning_manipulation, warning=FALSE, results='hide'}
-
-# Get data directory
-
-data.dir <- getOption("data.dir")
-if (is.null(data.dir))
-    stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
-
-## datatable with ICD
-a <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
-
-## Rearranging columns
-dt <- a %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:tvsr,dus:testvar,locked,doi_toi:valid)
-
-extra_col <- dt %>% dplyr::select(doi_toi:valid)
-
-# Creating age groups
-agebreaks <- c(17,25,45,65,98)
-agelabels <- c("18-24","25-44","45-64","65+")
-dt$agegrp <-cut(dt$age,
-                breaks = agebreaks,
-                right = FALSE,
-                labels = agelabels)
-
-# Mechanism of Injury
-moi.collapsed <- moi <- as.character(dt$moi)
- get_icd_range <- function(first.char, start.number, end.number) {
-    icd.range <- paste0(
-        paste0(
-            "^",
-            first.char,
-            stringr::str_pad(start.number:end.number, 2, pad = "0"),
-            "[0-9]?$"),
-        collapse = "|")
-    return (icd.range)
- }
- 
- icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
-                   c("Fall" = get_icd_range("W", 0, 19)),
-                   c("Animal bite" = get_icd_range("W", 50, 64)),
-                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
-for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
-moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
-a$moi.collapsed <- as.factor(moi.collapsed)
-
-## New variable 'GCS' to the dataset
-gcs <- with(dt, egcs + vgcs + mgcs)
-gcs <- replace(gcs, gcs > 15, NA)
-gcspv <- gcs
-gcspv[gcs >= 13] <- 4
-gcspv[gcs >= 9 & gcs < 13] <- 3
-gcspv[gcs >= 6 & gcs < 9] <- 2
-gcspv[gcs >= 4 & gcs < 6] <- 1
-gcspv[gcs < 4] <- 0
-
-## RR parameter value for calculating RTS
-rr <- with(dt,replace(rr, rr == 999, NA))
-rrpv <- rr
-rrpv[rr >= 10 & rr <= 29] = 4
-rrpv[rr > 29] = 3
-rrpv[rr >= 6 & rr <= 9] = 2
-rrpv[rr >= 1 & rr <= 5] = 1
-rrpv[rr == 0] = 0
-
-## SBP parameter value for calculating RTS
-sbp <- with(dt,replace(sbp, sbp == 999, NA))
-sbppv <- sbp
-sbppv[sbp > 89] <- 4
-sbppv[sbp >=76 & sbp <= 89] <- 3
-sbppv[sbp >= 50 & sbp <= 75] <- 2
-sbppv[sbp >= 1 & sbp <= 49] <- 1
-sbppv[sbp == 0] <- 0
-
-## Formula for calculating RTS
-dt$rts = round(0.9368*as.numeric(gcspv) + 
-               0.7326*as.numeric(sbppv) + 
-               0.2908*as.numeric(rrpv), digits = 0)
-
-## Complete record results
-
-dt$s24h <- replace(dt$s24h, dt$s24h == 999, 888) ## follow up not done
-dt$s30d <- replace(dt$s30d, dt$s30d == 999, 888)
-dt$s6m <- replace(dt$s6m, dt$s6m == 999, 888)
-dt$s <- replace(dt$s, dt$s == 999, 888)
-
-## Converting rest of the 999s to NA
-dt[] <- dt[] %>% 
-    mutate_all(funs(na_if(.,"999")))
-missing.data.list <- lapply(dt, function(column) {
-    n.na <- sum(is.na(column))
-    p.na <- round((n.na/length(column)) * 100)
-    missing <- data.frame("Count" = n.na, "Percentage" = p.na)
-    return (missing)
-})
-missing.data <- do.call(rbind, missing.data.list)
-maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data$Count)]
-complete.index <- complete.cases(dt)
-n.incomplete <- sum(!complete.index)
-p.incomplete <- round((n.incomplete/nrow(dt)) * 100)
-
-dtt <- dt[complete.index, ]
-
-```
-
-```{r result, warning=FALSE, message=FALSE}
-
-# Created a dataframe of triage category red
-sskm <- subset(x=dtt,subset = dtt$tc == 3)
-
-# Number of records
-dm <- as.numeric(nrow(sskm))
-
-# Age
-mean_age <- round(mean(sskm$age),2)
-stddev_age <- round(sd(sskm$age),2)
-nm_age <- sum(sskm$agegrp != "65+")
-percent_agebelow65 <- round(mean(sskm$agegrp != "65+") * 100, 2)
-calculate_n_p <- function(level.name, factor.var){
-    assert_that(is.character(level.name))
-    assert_that(is.factor(factor.var))
-    nm <- sum(factor.var == level.name)
-    percent <- round((nm/dm) * 100,2)
-    return.list <-list(nm = nm, percent = percent)
-    return.list
-}
-
-# Sex
-sex.data <- list.sort(lapply(setNames(nm = levels(sskm$sex)), calculate_n_p, factor.var = sskm$sex), nm, decreasing = TRUE)
-sexv <- unlist(sex.data)
-nm_male <- sexv["Male.nm"]
-p_male <- sexv["Male.percent"]
-nm_female <- sexv["Female.nm"]
-p_female <- sexv["Female.percent"]
-
-# Type of Injury
-nm_blunt <- sum(sskm$tyi == 0)
-percent_blunt <- round(mean(sskm$tyi == 0) * 100,2)
-nm_penetrating <- sum(sskm$tyi == 1)
-percent_penetrating <- round(mean(sskm$tyi == 1) * 100,2)
-nm_blunt_and_penetrating <- sum(sskm$tyi == 2)
-percent_blunt_and_penetrating <- round(mean(sskm$tyi == 2) * 100,2)
 
 
-# Mode of Transport
-mot.data <- list.sort(lapply(setNames(nm = levels(sskm$mot)), calculate_n_p, factor.var = sskm$mot), nm, decreasing = TRUE)
-motv <- unlist(mot.data)
-nm_pvt <- motv["Private Vehicle.nm"]
-p_mot_pvt <- motv["Private Vehicle.percent"]
-nm_mot_onfoot <- motv["On foot.nm"]
-p_mot_onfoot <- motv["On foot.percent"]
-mot1 <- names(mot.data[1])
 
-# MOI
-moi.data <- list.sort(lapply(setNames(nm = levels(sskm$moi.collapsed)), calculate_n_p, factor.var = sskm$moi.collapsed), nm, decreasing = TRUE)
 
-print(moi.data)
-moiv <- unlist(moi.data)
-p_animalbite <- moiv["Animal bite.percent"]
-p_assault <- moiv["Assault.percent"]
-p_fall <- moiv["Fall.percent"]
-p_other <- moiv["Other.percent"]
-p_tra <- moiv["Transport accident.percent"]
-moi1 <- names(moi.data[1])
-moi2 <- names(moi.data[2])
-moi3 <- names(moi.data[3])
 
-# Outcome
-sskm$s6m <- as.factor(sskm$s6m)
-outcome.data <- lapply(setNames(nm = levels(sskm$s6m)), calculate_n_p, factor.var = sskm$s6m)
-p_outcome_alive <- outcome.data[["0"]]["percent"]
-p_outcome_dead <- outcome.data[["1"]]["percent"]
-n_outcome_dead <- outcome.data[["1"]]["nm"]
-
-p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
-
-# Grouping patients wrt to injury
-
-#if (substr(sskm$einj1icd,start=3, stop=3) == 1) {"Open Wound"}
-sskm <- suppressWarnings(suppressMessages(unite(sskm, allinj, contains("icd"), sep = ",", remove = FALSE)))
-crush_inj <- str_c(c("S07","S070","S071","S078","S079","S17","S170","S178","S179","S280","S380","S381","T041","S47","S57","S570","S578","S579","S67","S670","S678","T042","S770","S771","S772","S87","S870","S878","S97","S970","S971","S978","T043","T048","T049"),collapse = "|")
-
-#mutate(sskm$inj_type = case_when(sskm, str_detect(allinj, crush_inj)~Crush Injury))
-
-crush <- filter(sskm, str_detect(allinj, crush_inj))
-crush$inj_type <- "Crush Injury"
-rest <- suppressWarnings(suppressMessages(sskm %>% anti_join(crush)))
-
-internal_inj <- str_c(c("S06","S060","S061","S062","S063","S064","S065","S066","S067","S068","S069","T905","S140","S141","S240","S241","S340","S341","S343","T093","T913","S142","S260","S270","S271","S272","S273","S274","S275","S276","S278","S279","T914","S36","S360","S361","S362","S363","S364","S365","S366","S367","S368","S369","S37","S370","S371","S372","S373","S374","S375","S376","S377","S378","S379","S396","S397","T065","T915"),collapse = "|")
-
-internal <- filter(rest, str_detect(allinj, internal_inj))
-internal$inj_type <- "Internal Injury"
-rest <- suppressWarnings(suppressMessages(rest %>% anti_join(internal)))
-bv_inj <- str_c(c("S090","S150","S512","S153","S154","S155","S156","S157","S158","S159","S151","S25","S250","S251","S252","S253","S254","S255","S257","S258","S259","S350","S351","S352","S353","S354","S355","S357","S358","S359","S45","S450","S451","S452","S453","S457","S458","S459","S55","S550","S551","S552","S557","S558","S559","S65","S650","S651","S652","S653","S654","S655","S657","S658","S659","T114","S75","S750","S751","S752","S757","S758","S759","S85","S850","S851","S852","S853","S854","S855","S857","S858","S859","S95","S950","S951","S952","S957","S958","S959","T134","T063","T145"),collapse = "|")
-
-bv <- filter(rest, str_detect(allinj, bv_inj))
-bv$inj_type <- "Blood Vessel"
-rest <- suppressWarnings(suppressMessages(rest %>% anti_join(bv)))
-amp_inj <- str_c(c("S08","S081","S082","S083","S084","S085","S086","S087","S088","S089","S18","S281","S382","S383","T096","S48","S480","S481","S489","S58","S580","S581","S589","S68","S680","S681","S682","S683","S684","S688","S689","T050","T052","T116","S780","S781","S782","S783","S784","S785","S786","S787","S788","S789","S88","S880","S881","S889","S98","S980","S981","S982","S983","S984","S780","T053","T055","T136","T058","T059"),collapse = "|")
-
-amputation <- filter(rest, str_detect(allinj, amp_inj))
-amputation$inj_type <- "Amputation"
-rest <- suppressWarnings(suppressMessages(rest %>% anti_join(amputation)))
-frac_inj <- str_c(c("S020","S021","S023","S027","S029","T902","S022","S024","S025","S026","S128","S129","S120","S121","S122","S123","S124","S125","S126","S127","S220","S221","S320","S321","S322","T08","T911","S222","S223","S224","S225","S226","S227","S228","S229","S323","S324","S325","S326","S327","S328","T021","T912","S42","S420","S421","S422","S423","S424","S427","S428","S429","S52","S520","S521","S522","S523","S524","S525","S526","S527","S528","S529","S62","S620","S621","S622","S623","S624","S625","S626","S627","S628","T022","T024","T10","T921","T922","S72","S720","S721","S722","S723","S724","S725","S726","S727","S728","S729","S82","S820","S821","S822","S823","S824","S825","S826","S827","S828","S829","S92","S920","S921","S922","S923","S924","S925","S927","S929","T023","T025","T12","T931","T932","T028","T029","T142"),collapse = "|")
-
-frac <- filter(rest, str_detect(allinj, frac_inj))
-frac$inj_type <- "Fracture"
-rest <- suppressWarnings(suppressMessages(rest %>% anti_join(frac)))
-disl_inj <- str_c(c("S030","S031","S032","S033","S130","S131","S132","S133","S230","S231","S330","S331","S332","S232","S333","S334","S430","S431","S432","S433","S530","S531","S630","S631","S632","S730","S830","S831","S93","S930","S931","S933"),collapse = "|")
-
-disl <- filter(rest, str_detect(allinj, disl_inj))
-disl$inj_type <- "Dislocation"
-rest <- suppressWarnings(suppressMessages(rest %>% anti_join(disl)))
-burn_inj <- str_c(c("T26","T260","T261","T262","T263","T264","T265","T266","T267","T268","T269","T270","T274","T20","T200","T201","T202","T203","T204","T205","T206","T207","T280","T285","T950","T281","T286","T283","T288","T21","T211","T212","T213","T214","T215","T216","T217","T272","T273","T276","T277","T282","T287","T951","T22","T220","T221","T222","T223","T224","T225","T226","T227","T23","T230","T231","T232","T233","T234","T235","T236","T237","T952","T24","T240","T241","T242","T243","T244","T245","T246","T247","T25","T250","T251","T252","T253","T254","T255","T256","T257","T271","T275","T289","T284","T29","T290","T291","T292","T293","T294","T295","T296","T297","T30","T300","T301","T302","T303","T304","T305","T306","T307","T32","T320","T321","T322","T323","T324","T325","T326","T327","T328","T329","T954","T958","T959"),collapse = "|")
-
-```
+## Introduction
+According to global statistics approximatily 4.7 million people die each year as a result of trauma, accounting for 8.5% of global deaths. Trauma accounts for 1.7 times the cumulative mortality from malaria, tuberculosis, and HIV/AIDS. In addition an estimated 973 million people suffer from injuries that warrant urgent and emergent medical attention every year. 
+It is important to triage trauma patients because proper triaging indicate level of care required for the patients.Different triage category are present based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, The red triage level is used for very serious patients, yellow triage level used for moderate injury where green triage is for minor injury.So triaging is very important part of trauma care system because based on the triage level treatment will provide.Present analysis shows different profile of patients triage red.
