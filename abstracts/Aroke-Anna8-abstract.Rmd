@@ -483,16 +483,15 @@ Among the patients triaged green, injury due to assualt and transport accidents 
 ---------------------------------------------------------------------------
 
 # Introduction
-Trauma is one of the leading causes of emergency department visits.[@Weiss2015] 
+Emergency departments are meant to cater to patients that require immediate care. Trauma is one of the leading causes of emergency department (ED) visits.[@Weiss2015]
+In the ED, patients are sorted for treatment by priority using triage.
+Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. There are different triage systems applied in EDs across the world.
+Most often EDs are perceived to provide quick and easy access to healthcare, although they are not. This leads to visits of patients with no injury or minor injuries.[@Uscher-Pines2013][@Coster2017]. These are non-urgent visits or ones that do not require an ED visit. 
+Although these patients are triaged green they consume significant resources in the form of time, man-power. This also leads to poor patient outcome and has effect on waiting times of patients having more urgent needs.[@Morley2018]
 
-Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. 
-
-Emergency departments are perceived to provide quick and easy access to healthcare, although they are not. This leads to visits of patients with no injury or minor injuries.[@Uscher-Pines2013][@Coster2017]
-
-Although these patients are triaged green they consume significant resources.
-In India, no objective data is available to understand the problem of overcrowding.[@Pines2011]
+Studies have categorised patients triaged (according to the MTS Triaging system) green and blue as not very urgent and non-urgent respecticely.[@Moura2020][@Slagman2019]
 It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
-
+In India, no objective data is available to understand the problem of overcrowding.
 The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
 
 # Methods
