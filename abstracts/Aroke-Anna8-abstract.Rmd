@@ -233,7 +233,7 @@ maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data
 
 complete.index <- complete.cases(dt)
 n.incomplete <- sum(!complete.index)
-p.incomplete <- round((n.incomplete/nrow(dt)) * 100)
+p.incomplete <- round((n.incomplete/nrow(dt)) * 100,1)
 
 dtt <- dt[complete.index, ]
 
@@ -247,8 +247,8 @@ kbbh <- subset(x=dtt,subset = dtt$tc == 0)
 dm <- as.numeric(nrow(kbbh))
 
 # Age
-mean_age <- round(mean(kbbh$age),2)
-stddev_age <- round(sd(kbbh$age),2)
+mean_age <- round(mean(kbbh$age),1)
+stddev_age <- round(sd(kbbh$age),1)
 
 nm_age <- sum(kbbh$agegrp != "65+")
 percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 1)
@@ -460,36 +460,34 @@ p_rts_8 <- round(mean(kbbh$rts == 8) * 100,1)
 
 ## Introduction
 
-Trauma is one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. Emergency departments provide quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. Although these patients are triaged green they consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
+Trauma is one of the leading causes of emergency department visits.  Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. Emergency departments are perceived as quick and easy access to healthcare, leading to visits of patients with no injury or minor injuries. These patients with minor injuries, triaged green, consume significant resources. It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
 
 ## Aim
 
-The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
+The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary care hospital in Mumbai.
 
 ## Methods
 
-Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective cohort analysis of the data was performed using R. 
+Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective cohort analysis of the data was performed. 
 
 ## Results
-
-There was `r nrow(dt)` observations in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
 ## Conclusion
 
-Among the patients triaged green, injury due to assualt and transport accidents were predominant. `r p_rts_8`% patients had an RTS score of 8. Patients with minor injuries and no injuries defined are `r p_iss_mi`% and `r p_iss_nd`% respectively. 
+Among the patients triaged green, injury due to assualt and transport accidents were predominant. All patients had an RTS score of greater than 4. Most of the patients had minor injuries or no defined injuries.
 
 ---------------------------------------------------------------------------
 
 # Introduction
-Emergency departments are meant to cater to patients that require immediate care. Trauma is one of the leading causes of emergency department (ED) visits.[@Weiss2015]
+Emergency departments are meant to cater to patients that require immediate care. Trauma is one of the leading causes of emergency department (ED) visits.[@weiss2014]
 In the ED, patients are sorted for treatment by priority using triage.
 Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. There are different triage systems applied in EDs across the world.
 Most often EDs are perceived to provide quick and easy access to healthcare, although they are not. This leads to visits of patients with no injury or minor injuries.[@Uscher-Pines2013][@Coster2017]. These are non-urgent visits or ones that do not require an ED visit. 
-Although these patients are triaged green they consume significant resources in the form of time, man-power. This also leads to poor patient outcome and has effect on waiting times of patients having more urgent needs.[@Morley2018]
+Although these patients are triaged green they consume significant resources in the form of time, man-power. This also leads to poor patient outcome and has effect on waiting times of patients having more urgent needs.[@morley2018]
 
-Studies have categorised patients triaged (according to the MTS Triaging system) green and blue as not very urgent and non-urgent respecticely.[@Moura2020][@Slagman2019]
+Studies have categorised patients triaged (according to the MTS Triaging system) green and blue as not very urgent and non-urgent respecticely.[@moura2020][@slagman2019]
 It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
 In India, no objective data is available to understand the problem of overcrowding.
 The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
