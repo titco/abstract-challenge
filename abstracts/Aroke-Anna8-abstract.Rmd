@@ -247,8 +247,8 @@ kbbh <- subset(x=dtt,subset = dtt$tc == 0)
 dm <- as.numeric(nrow(kbbh))
 
 # Age
-mean_age <- round(mean(kbbh$age),1)
-stddev_age <- round(sd(kbbh$age),1)
+mean_age <- round(mean(kbbh$age),0)
+stddev_age <- round(sd(kbbh$age),0)
 
 nm_age <- sum(kbbh$agegrp != "65+")
 percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 1)
@@ -396,8 +396,8 @@ p_supf <- injv["Superficial Injury.percent"]
 nm_supf <- injv["Superficial Injury.nm"]
 p_ndi <- injv["No defined Injury.percent"]
 nm_ndi <- injv["No defined Injury.nm"]
-p_ow <- injv["Open WOund.percent"]
-nm_ow <- injv["Open WOund.nm"]
+p_ow <- injv["Open Wound.percent"]
+nm_ow <- injv["Open Wound.nm"]
 p_frac <- injv["Fracture.percent"]
 nm_frac <- injv["Fracture.nm"]
 inj1 <- names(inj.data[1])
@@ -468,37 +468,35 @@ The aim of this study is to describe the demographic, physiological and injury c
 
 ## Methods
 
-Data of patients triaged green were extracted from the Trauma Triage Study in India dataset. A retrospective cohort analysis of the data was performed. 
+Data analysis of patients triaged green, from the Trauma Triage Study in India registry was performed.
 
 ## Results
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through `r mot1` (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
+We analysed `r dm` patients triaged green from the TTRIS registry. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%, while `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest mechanism of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
 
 ## Conclusion
 
-Among the patients triaged green, injury due to assualt and transport accidents were predominant. All patients had an RTS score of greater than 4. Most of the patients had minor injuries or no defined injuries.
+Among the patients triaged green, injury due to assualt and transport accidents were predominant. All patients had an RTS score of greater than four. Most of the patients had minor injuries or no defined injuries.
 
 ---------------------------------------------------------------------------
 
 # Introduction
 Emergency departments are meant to cater to patients that require immediate care. Trauma is one of the leading causes of emergency department (ED) visits.[@weiss2014]
-In the ED, patients are sorted for treatment by priority using triage.
-Based on injury severity and physiological parameters patients are triaged as red, orange, yellow, or green, from most to least urgent. There are different triage systems applied in EDs across the world.
-Most often EDs are perceived to provide quick and easy access to healthcare, although they are not. This leads to visits of patients with no injury or minor injuries.[@Uscher-Pines2013][@Coster2017]. These are non-urgent visits or ones that do not require an ED visit. 
-Although these patients are triaged green they consume significant resources in the form of time, man-power. This also leads to poor patient outcome and has effect on waiting times of patients having more urgent needs.[@morley2018]
+In the ED, patients are sorted for treatment by priority using triage. There are different triage systems applied in ED across the world like the Australian triage system (ATS), the canadian Triage and Acuity Scale (CTAS), the Manchester Triaging system (MTS) and the Emergency Severity Index (ESI).[@christ2010modern] These use an estimate of injury severity and physiological parameters to triage, prioritize for treatment, patients as red, orange, yellow, or green, from most to least urgent. Studies have categorised patients triaged (according to the MTS) green and blue as not very urgent and non-urgent respecticely.[@moura2020],[@slagman2019].
 
-Studies have categorised patients triaged (according to the MTS Triaging system) green and blue as not very urgent and non-urgent respecticely.[@moura2020][@slagman2019]
+Most often EDs are perceived to provide quick and easy access to healthcare. This leads to visits of patients with no injury or minor injuries.[@Uscher-Pines2013],[@Coster2017]. These are non-urgent visits or ones that do not require an ED visit. 
+Although these patients are triaged green they consume significant resources in the form of time, man-power. This also leads to poor patient outcome and impacts waiting times of patients having more urgent needs as an effect of overcrowding.[@morley2018] In India, no objective data is available to understand the problem of overcrowding.
+
 It is important to understand the characteristics of these patients to understand how they should be managed so that resources can be directed towards serious patients.
-In India, no objective data is available to understand the problem of overcrowding.
 The aim of this study is to describe the demographic, physiological and injury characteristics of trauma patients triaged green in the ED of a secondary healthcare hospital in Mumbai.
 
 # Methods
 
 ## Setting
-We performed this study in the Emergency Department at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergency. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders.The ED has 5 bed's and is staffed by one physician/Casualty Medical Officer (CMO) two On-duty nurses, two dressers and two ward boys. 
+We performed this study in the ED at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergencies. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders. The ED has five beds and is staffed by one physician/Casualty Medical Officer, two on-duty nurses, two dressers who aid in wound dressing and two ward boys. 
 
 ## Data extraction
-Data of patients triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. Number of serious injuries was estimated by the treating pyhsician. A serious injury here was deinfed as injury that warrants hospitalization. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24hrs, 30 days and 6months from the day of injury. Data analysis was performed using R statistical software.
+Data of patients that visited the ED of KBBH and were triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24 hours, 30 days and 6 months from the day of injury. Data analysis was performed using R statistical software.
 
 ## Variables
 
@@ -514,7 +512,7 @@ Severity of Injury was assesed using ISS and RTS scores[@champion1989] and furth
 
 # Results
 
-There was `r nrow(dt)` patients in the study data. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and were excluded from the study population.
+There were 15000 patient records in the TTRIS dataset, out of which `r nrow(dt)` patients were those that visited the ED of KBBH. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and were excluded from the study population.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age which mainly constitutes the working population. The majority were in the age group 25-44 years (49.4%), followed by patients in the age group 18-24 years (31.7%). A total of (`r percent_male`%) patients were male. Type of injury were predominantly blunt injuries (`r percent_blunt`%) followed by penetrating injuries (1.3%). The most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by transport accidents (`r p_tra`%) and fall (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. Of the 134 patients  transfered from other hospitals or local clinics, 61 had superficial injuries (40) or no defined injuries (21), 36 had fracture, 27 had open wound.
 
