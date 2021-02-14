@@ -300,13 +300,16 @@ moi2 <- names(moi.data[2])
 moi3 <- names(moi.data[3])
 
 # Outcome
-kbbh$s6m <- as.factor(kbbh$s6m)
-outcome.data <- lapply(setNames(nm = levels(kbbh$s6m)), calculate_n_p, factor.var = kbbh$s6m)
+kbbh$s30d <- as.factor(kbbh$s30d)
+outcome.data <- lapply(setNames(nm = levels(kbbh$s30d)), calculate_n_p, factor.var = kbbh$s30d)
+print(outcome.data)
 p_outcome_alive <- outcome.data[["0"]]["percent"]
 p_outcome_dead <- outcome.data[["1"]]["percent"]
 n_outcome_dead <- outcome.data[["1"]]["nm"]
 
 p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
+
+
 
 # Grouping patients wrt to injury
 
@@ -429,7 +432,7 @@ ab_noinj.p <- injvmoi[["Animal bite"]][8]
 ab_ow.p <- injvmoi[["Animal bite"]][9]
 ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
 
-# Time spent in ED
+# Length of Stay in ED
 
 doa <- kbbh$doa
 kbbh$admits <- ifelse(doa==0,"Not admitted","Admitted")
@@ -472,7 +475,7 @@ Data analysis of patients triaged green, from the Trauma Triage Study in India r
 
 ## Results
 
-We analysed `r dm` patients triaged green from the TTRIS registry. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%, while `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest mechanism of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead.
+We analysed `r dm` patients triaged green from the TTRIS registry. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%, while `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest mechanism of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 30days, of which `r n_outcome_dead` patients were reported dead.
 
 ## Conclusion
 
@@ -493,7 +496,7 @@ The aim of this study is to describe the demographic, physiological and injury c
 # Methods
 
 ## Setting
-We performed this study in the ED at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergencies. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders. The ED has five beds and is staffed by one physician/Casualty Medical Officer, two on-duty nurses, two dressers who aid in wound dressing and two ward boys. 
+We performed this study in the ED at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergencies. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders. 
 
 ## Data extraction
 Data of patients that visited the ED of KBBH and were triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24 hours, 30 days and 6 months from the day of injury. Data analysis was performed using R statistical software.
@@ -516,7 +519,7 @@ There were 15000 patient records in the TTRIS dataset, out of which `r nrow(dt)`
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age which mainly constitutes the working population. The majority were in the age group 25-44 years (49.4%), followed by patients in the age group 18-24 years (31.7%). A total of (`r percent_male`%) patients were male. Type of injury were predominantly blunt injuries (`r percent_blunt`%) followed by penetrating injuries (1.3%). The most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by transport accidents (`r p_tra`%) and fall (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. Of the 134 patients  transfered from other hospitals or local clinics, 61 had superficial injuries (40) or no defined injuries (21), 36 had fracture, 27 had open wound.
 
-The Injury Severity Score (ISS) indicated that 50.2% were 'mild', 49.4% patients had 'No defined injuries', the remaining 0.4% patients had 'moderate' severity. `r p_followup`% patients were successfully followed up at 6months, of which `r n_outcome_dead` patients were reported dead. All patients had an RTS score greater than 4. `r p_rts_8`% patients had an RTS score of 8.
+The Injury Severity Score (ISS) indicated that 50.2% were 'mild', 49.4% patients had 'No defined injuries', the remaining 0.4% patients had 'moderate' severity. All patients had an RTS score greater than 4. `r p_rts_8`% patients had an RTS score of 8. `r p_followup`% patients were successfully followed up at 30days, of which `r n_outcome_dead` patients were reported dead. Of the ones reported dead, both the patients were aged 80 year old. First patient arrived in the ED 7 days after injury due to fall on same level from slipping, tripping or stumbling (W01). The patient was inaccurately triaged green as she had a GCS of 7 (2 - EGCS,2 - VGCS,3 - MGCS) on arrival and was admitted in the ICU with an ED - LOS of 30 minutes. Documented injury of the patient was an old CLW on the forehead and abrasion on arm. The patient died within 36 hours of admission. The second patient arrived in the ED within an hour of injury due to fall (W18) with a complain of pain in the hip. Patient of arrival had a GCS of 15 and oxygen saturation of 98. The radiological findings (X-Ray Chest and X-Ray PBH) were normal, therefore was discharged from the ED with an ED - LOS of less than 3 hours. We presume this patient must have died due to oldage and natural causes.
 
 Most common type of amputations were, a single finger (8), thumb (2) and single toe amputations (2). Crush injuries were of unspecified part of the hand (3) the finger (1) and the toe (2). More than one third of the fractures were forearm and elbow fractures (73), followed by hand (53), foot fracture (50) and knee or lower leg fracture (44). Shoulder or upper arm fracture were 28, hip and thigh fractures were 19 and fracture of skull or facial bones were 19.
 
