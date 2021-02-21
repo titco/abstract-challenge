@@ -13,7 +13,7 @@ output:
     toc: false
     keep_tex: yes
 bibliography: abstract.bib
---- 
+---
 
 ```{r setup, include=FALSE, results='asis', message=FALSE}
 library(knitr)
@@ -241,6 +241,7 @@ dtt <- dt[complete.index, ]
 
 ```{r result, warning=FALSE, message=FALSE}
 # Created a dataframe of triage category green
+
 kbbh <- subset(x=dtt,subset = dtt$tc == 0)
 
 # Number of records
@@ -302,14 +303,11 @@ moi3 <- names(moi.data[3])
 # Outcome
 kbbh$s30d <- as.factor(kbbh$s30d)
 outcome.data <- lapply(setNames(nm = levels(kbbh$s30d)), calculate_n_p, factor.var = kbbh$s30d)
-print(outcome.data)
 p_outcome_alive <- outcome.data[["0"]]["percent"]
 p_outcome_dead <- outcome.data[["1"]]["percent"]
 n_outcome_dead <- outcome.data[["1"]]["nm"]
 
 p_followup <- as.numeric(p_outcome_alive)+as.numeric(p_outcome_dead)
-
-
 
 # Grouping patients wrt to injury
 
@@ -432,7 +430,7 @@ ab_noinj.p <- injvmoi[["Animal bite"]][8]
 ab_ow.p <- injvmoi[["Animal bite"]][9]
 ab_total.p <- ab_noinj.p+ab_ow.p+ab_sup.p
 
-# Length of Stay in ED
+# Time spent in ED
 
 doa <- kbbh$doa
 kbbh$admits <- ifelse(doa==0,"Not admitted","Admitted")
@@ -496,7 +494,7 @@ The aim of this study is to describe the demographic, physiological and injury c
 # Methods
 
 ## Setting
-We performed this study in the ED at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergencies. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders. 
+We performed this study in the ED at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergencies. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders.
 
 ## Data extraction
 Data of patients that visited the ED of KBBH and were triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24 hours, 30 days and 6 months from the day of injury. Data analysis was performed using R statistical software.
@@ -541,13 +539,13 @@ kbbh$nsi <- factor(kbbh$nsi, levels = c(0,1,2),
 kbbh$hd <- factor(kbbh$hd, levels = c(0,1,2,3), 
                   labels = c("Discharged","Dead","Transferred","Abscond/ DAMA"))
 
-var_label(kbbh) <- list(age = "Age", agegrp = "Age Group", sex = "Sex", moi.collapsed = "Mode of Injury", tyi = "Type of injury", mot = "Mode of transport", tran = "Transfer status", avpu = "AVPU", sbp = "Systolic blood pressure", dbp = "Distolic blood pressure", hr = "Heart rate", spo2 = "Oxygen saturation", vo2 = "Need for oxygen support", rr = "Respiratory rate", nsi = "Number of serious injuries", hd = "Hospital disposition", gcs = "GCS", gcs.cat = "GCS",isspv = "ISS", rts = "RTS", inj_type = "Characteristic of Injury")
+var_label(kbbh) <- list(age = "Age", agegrp = "Age Group", sex = "Sex", moi.collapsed = "Mode of Injury", tyi = "Type of injury", mot = "Mode of transport", tran = "Transfer status", avpu = "AVPU", sbp = "Systolic blood pressure", dbp = "Distolic blood pressure", hr = "Heart rate", spo2 = "Oxygen saturation", vo2 = "Need for oxygen support", rr = "Respiratory rate", nsi = "Number of serious injuries", hd = "Hospital disposition", gcs = "GCS", gcs.cat = "GCS",isspv = "ISS", rts = "RTS", inj_type = "Characteristic of Injury", admits = "Admit status")
 
 myvars <- c("age", "mot", "tran", "avpu", "sbp", "dbp", "hr", "spo2", "vo2", "rr", "nsi", "hd", "gcs","gcs.cat", "isspv", "rts","inj_type")
 
 catvars <- c("mot", "tran", "avpu", "vo2", "nsi", "hd","gcs.cat", "inj_type")
 
-Table1 <- CreateTableOne(vars = myvars, data=kbbh, factorVars = catvars)
+Table1 <- CreateTableOne(vars = myvars, strata = "admits", data=kbbh, factorVars = catvars)
 knitr::kable(print(Table1,
                    caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 ```
