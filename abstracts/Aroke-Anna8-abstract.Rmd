@@ -497,7 +497,7 @@ The aim of this study is to describe the demographic, physiological and injury c
 We performed this study in the ED at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergencies. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders.
 
 ## Data extraction
-Data of patients that visited the ED of KBBH and were triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization. This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24 hours, 30 days and 6 months from the day of injury. Data analysis was performed using R statistical software.
+Data of patients that visited the ED of KBBH and were triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization.[@gardner2017] This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24 hours, 30 days and 6 months from the day of injury. Data analysis was performed using R statistical software.
 
 ## Variables
 
@@ -567,10 +567,8 @@ kable(Table3,
       caption = "Percentage distribution of Injury type among different Mechanism of Injury",
 )
 ```
+
 ```{r}
-
-
-
 Table4 <- xtabs(~kbbh$inj_type+kbbh$ardd, data = nap)
 kable(Table4,
       caption = "Time taken (in hours, 0-1 hour, more than one hour or more than 2 hours) for discharge for injury type",
