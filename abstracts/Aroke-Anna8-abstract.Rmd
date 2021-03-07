@@ -497,11 +497,20 @@ The aim of this study is to describe the demographic, physiological and injury c
 We performed this study in the ED at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergencies. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders.
 
 ## Data extraction
-Data of patients that visited the ED of KBBH and were triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset. Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last. The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization.[@gardner2017] This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24 hours, 30 days and 6 months from the day of injury. Data analysis was performed using R statistical software.
+Data of patients that visited the ED of KBBH and were triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset.  Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. 
+
+To allow for comparisons between prediction models on centre level the updating sample will included the first 25 events (patients with the outcome) and all non-events (patients without the outcome) presenting in the same time period to each centre. This sample size was shown to be adequate for updating logit models with fewer than eight free parameters (20) . Assuming that 30 day mortality will be 15% each centre needed to enrol at least 170 participants for the updating sample. For the validation
+sample each centre needed to enrol at least 200 events and all non-events presenting in the same time period. This number of events is based on simulation studies of the number of events needed to detect significant differences in discrimination and calibration when comparing multiple prediction models with 80% power (21). To power the study so that secondary outcomes can also be reliably assessed 24 hour mortality was used as the basis of the validation sample size calculation as we expected this outcome to be the least frequent. Assuming that 24-hour mortality will be about 5% the total number of patients that needed to be enrolled by each centre is 4000. Anticipating a 20% loss to follow up the each centre was needed to enrol 5200 participants. Assuming that each centre enrols ten participants per shift, and that each project officer does five shifts per week, the total time needed to enrol the total number of participants was 26 months.
+
+Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24 hours, 30 days and 6 months from the day of injury. Data analysis was performed using R statistical software.
 
 ## Variables
 
-- Mechanism of Injury: Mechanism of injury (ICD-10) codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others. 
+- Mechanism of Injury: This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Mechanism of injury (ICD-10) codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others. 
+
+- Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last.
+
+- The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization.[@gardner2017]
 
 Severity of Injury was assesed using ISS and RTS scores[@champion1989] and further elaborated by identifying injury characteristics
 
