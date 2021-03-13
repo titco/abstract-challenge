@@ -540,13 +540,51 @@ grViz("digraph flowchart {
       ")
 
 grid.newpage()
-one <- boxGrob("Total patients in TTRIS dataset n=15000",
-               x=0.5,y=0.5)
-two <- boxGrob("Patients in each centre n=5200")
-three <- boxGrob("Patients in KBBH data of TTRIS n=4793")
-six <- boxGrob("Study population : Patients Triaged green in KBBH dataset n=4133")
-four <- boxGrob("Excluded : Records with incomplete observations n=227")
-five <- boxGrob("Excluded : Patients that did not consent for follow-up n=414")
+org_cohort <- boxGrob(glue("Total patients in TTRIS dataset",
+                            "n = {pop}",
+                           pop = txtInt(15000),
+                           .sep = "\n"))
+centre_cohort <- boxGrob(glue("Patients in each centre",
+                            "n = {pop}",
+                           pop = txtInt(5000),
+                           .sep = "\n"))
+
+kbbh_cohort <- boxGrob(glue("Patients in KBBH dataset of TTRIS",
+                            "n = {pop}",
+                           pop = txtInt(4793),
+                           .sep = "\n"))
+
+excluded <- boxGrob(glue("Excluded (n = {tot}):",
+                         " - incomplete observations: {incomplete}",
+                         " - no consent for follow-up: {consent}",
+                         tot = 641,
+                         incomplete = 227,
+                         consent = 641-227,
+                         .sep = "\n"),
+                    just = "left")
+
+study_pop <- boxGrob(glue("Study Population, Patients triaged green",
+                            "n = {pop}",
+                           pop = txtInt(4133),
+                           .sep = "\n"))
+
+grid.newpage()
+vert <- spreadVertical(org_cohort,
+                       centre_cohort = centre_cohort,
+                       kbbh_cohort = kbbh_cohort,
+                       study_pop = study_pop)
+
+excluded <- moveBox(excluded,
+                    x = 0.98,
+                    y = coords(vert$study_pop)$top + distance(vert$kbbh_cohort, vert$study_pop, half = TRUE, center = FALSE))
+
+for (i in 1:(length(vert) - 1)) {
+  connectGrob(vert[[i]], vert[[i + 1]], type = "vert") %>%
+    print
+}
+connectGrob(vert$kbbh_cohort, excluded, type = "L")
+
+
 
 ```
 
