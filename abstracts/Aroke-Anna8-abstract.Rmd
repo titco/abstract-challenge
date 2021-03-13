@@ -30,6 +30,12 @@ library(assertthat)
 library(rlist)
 library(labelled)
 library(corrplot)
+library(DiagrammeR) #For the flowchart
+library(Gmisc, quietly = TRUE)
+library(glue)
+library(htmlTable)
+library(grid)
+library(magrittr)
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
@@ -242,10 +248,15 @@ dtt <- dt[complete.index, ]
 ```{r result, warning=FALSE, message=FALSE}
 # Created a dataframe of triage category green
 
-kbbh <- subset(x=dtt,subset = dtt$tc == 0)
+dttt <- subset(x=dtt,subset = dtt$tc == 0)
+n_nic <- nrow(subset(x=dttt,subset = dttt$ic == 0))
+kbbh <- subset(x=dttt,subset = dttt$ic == 1)
 
 # Number of records
 dm <- as.numeric(nrow(kbbh))
+dm
+
+nrow(kbbh)
 
 # Age
 mean_age <- round(mean(kbbh$age),0)
@@ -493,36 +504,89 @@ The aim of this study is to describe the demographic, physiological and injury c
 
 # Methods
 
-## Setting
-We performed this study in the ED at the K.B. Bhabha Hospital, a regional secondary healthcare facility located in Mumbai, India. The ED serves approximately 350 patients each day, having medicinal, surgical or traumatic emergencies. The close proximity to a police station entails this ED as a stop for health-checkups of prisoners and offenders.
+## Study Design
 
-## Data extraction
-Data of patients that visited the ED of KBBH and were triaged green were extracted from the Trauma Triage Study in India (TTRIS) dataset.  Patients aged 18 and above were included in the dataset. Data was collected prospectively from the year 2016 to 2019. 
+We performed this prospective cohort study as part of the Trauma Triage Study in India (TTRIS). The TTRIS is a multicentre project, an extension of the Towards Improved Trauma Care Outcomes consortium.
 
-To allow for comparisons between prediction models on centre level the updating sample will included the first 25 events (patients with the outcome) and all non-events (patients without the outcome) presenting in the same time period to each centre. This sample size was shown to be adequate for updating logit models with fewer than eight free parameters (20) . Assuming that 30 day mortality will be 15% each centre needed to enrol at least 170 participants for the updating sample. For the validation
-sample each centre needed to enrol at least 200 events and all non-events presenting in the same time period. This number of events is based on simulation studies of the number of events needed to detect significant differences in discrimination and calibration when comparing multiple prediction models with 80% power (21). To power the study so that secondary outcomes can also be reliably assessed 24 hour mortality was used as the basis of the validation sample size calculation as we expected this outcome to be the least frequent. Assuming that 24-hour mortality will be about 5% the total number of patients that needed to be enrolled by each centre is 4000. Anticipating a 20% loss to follow up the each centre was needed to enrol 5200 participants. Assuming that each centre enrols ten participants per shift, and that each project officer does five shifts per week, the total time needed to enrol the total number of participants was 26 months.
+## Study Setting
 
-Consent for telephonic follow-up was taken before the patient was discharged. Follow-up was done at 24 hours, 30 days and 6 months from the day of injury. Data analysis was performed using R statistical software.
+We conducted this study in the emergency department (ED) at the Khershedji Behramji Bhabha Hospital (KBBH) between July 2016 to November 2019. KBBH is a 436 bedded regional secondary healthcare facility located in Mumbai, India, catering to approximately 350 patients each day in the ED, with trauma as a subspeciality with  medical, surgical and obstetric emergencies.. There are surgery, orthopaedics and anaesthesia departments and both adult and paediatric intensive care units. Most patients present directly and are not transferred from another health centre. Plain radiography  and ultrasonography are available around the clock, but CT is only available in-house during the day. During evenings and nights, patients in need of a CT are referred elsewhere. Prehospital care in India is poorly developed, with no organised emergency medical services and the concept of onscene triage in trauma patients is non-existent. Ambulances are predominately used for interhospital transfers, and most patients who arrive directly from the scene of the incident arrive in private vehicles or on-foot. The patients arriving at the ED are first seen by a casualty medical officer largely on a first come, first served basis. There is no formalised system for triaging ED patients at KBBH. 
+
+## Participants
+
+- Inclusion Criteria: We included any person aged ≥18 years presenting to the KBBH ED with a history of trauma. A history of trauma was defined here as having any of the external causes of morbidity and mortality listed in block V01-Y36, chapter XX of the International Classification of Disease version 10 online code book as the primary complaint, with some exclusions (see online supplementary material).
+
+```{r}
+grViz("digraph flowchart {
+      # node definitions with substituted label text
+      node [fontname = Helvetica, shape = rectangle]        
+      tab1 [label = '@@1']
+      tab2 [label = '@@2']
+      tab3 [label = '@@3']
+      tab4 [label = '@@4']
+      tab5 [label = '@@5', shape = oval]
+
+      # edge definitions with the node IDs
+      tab1 -> tab2 -> tab3
+      tab3 -> tab4;
+      tab3 -> tab5
+      }
+
+      [1]: 'Total patients in TTRIS (n=15000)'
+      [2]: 'Patients in each centre (n=5200)'
+      [3]: 'Number of patients in KBBH data of TTRIS n=4793'
+      [4]: 'Excluded : Records with incomplete observations n=227, Patients that did not consent for follow-up n=414'
+      [5]: 'Included : Patients Triaged green in KBBH dataset n=4133'
+      ")
+
+grid.newpage()
+one <- boxGrob("Total patients in TTRIS dataset n=15000",
+               x=0.5,y=0.5)
+two <- boxGrob("Patients in each centre n=5200")
+three <- boxGrob("Patients in KBBH data of TTRIS n=4793")
+six <- boxGrob("Study population : Patients Triaged green in KBBH dataset n=4133")
+four <- boxGrob("Excluded : Records with incomplete observations n=227")
+five <- boxGrob("Excluded : Patients that did not consent for follow-up n=414")
+
+```
+
+
+## Source and methods of selection of participants and follow-up
+
+Data of patients that visited the ED of KBBH and were triaged green during July 2016- November 2019 were extracted from TTRIS dataset. The project officers worked morning, evening and night shifts (6 hour observational shifts) and data were collected from the first 10 consecutive patients during each shift. The rationale for including only the first 10 patients was that this was the number of participants that we considered feasible to follow-up. Follow-up was performed by the project officer at 24 hours, 30 days and 6 months after a participant arrived at the ED. The time frame of the study was chosen to ensure that all included patients had completed 6 months of follow-up to minimise the loss to follow-up. The follow-up was completed in person or by phone, depending on whether the patient was still hospitalised or if the patient had been discharged. The phone numbers of one or more contact persons, for example, relatives, were collected on enrolment and those people were contacted if the participant did not reply to the follow-up phone call. Only if neither the participant nor the contact person answered any of three phone calls was the outcome recorded as missing. 
+
+## Variables and Outcomes
+
+- Outcomes 		 	 	 							
+The outcome variable was mortality within 30 days and 6 months, henceforth referred to as 30-day and 6-month mortality. 
+
+- Clinician Triage						
+For the purpose of this study, the clinicians who first assessed the patients on arrival to the ED were instructed by the project officers to categorise patients into four colour-coded triage level groups, henceforth referred to as only triage levels. The triage levels were green, yellow, orange and red. The risk of mortality increases from green to red along the corresponding colour spectrum, with green and red indicating the least and most urgent patients, respectively. The clinicians were allowed to use all information available at the time when they assigned the triage level, which was as soon as they had first seen the patient. The triage levels were not used to guide further patient care, and no interventions were implemented as part of the study for patients assigned to the more urgent triage levels. 
 
 ## Variables
 
-- Mechanism of Injury: This dataset contains patients presenting to the ED with any of the mechanism of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Mechanism of injury (ICD-10) codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others. 
+- Mechanism of Injury: This dataset contains patients presenting to the ED with any of the mechanisms of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Mechanism of injury (ICD-10) codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others.
 
-- Triage category was determined by the treating physician. Green was assigned to the least serious patients and those that should be treated last.
+- The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization.8
+Severity of Injury was assessed using ISS and RTS scores9 and further elaborated by identifying injury characteristics
 
-- The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization.[@gardner2017]
-
-Severity of Injury was assesed using ISS and RTS scores[@champion1989] and further elaborated by identifying injury characteristics
-
-- ISS: The Injury Severity Score (ISS) was categorized 'No defined injuries(ND)' (0), 'mild' (3-8), 'moderate' (9-15), 'severe' (16-25), 'profound' (>25).
+- ISS: The Injury Severity Score (ISS) was categorized ‘No defined injuries (ND)’ (0), ‘mild’ (3-8), ‘moderate’ (9-15), ‘severe’ (16-25), ‘profound’ (>25).
 
 - RTS: RTS was calculated using the GCS, RR and SBP values in the TTRIS dataset. They were further categorized into RTS < 4 and RTS > 4.
+- Injury characteristics: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury.10 If no crush injury was present then the patient was categorized into the next most critical injury.			
 
-- Injury characteristics: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury.[@CDC1992] If no crush injury was present then the patient was categorized into the next most critical injury.
+## Quality assurance
+
+There were several layers of quality control. First, data were entered using a dedicated electronic data collection instrument with extensive logical checks and prompts for unlikely but possible values. Second, the collected data were reviewed on a weekly basis and discussed during weekly online conferences with all project officers. Third, on-site quality control sessions were conducted every 3–4 months. During these sessions, a second project officer collected data alongside the project officer who worked at the ED. The quality control data were then compared with the standard data. 
+
+## Data Analysis 
+
+Data analysis was performed using R statistical software.
+
 
 # Results
 
-There were 15000 patient records in the TTRIS dataset, out of which `r nrow(dt)` patients were those that visited the ED of KBBH. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and were excluded from the study population.
+There were 15000 patient records in the TTRIS dataset, out of which `r nrow(dt)` patients were those that visited the ED of KBBH. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and `r n_nic` patients did not consent for follow-up hence were excluded from the study population.
 
 In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age which mainly constitutes the working population. The majority were in the age group 25-44 years (49.4%), followed by patients in the age group 18-24 years (31.7%). A total of (`r percent_male`%) patients were male. Type of injury were predominantly blunt injuries (`r percent_blunt`%) followed by penetrating injuries (1.3%). The most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by transport accidents (`r p_tra`%) and fall (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. Of the 134 patients  transfered from other hospitals or local clinics, 61 had superficial injuries (40) or no defined injuries (21), 36 had fracture, 27 had open wound.
 
