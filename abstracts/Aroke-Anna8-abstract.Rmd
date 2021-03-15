@@ -520,72 +520,21 @@ We conducted this study in the emergency department (ED) at the Khershedji Behra
 grViz("digraph flowchart {
       # node definitions with substituted label text
       node [fontname = Helvetica, shape = rectangle]        
-      tab1 [label = '@@1']
-      tab2 [label = '@@2']
-      tab3 [label = '@@3']
-      tab4 [label = '@@4']
-      tab5 [label = '@@5', shape = oval]
+      tab1 [label = 'Total patients in TTRIS n=15000']
+      tab2 [label = 'Patients in other centre n=10207']
+      tab3 [label = 'Patients in KBBH n=4793']
+      tab4 [label = 'Excluded : \n Records with incomplete observations n=227 \n Patients that did not consent for follow-up n=414']
+      tab5 [label = 'Included: n=4152']
+      tab6 [label = 'Patients Triaged green in KBBH dataset n=4133', shape = oval]
 
       # edge definitions with the node IDs
-      tab1 -> tab2 -> tab3
+      tab1 -> tab2; 
+      tab1 -> tab3
       tab3 -> tab4;
       tab3 -> tab5
+      tab5 -> tab6
       }
-
-      [1]: 'Total patients in TTRIS (n=15000)'
-      [2]: 'Patients in each centre (n=5200)'
-      [3]: 'Number of patients in KBBH data of TTRIS n=4793'
-      [4]: 'Excluded : Records with incomplete observations n=227, Patients that did not consent for follow-up n=414'
-      [5]: 'Included : Patients Triaged green in KBBH dataset n=4133'
       ")
-
-grid.newpage()
-org_cohort <- boxGrob(glue("Total patients in TTRIS dataset",
-                            "n = {pop}",
-                           pop = txtInt(15000),
-                           .sep = "\n"))
-centre_cohort <- boxGrob(glue("Patients in each centre",
-                            "n = {pop}",
-                           pop = txtInt(5000),
-                           .sep = "\n"))
-
-kbbh_cohort <- boxGrob(glue("Patients in KBBH dataset of TTRIS",
-                            "n = {pop}",
-                           pop = txtInt(4793),
-                           .sep = "\n"))
-
-excluded <- boxGrob(glue("Excluded (n = {tot}):",
-                         " - incomplete observations: {incomplete}",
-                         " - no consent for follow-up: {consent}",
-                         tot = 641,
-                         incomplete = 227,
-                         consent = 641-227,
-                         .sep = "\n"),
-                    just = "left")
-
-study_pop <- boxGrob(glue("Study Population, Patients triaged green",
-                            "n = {pop}",
-                           pop = txtInt(4133),
-                           .sep = "\n"))
-
-grid.newpage()
-vert <- spreadVertical(org_cohort,
-                       centre_cohort = centre_cohort,
-                       kbbh_cohort = kbbh_cohort,
-                       study_pop = study_pop)
-
-excluded <- moveBox(excluded,
-                    x = 0.98,
-                    y = coords(vert$study_pop)$top + distance(vert$kbbh_cohort, vert$study_pop, half = TRUE, center = FALSE))
-
-for (i in 1:(length(vert) - 1)) {
-  connectGrob(vert[[i]], vert[[i + 1]], type = "vert") %>%
-    print
-}
-connectGrob(vert$kbbh_cohort, excluded, type = "L")
-
-
-
 ```
 
 
