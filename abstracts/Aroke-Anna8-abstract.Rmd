@@ -31,11 +31,9 @@ library(rlist)
 library(labelled)
 library(corrplot)
 library(DiagrammeR) #For the flowchart
-library(Gmisc, quietly = TRUE)
-library(glue)
-library(htmlTable)
-library(grid)
-library(magrittr)
+library(DiagrammeRsvg) #Exporting the flowchart as svg
+library(magrittr) #Exporting the flowchart as svg
+library(rsvg) #Exporting the flowchart as svg
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
@@ -45,6 +43,7 @@ knitr::opts_chunk$set(echo = FALSE)
 # Get data directory
 
 data.dir <- getOption("data.dir")
+options(data.dir = "C:/Users/annan/OneDrive/Documents/Projects/PGTP")
 if (is.null(data.dir))
     stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
 
@@ -57,32 +56,12 @@ h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
 
 ## Merged the two datatables
 h$pid <- as.integer(h$pid)
-dt <- merge(g1, h, by = "pid") # When you do this you loose all extra patients present in g mot not in h. Is that intentional? Yes, g has the AIS score columns.
+dt <- merge(g1, h, by = "pid")
 
 ## Rearranging columns
 dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:tvsr,dus:testvar,locked,X0:iss,doi_toi:valid)
 
-extra_col <- dt %>% dplyr::select(doi_toi:valid)
-
-## Adding the extra columns to g
-g <- cbind(g,extra_col)
-
-## Changing class of the data
-g <- as.data.frame(g)
-dt <- as.data.frame(dt)
-
-dt[] <- lapply(names(dt), function(name) {
-    column <- dt[, name]
-    correct.class <- class(g[, name])
-    if (correct.class == "factor") {
-        new.column <- factor(column, levels = levels(g[, name]))
-    } else {
-        new.column <- as(column, correct.class)
-    }
-    return (new.column)
-})
-
-## dplyr::all_equal(g,dt) ##To compare the two dataframes
+#dplyr::all_equal(g,dt) ##To compare the two dataframes
 
 # Creating age groups
 agebreaks <- c(17,25,45,65,98)
@@ -95,7 +74,7 @@ dt$agegrp <-cut(dt$age,
 # Mechanism of Injury
 moi.collapsed <- moi <- as.character(dt$moi)
 
- get_icd_range <- function(first.char, start.number, end.number) {
+get_icd_range <- function(first.char, start.number, end.number) {
     icd.range <- paste0(
         paste0(
             "^",
@@ -147,7 +126,7 @@ dt$iss <- as.numeric(iss)
 ## character, not numeric
 
 issbreaks <- c(0,1,9,16,25,109)
-isslabels <- c("ND","Mild","Moderate","Severe","Profound")
+isslabels <- c("No defined injury","Mild","Moderate","Severe","Profound")
 dt$isspv <-cut(dt$iss,
                 breaks = issbreaks,
                 right = FALSE,
@@ -242,28 +221,38 @@ n.incomplete <- sum(!complete.index)
 p.incomplete <- round((n.incomplete/nrow(dt)) * 100,1)
 
 dtt <- dt[complete.index, ]
+dttt <- subset(x=dtt,subset = dtt$ic == 1)
+n_nic <- nrow(subset(x=dttt,subset = dttt$ic == 0))
 
+# creating inclusion flowchart
+grViz("digraph flowchart {
+      # node definitions with substituted label text
+      node [fontname = Helvetica, shape = rectangle]        
+      tab1 [label = 'Total patients in TTRIS n=15000']
+      tab2 [label = 'Patients in other centre n=10207']
+      tab3 [label = 'Patients in KBBH n=4793']
+      tab4 [label = 'Excluded : \n Records with incomplete observations n=228 \n Patients that did not consent for follow-up n=411']
+      tab5 [label = 'Included: n=4151']
+      tab6 [label = 'Patients Triaged green in KBBH dataset n=4135', shape = oval]
+
+      # edge definitions with the node IDs
+      tab1 -> tab2; 
+      tab1 -> tab3
+      tab3 -> tab4;
+      tab3 -> tab5
+      tab5 -> tab6
+      }
+      ") %>% export_svg %>% charToRaw %>% rsvg_svg("flowchart.svg")
 ```
 
 ```{r result, warning=FALSE, message=FALSE}
+
 # Created a dataframe of triage category green
 
-dttt <- subset(x=dtt,subset = dtt$tc == 0)
-n_nic <- nrow(subset(x=dttt,subset = dttt$ic == 0))
-kbbh <- subset(x=dttt,subset = dttt$ic == 1)
+kbbh <- subset(x=dttt,subset = dttt$tc == 0)
 
 # Number of records
 dm <- as.numeric(nrow(kbbh))
-dm
-
-nrow(kbbh)
-
-# Age
-mean_age <- round(mean(kbbh$age),0)
-stddev_age <- round(sd(kbbh$age),0)
-
-nm_age <- sum(kbbh$agegrp != "65+")
-percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 1)
 
 calculate_n_p <- function(level.name, factor.var){
     assert_that(is.character(level.name))
@@ -273,6 +262,22 @@ calculate_n_p <- function(level.name, factor.var){
     return.list <-list(nm = nm, percent = percent)
     return.list
 }
+
+# Transfer status
+tran.data <- list.sort(lapply(setNames(nm = levels(kbbh$tran)), calculate_n_p, factor.var = kbbh$tran), nm, decreasing = TRUE)
+tranv <- unlist(tran.data)
+
+nm_direct <- tranv["Direct.nm"]
+p_direct <- tranv["Direct.percent"]
+nm_tran <- tranv["Transferred.nm"]
+p_tran <- tranv["Transferred.percent"]
+
+# Age
+mean_age <- round(mean(kbbh$age),0)
+stddev_age <- round(sd(kbbh$age),0)
+
+nm_age <- sum(kbbh$agegrp != "65+")
+percent_agebelow65 <- round(mean(kbbh$agegrp != "65+") * 100, 1)
 
 # Sex
 sex.data <- list.sort(lapply(setNames(nm = levels(kbbh$sex)), calculate_n_p, factor.var = kbbh$sex), nm, decreasing = TRUE)
@@ -284,18 +289,26 @@ nm_female <- sexv["Female.nm"]
 p_female <- sexv["Female.percent"]
 
 # Type of Injury
-nm_blunt <- sum(kbbh$tyi == 0)
-percent_blunt <- round(mean(kbbh$tyi == 0) * 100,1)
+
+tyi.data <- list.sort(lapply(setNames(nm = levels(kbbh$tyi)), calculate_n_p, factor.var = kbbh$tyi), nm, decreasing = TRUE)
+
+tyiv <- unlist(tyi.data)
+nm_blunt <- tyiv["Blunt.nm"]
+p_blunt <- tyiv["Blunt.percent"]
+
+nm_pene <- tyiv["Penetrating.nm"]
+p_pene <- tyiv["Penetrating.percent"]
 
 # Mode of Transport
 mot.data <- list.sort(lapply(setNames(nm = levels(kbbh$mot)), calculate_n_p, factor.var = kbbh$mot), nm, decreasing = TRUE)
 
 motv <- unlist(mot.data)
 nm_pvt <- motv["Private Vehicle.nm"]
-p_mot_pvt <- motv["Private Vehicle.percent"]
-nm_mot_onfoot <- motv["On foot.nm"]
-p_mot_onfoot <- motv["On foot.percent"]
+p_pvt <- motv["Private Vehicle.percent"]
+nm_onfoot <- motv["On foot.nm"]
+p_onfoot <- motv["On foot.percent"]
 mot1 <- names(mot.data[1])
+mot2 <- names(mot.data[2])
 
 # MOI
 moi.data <- list.sort(lapply(setNames(nm = levels(kbbh$moi.collapsed)), calculate_n_p, factor.var = kbbh$moi.collapsed), nm, decreasing = TRUE)
@@ -310,6 +323,17 @@ p_tra <- moiv["Transport accident.percent"]
 moi1 <- names(moi.data[1])
 moi2 <- names(moi.data[2])
 moi3 <- names(moi.data[3])
+
+# ISS 
+iss.data <- list.sort(lapply(setNames(nm = levels(kbbh$isspv)), calculate_n_p, factor.var = kbbh$isspv), nm, decreasing = TRUE)
+
+issv <- unlist(iss.data)
+nm_iss_mild <- issv["Mild.nm"]
+p_iss_mild <- issv["Mild.percent"]
+nm_iss_nd <- issv["No defined injury.nm"]
+p_iss_nd <- issv["No defined injury.percent"]
+nm_iss_mod <- issv["Moderate.nm"]
+p_iss_mod <- issv["Moderate.percent"]
 
 # Outcome
 kbbh$s30d <- as.factor(kbbh$s30d)
@@ -347,8 +371,8 @@ rest <- suppressWarnings(suppressMessages(rest %>% anti_join(bv)))
 
 amp_inj <- str_c(c("S08","S081","S082","S083","S084","S085","S086","S087","S088","S089","S18","S281","S382","S383","T096","S48","S480","S481","S489","S58","S580","S581","S589","S68","S680","S681","S682","S683","S684","S688","S689","T050","T052","T116","S780","S781","S782","S783","S784","S785","S786","S787","S788","S789","S88","S880","S881","S889","S98","S980","S981","S982","S983","S984","S780","T053","T055","T136","T058","T059"),collapse = "|")
 
-amputation <- filter(rest, str_detect(allinj, amp_inj))
 
+amputation <- filter(rest, str_detect(allinj, amp_inj))
 amputation$inj_type <- "Amputation"
 rest <- suppressWarnings(suppressMessages(rest %>% anti_join(amputation)))
 
@@ -395,7 +419,6 @@ supf <- filter(rest, str_detect(allinj, supf_inj))
 supf$inj_type <- "Superficial Injury"
 no_def_inj <- suppressWarnings(suppressMessages(rest %>% anti_join(supf)))
 no_def_inj$inj_type <- "No defined Injury"
-
 kbbh1 <- suppressWarnings(suppressMessages(rbind(no_def_inj,supf,open,unspe,multiple,burn,disl,frac,amputation,bv,internal,crush)))
 kbbh<- merge(kbbh,kbbh1)
 
@@ -416,6 +439,18 @@ inj1 <- names(inj.data[1])
 inj2 <- names(inj.data[2])
 inj3 <- names(inj.data[3])
 inj4 <- names(inj.data[4])
+
+# Injury characteristics of transferred to kbbh patients
+tr <- subset(x=kbbh, subset = kbbh$tran == 1)
+
+tr.inj.data <- list.sort(lapply(setNames(nm = levels(tr$inj_type)), calculate_n_p, factor.var = tr$inj_type), nm, decreasing = TRUE)
+
+tr.inj.v <- unlist(tr.inj.data)
+
+nm_tr_superf <- tr.inj.v["Superficial Injury.nm"]
+nm_tr_nd <- tr.inj.v["No defined Injury.nm"]
+nm_tr_frac <- tr.inj.v["Fracture.nm"]
+nm_tr_ow <- tr.inj.v["Open Wound.nm"]
 
 injvmoi <- as_tibble(colPerc(xtabs(~kbbh$inj_type+kbbh$moi.collapsed, data = kbbh)))
 
@@ -504,43 +539,29 @@ The aim of this study is to describe the demographic, physiological and injury c
 
 # Methods
 
-## Study Design
+## Study Design 
 
-We performed this prospective cohort study as part of the Trauma Triage Study in India (TTRIS). The TTRIS is a multicentre project, an extension of the Towards Improved Trauma Care Outcomes consortium.
+We performed this single-centre prospective cohort study as part of the Trauma Triage Study in India (TTRIS). The TTRIS is a multicentre project, an extension of the Towards Improved Trauma Care Outcomes consortium.
 
 ## Study Setting
 
-We conducted this study in the emergency department (ED) at the Khershedji Behramji Bhabha Hospital (KBBH) between July 2016 to November 2019. KBBH is a 436 bedded regional secondary healthcare facility located in Mumbai, India, catering to approximately 350 patients each day in the ED, with trauma as a subspeciality with  medical, surgical and obstetric emergencies.. There are surgery, orthopaedics and anaesthesia departments and both adult and paediatric intensive care units. Most patients present directly and are not transferred from another health centre. Plain radiography  and ultrasonography are available around the clock, but CT is only available in-house during the day. During evenings and nights, patients in need of a CT are referred elsewhere. Prehospital care in India is poorly developed, with no organised emergency medical services and the concept of onscene triage in trauma patients is non-existent. Ambulances are predominately used for interhospital transfers, and most patients who arrive directly from the scene of the incident arrive in private vehicles or on-foot. The patients arriving at the ED are first seen by a casualty medical officer largely on a first come, first served basis. There is no formalised system for triaging ED patients at KBBH. 
+We conducted this study in the emergency department (ED) at the Khershedji Behramji Bhabha Hospital (KBBH) between July 2016 to November 2019. KBBH is a 436 bedded regional secondary healthcare facility located in Mumbai, India, catering to approximately 350 patients each day in the ED, with trauma as a subspeciality with  medical, surgical and obstetric emergencies.. There are surgery, orthopaedics and anaesthesia departments and both adult and paediatric intensive care units. There is no neurosurgery department in KBBH. Most patients present directly and were not transferred from another health centre. Plain radiography  and ultrasonography are available around the clock, but CT is only available in-house during the day. During evenings and nights, patients in need of a CT or neurosurgeon's opinion are referred to nearby tertiary care centres. Prehospital care in India is poorly developed, with no organised emergency medical services and the concept of onscene triage in trauma patients is non-existent. Ambulances are predominately used for interhospital transfers, and most patients who arrive directly from the scene of the incident arrive in private vehicles or on-foot. The patients arriving at the ED are first seen by a casualty medical officer largely on a first come, first served basis. There is no formalised system for triaging ED patients at KBBH. 
+
+## Clinician Triage						
+
+For the purpose of this study, the clinicians who first assessed the patients on arrival to the ED were asked by the project officers to categorise patients into four colour-coded triage level groups, henceforth referred to as only triage levels. The triage levels were green, yellow, orange and red. The risk of mortality increases from green to red along the corresponding colour spectrum, with green and red indicating the least and most urgent patients, respectively. The clinicians were allowed to use all information available at the time when they assigned the triage level, which was as soon as they had first seen the patient. The triage levels were not used to guide further patient care, and no interventions were implemented as part of the study for patients assigned to the more urgent triage levels. 
 
 ## Participants
 
-- Inclusion Criteria: We included any person aged ≥18 years presenting to the KBBH ED with a history of trauma. A history of trauma was defined here as having any of the external causes of morbidity and mortality listed in block V01-Y36, chapter XX of the International Classification of Disease version 10 online code book as the primary complaint, with some exclusions (see online supplementary material).
-
-```{r}
-grViz("digraph flowchart {
-      # node definitions with substituted label text
-      node [fontname = Helvetica, shape = rectangle]        
-      tab1 [label = 'Total patients in TTRIS n=15000']
-      tab2 [label = 'Patients in other centre n=10207']
-      tab3 [label = 'Patients in KBBH n=4793']
-      tab4 [label = 'Excluded : \n Records with incomplete observations n=227 \n Patients that did not consent for follow-up n=414']
-      tab5 [label = 'Included: n=4152']
-      tab6 [label = 'Patients Triaged green in KBBH dataset n=4133', shape = oval]
-
-      # edge definitions with the node IDs
-      tab1 -> tab2; 
-      tab1 -> tab3
-      tab3 -> tab4;
-      tab3 -> tab5
-      tab5 -> tab6
-      }
-      ")
-```
-
+- Inclusion Criteria: We included any person aged ≥18 years presenting to the KBBH ED with a history of trauma. A history of trauma was defined here as having any of the external causes of morbidity and mortality listed in block V01-Y36, chapter XX of the International Classification of Disease version 10 online code book as the primary complaint, with some exclusions (see online supplementary material).	
 
 ## Source and methods of selection of participants and follow-up
 
-Data of patients that visited the ED of KBBH and were triaged green during July 2016- November 2019 were extracted from TTRIS dataset. The project officers worked morning, evening and night shifts (6 hour observational shifts) and data were collected from the first 10 consecutive patients during each shift. The rationale for including only the first 10 patients was that this was the number of participants that we considered feasible to follow-up. Follow-up was performed by the project officer at 24 hours, 30 days and 6 months after a participant arrived at the ED. The time frame of the study was chosen to ensure that all included patients had completed 6 months of follow-up to minimise the loss to follow-up. The follow-up was completed in person or by phone, depending on whether the patient was still hospitalised or if the patient had been discharged. The phone numbers of one or more contact persons, for example, relatives, were collected on enrolment and those people were contacted if the participant did not reply to the follow-up phone call. Only if neither the participant nor the contact person answered any of three phone calls was the outcome recorded as missing. 
+Data of patients that visited the ED was collected for TTRIS at KBBH Mumbai, Institute of Post Graduate Medical Education and Research and Seth Sukhlal Karnani Memorial Hospital (IPGMER and SSKM), Kolkata and Maulana Azad Medical College (MAMC), Delhi , during July 2016- November 2019. The project officer (the primary author of this manuscript) worked morning, evening and night shifts (6 hour observational shifts) and data were collected from the first 10 consecutive patients only, irrespective of their triage, during each shift. Data collected at KKBH, Mumbai was extracted and evaluated for this study.
+
+![](flowchart.svg)
+
+The rationale for including only the first 10 patients was that this was the number of participants that we considered feasible to follow-up. Follow-up was performed by the project officer at 24 hours, 30 days and 6 months after a participant arrived at the ED. The time frame of the study was chosen to ensure that all included patients had completed 6 months of follow-up to minimise the loss to follow-up. The follow-up was completed in person or by phone, depending on whether the patient was still hospitalised or if the patient had been discharged. The phone numbers of one or more contact persons, for example, relatives, were collected on enrolment and those people were contacted if the participant did not reply to the follow-up phone call. Only if neither the participant nor the contact person answered any of three phone calls was the outcome recorded as missing. 
 
 ## Variables and Outcomes
 
@@ -554,13 +575,15 @@ For the purpose of this study, the clinicians who first assessed the patients on
 
 - Mechanism of Injury: This dataset contains patients presenting to the ED with any of the mechanisms of Injury listed in International Classification of Diseases (ICD-10) between V01 to Y09. Mechanism of injury (ICD-10) codes were grouped into Transport accidents (V00-V99), Falls (W00-W19), Animal Bites (W50-W64), Assault (X85-X99, Y00-Y09) and others.
 
-- The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization.8
-Severity of Injury was assessed using ISS and RTS scores9 and further elaborated by identifying injury characteristics
+- The number of serious injuries was estimated by the treating physician. A serious injury here was defined as injury that warrants hospitalization.
 
-- ISS: The Injury Severity Score (ISS) was categorized ‘No defined injuries (ND)’ (0), ‘mild’ (3-8), ‘moderate’ (9-15), ‘severe’ (16-25), ‘profound’ (>25).
+Severity of Injury was assessed using ISS and RTS scores and further elaborated by identifying injury characteristics
 
-- RTS: RTS was calculated using the GCS, RR and SBP values in the TTRIS dataset. They were further categorized into RTS < 4 and RTS > 4.
-- Injury characteristics: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury.10 If no crush injury was present then the patient was categorized into the next most critical injury.			
+- Injury characteristics: Injuries were recorded and coded using the ICD-10 in the TTRIS dataset. To further understand the characteristics of the injury and analyse its severity, patients were divided into categories with respect to the most critical injury (using the ICD-10 codes) into namely; Crush injury, Injury to internal organs, blood vessel injury, Amputation, Fracture, Dislocation, Burn, Multiple injury, Unspecified Injury, Open wound, Superficial Injury and No defined injury.10 If no crush injury was present then the patient was categorized into the next most critical injury. Injury characteristics of patients that presented to the ED with no injuries were categorized as ‘No defined injury’
+
+- The Injury Severity Score (ISS): ISS was categorized , ‘mild’ (3-8), ‘moderate’ (9-15), ‘severe’ (16-25), ‘profound’ (>25). ISS was not assigned to patients with ‘no defined injuries’.
+
+- Revised Trauma Score (RTS): RTS was calculated using the GCS, RR and SBP values in the TTRIS dataset. They were further categorized into RTS < 4 and RTS > 4.
 
 ## Quality assurance
 
@@ -568,18 +591,26 @@ There were several layers of quality control. First, data were entered using a d
 
 ## Data Analysis 
 
-Data analysis was performed using R statistical software.
-
+Data analysis was performed using R statistical software. Complete case analysis for performed and incomplete patient records were excluded. Descriptive statistics was run for all variables. The results are presented as number and percentages for categorical variables and mean and standard deviation for quantitative variables. The Chi-square test was performed to understand the association between age groups and injury characteristic with a confidence interval of 95%
 
 # Results
 
-There were 15000 patient records in the TTRIS dataset, out of which `r nrow(dt)` patients were those that visited the ED of KBBH. Out of these, `r n.incomplete` (`r p.incomplete` %) observations were incomplete and `r n_nic` patients did not consent for follow-up hence were excluded from the study population.
+During the study period, `r dm` patients from the TTRIS dataset were triaged green by the clinician and hence included in our study. Of these, `r nm_tran` were transferred from other healthcare facilities and approximately `r p_pvt`% of patients from our study population arrived through `r mot1`, `r p_onfoot`% `r mot2`, with the least number of people using the ambulance as a mode of transport to the ED
 
-In the TTRIS dataset, `r dm` patients were triaged green. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age which mainly constitutes the working population. The majority were in the age group 25-44 years (49.4%), followed by patients in the age group 18-24 years (31.7%). A total of (`r percent_male`%) patients were male. Type of injury were predominantly blunt injuries (`r percent_blunt`%) followed by penetrating injuries (1.3%). The most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%. `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest cause of injury (`r p_assault`%) followed by transport accidents (`r p_tra`%) and fall (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. Of the 134 patients  transfered from other hospitals or local clinics, 61 had superficial injuries (40) or no defined injuries (21), 36 had fracture, 27 had open wound.
+_Patient Demographics_
 
-The Injury Severity Score (ISS) indicated that 50.2% were 'mild', 49.4% patients had 'No defined injuries', the remaining 0.4% patients had 'moderate' severity. All patients had an RTS score greater than 4. `r p_rts_8`% patients had an RTS score of 8. `r p_followup`% patients were successfully followed up at 30days, of which `r n_outcome_dead` patients were reported dead. Of the ones reported dead, both the patients were aged 80 year old. First patient arrived in the ED 7 days after injury due to fall on same level from slipping, tripping or stumbling (W01). The patient was inaccurately triaged green as she had a GCS of 7 (2 - EGCS,2 - VGCS,3 - MGCS) on arrival and was admitted in the ICU with an ED - LOS of 30 minutes. Documented injury of the patient was an old CLW on the forehead and abrasion on arm. The patient died within 36 hours of admission. The second patient arrived in the ED within an hour of injury due to fall (W18) with a complain of pain in the hip. Patient of arrival had a GCS of 15 and oxygen saturation of 98. The radiological findings (X-Ray Chest and X-Ray PBH) were normal, therefore was discharged from the ED with an ED - LOS of less than 3 hours. We presume this patient must have died due to oldage and natural causes.
+The mean age of patients was `r mean_age` (+-`r stddev_age`), with 49.4% in the age group of 25 to 44 years. A large proportion of patients (`r percent_agebelow65`%) were below 65 years of age which mainly constitutes the working population. A total of `r nm_male` (`r percent_male`%) patients were male. 
+
+_Patients Injuries_
+
+We observed `r moi1` as the commonest cause of injury (`r p_tra`%) followed by `r moi2` (`r p_assault`%) and `r moi3` (`r p_fall`%) with injury due to animal bites in `r p_animalbite`% of the patients. Blunt injuries represented the most common type of injury endured by patients (`r p_blunt`%) followed by penetrating injuries (`r p_pene`%). Of the `r nm_tran` patients  transfered from other hospitals or local clinics, `r nm_tr_superf + nm_tr_nd` had superficial injuries (`r nm_superf`) or no defined injuries (`r nm_tr_nd`), `r nm_tr_frac` had fracture, `r nm_tr_ow` had open wound.
+
+The Injury Severity Score (ISS) indicated that `r p_iss_mild`% were 'mild', `r p_iss_nd`% patients had 'No defined injuries', the remaining `r p_iss_mod`% (nm_iss_mod) patients had 'moderate' severity. 
+All patients had RTS greater than four, with `r p_rts_8`% having a score of greater than eight. 
 
 Most common type of amputations were, a single finger (8), thumb (2) and single toe amputations (2). Crush injuries were of unspecified part of the hand (3) the finger (1) and the toe (2). More than one third of the fractures were forearm and elbow fractures (73), followed by hand (53), foot fracture (50) and knee or lower leg fracture (44). Shoulder or upper arm fracture were 28, hip and thigh fractures were 19 and fracture of skull or facial bones were 19.
+
+`r p_followup`% patients were successfully followed up at 30days, of which `r n_outcome_dead` patients were reported dead. Of the ones reported dead, both the patients were aged 80 year old. First patient arrived in the ED 7 days after injury due to fall on same level from slipping, tripping or stumbling (W01). The patient was inaccurately triaged green as she had a GCS of 7 (2 - EGCS,2 - VGCS,3 - MGCS) on arrival and was admitted in the ICU with an ED - LOS of 30 minutes. Documented injury of the patient was an old CLW on the forehead and abrasion on arm. The patient died within 36 hours of admission. The second patient arrived in the ED within an hour of injury due to fall (W18) with a complain of pain in the hip. Patient of arrival had a GCS of 15 and oxygen saturation of 98. The radiological findings (X-Ray Chest and X-Ray PBH) were normal, therefore was discharged from the ED with an ED - LOS of less than 3 hours. We presume this patient must have died due to oldage and natural causes.
 
 ```{r}
 #Factor labels
