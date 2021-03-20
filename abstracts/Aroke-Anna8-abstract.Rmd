@@ -357,6 +357,8 @@ crush <- filter(kbbh, str_detect(allinj, crush_inj))
 crush$inj_type <- "Crush Injury"
 rest <- suppressWarnings(suppressMessages(kbbh %>% anti_join(crush)))
 
+#table(crush$allinj)
+
 internal_inj <- str_c(c("S06","S060","S061","S062","S063","S064","S065","S066","S067","S068","S069","T905","S140","S141","S240","S241","S340","S341","S343","T093","T913","S142","S260","S270","S271","S272","S273","S274","S275","S276","S278","S279","T914","S36","S360","S361","S362","S363","S364","S365","S366","S367","S368","S369","S37","S370","S371","S372","S373","S374","S375","S376","S377","S378","S379","S396","S397","T065","T915"),collapse = "|")
 
 internal <- filter(rest, str_detect(allinj, internal_inj))
@@ -371,16 +373,19 @@ rest <- suppressWarnings(suppressMessages(rest %>% anti_join(bv)))
 
 amp_inj <- str_c(c("S08","S081","S082","S083","S084","S085","S086","S087","S088","S089","S18","S281","S382","S383","T096","S48","S480","S481","S489","S58","S580","S581","S589","S68","S680","S681","S682","S683","S684","S688","S689","T050","T052","T116","S780","S781","S782","S783","S784","S785","S786","S787","S788","S789","S88","S880","S881","S889","S98","S980","S981","S982","S983","S984","S780","T053","T055","T136","T058","T059"),collapse = "|")
 
-
 amputation <- filter(rest, str_detect(allinj, amp_inj))
 amputation$inj_type <- "Amputation"
 rest <- suppressWarnings(suppressMessages(rest %>% anti_join(amputation)))
+
+#table(amputation$allinj)
 
 frac_inj <- str_c(c("S02","S020","S021","S023","S027","S029","T902","S022","S024","S025","S026","S12","S128","S129","S120","S121","S122","S123","S124","S125","S126","S127","S22","S220","S221","S32","S320","S321","S322","T08","T911","S222","S223","S224","S225","S226","S227","S228","S229","S323","S324","S325","S326","S327","S328","T021","T912","S42","S420","S421","S422","S423","S424","S427","S428","S429","S52","S520","S521","S522","S523","S524","S525","S526","S527","S528","S529","S62","S620","S621","S622","S623","S624","S625","S626","S627","S628","T022","T024","T10","T921","T922","S72","S720","S721","S722","S723","S724","S725","S726","S727","S728","S729","S82","S820","S821","S822","S823","S824","S825","S826","S827","S828","S829","S92","S920","S921","S922","S923","S924","S925","S927","S929","T023","T025","T12","T931","T932","T028","T029","T142"),collapse = "|")
 
 frac <- filter(rest, str_detect(allinj, frac_inj))
 frac$inj_type <- "Fracture"
 rest <- suppressWarnings(suppressMessages(rest %>% anti_join(frac)))
+
+table(frac$allinj)
 
 disl_inj <- str_c(c("S030","S031","S032","S033","S130","S131","S132","S133","S230","S231","S330","S331","S332","S232","S333","S334","S430","S431","S432","S433","S530","S531","S630","S631","S632","S730","S830","S831","S93","S930","S931","S933"),collapse = "|")
 
@@ -393,7 +398,6 @@ burn_inj <- str_c(c("T26","T260","T261","T262","T263","T264","T265","T266","T267
 burn <- filter(rest, str_detect(allinj, burn_inj))
 burn$inj_type <- "Burn"
 rest <- suppressWarnings(suppressMessages(rest %>% anti_join(burn)))
-
 
 multiple_inj <- str_c(c("S097","S197","S277","S297","T031","T092","S497","S597","S697","T032","T112","T923","T926","S797","S897","S997","T033","T132","T933","T936","T038","T039","T910","T143","T147"),collapse = "|")
 
@@ -410,7 +414,7 @@ rest <- suppressWarnings(suppressMessages(rest %>% anti_join(unspe)))
 open_inj <- str_c(c("S01","S010","S011","S012","S013","S014","S015","S017","S018","S019","T901","S052","S053","S054","S055","S056","S057","S080","S092","S11","S110","S111","S112","S117","S118","S119","S21","S210","S211","S212","S217","S218","S219","S311","S318","S310","S312","S313","S314","S315","S317","T091","S41","S410","S411","S417","S418","S51","S510","S517","S518","S519","S61","S610","S611","S617","S618","S619","T012","T111","T920","S710","S711","S712","S713","S714","S715","S716","S717","S718","S81","S810","S817","S818","S819","S91","S910","S911","S912","S913","S917","T013","T131","T930","T019","T141"),collapse = "|")
 
 open <- filter(rest, str_detect(allinj, open_inj))
-open$inj_type <- "Open Wound"
+open$inj_type <- "Open wound"
 rest <- suppressWarnings(suppressMessages(rest %>% anti_join(open)))
 
 supf_inj <- str_c(c("S00","S000","S001","S002","S003","S004","S005","S007","S008","S009","S050","S051","T900","S10","S100","S101","S107","S108","S109","S20","S200","S201","S202","S203","S204","S207","S208","S301","S300","S302","S307","S308","S309","T090","S40","S400","S407","S408","S409","S50","S500","S501","S507","S508","S509","S60","S600","S601","S602","S607","S608","S609","T002","T110","S70","S700","S701","S702","S703","S704","S705","S706","S707","S708","S709","S80","S800","S801","S807","S808","S809","S90","S900","S901","S902","S903","S907","S908","S909","T003","T130","T008","T009","T140","T150"),collapse = "|")
@@ -439,6 +443,9 @@ inj1 <- names(inj.data[1])
 inj2 <- names(inj.data[2])
 inj3 <- names(inj.data[3])
 inj4 <- names(inj.data[4])
+
+amp <- subset(x=kbbh, subset = kbbh$inj_type == "Amputation")
+
 
 # Injury characteristics of transferred to kbbh patients
 tr <- subset(x=kbbh, subset = kbbh$tran == 1)
@@ -515,11 +522,11 @@ The aim of this study is to describe the demographic, physiological and injury c
 
 ## Methods
 
-Data analysis of patients triaged green, from the Trauma Triage Study in India registry was performed.
+We performed this single-centre prospective cohort study as part of the Trauma Triage Study in India (TTRIS). The TTRIS is a multicentre project, an extension of the Towards Improved Trauma Care Outcomes consortium.
 
 ## Results
 
-We analysed `r dm` patients triaged green from the TTRIS registry. The mean age of these patients was `r mean_age` (+-`r stddev_age`). `r percent_agebelow65`% of the patients were below 65 years of age. `r percent_male`% patients were male. `r percent_blunt`% patients had blunt injuries. Most common mode of arrival to the ED was through private vehicles (`r percent_mot_pvt`)%, while `r percent_mot_onfoot`% patients came to the ED on foot. `r moi1` was the commonest mechanism of injury (`r p_assault`%) followed by `r moi2` (`r p_tra`%) and `r moi3` (`r p_fall`%). Injury due to animal bites were `r p_animalbite`%. `r p_followup`% patients were successfully followed up at 30days, of which `r n_outcome_dead` patients were reported dead.
+During the study period, `r dm` patients from the TTRIS dataset were triaged green by the clinician and hence included in our study. Of these, `r nm_tran` were transferred from other healthcare facilities and approximately `r p_pvt`% of patients from our study population arrived through `r mot1`, `r p_onfoot`% `r mot2`, with the least number of people using the ambulance as a mode of transport to the ED
 
 ## Conclusion
 
@@ -608,9 +615,19 @@ We observed `r moi1` as the commonest cause of injury (`r p_tra`%) followed by `
 The Injury Severity Score (ISS) indicated that `r p_iss_mild`% were 'mild', `r p_iss_nd`% patients had 'No defined injuries', the remaining `r p_iss_mod`% (nm_iss_mod) patients had 'moderate' severity. 
 All patients had RTS greater than four, with `r p_rts_8`% having a score of greater than eight. 
 
-Most common type of amputations were, a single finger (8), thumb (2) and single toe amputations (2). Crush injuries were of unspecified part of the hand (3) the finger (1) and the toe (2). More than one third of the fractures were forearm and elbow fractures (73), followed by hand (53), foot fracture (50) and knee or lower leg fracture (44). Shoulder or upper arm fracture were 28, hip and thigh fractures were 19 and fracture of skull or facial bones were 19.
+Most common type of amputations were, a single finger (8), thumb (2) and single toe amputations (2). Crush injuries were of unspecified part of the hand (3) the finger (1) and the toe (2). More than one third of the fractures were forearm and elbow fractures (58), followed by hand (51), foot fracture (46) and knee or lower leg fracture (30). Shoulder or upper arm fracture were 22, hip and thigh fractures were 18 and fracture of skull or facial bones were 14.
 
-`r p_followup`% patients were successfully followed up at 30days, of which `r n_outcome_dead` patients were reported dead. Of the ones reported dead, both the patients were aged 80 year old. First patient arrived in the ED 7 days after injury due to fall on same level from slipping, tripping or stumbling (W01). The patient was inaccurately triaged green as she had a GCS of 7 (2 - EGCS,2 - VGCS,3 - MGCS) on arrival and was admitted in the ICU with an ED - LOS of 30 minutes. Documented injury of the patient was an old CLW on the forehead and abrasion on arm. The patient died within 36 hours of admission. The second patient arrived in the ED within an hour of injury due to fall (W18) with a complain of pain in the hip. Patient of arrival had a GCS of 15 and oxygen saturation of 98. The radiological findings (X-Ray Chest and X-Ray PBH) were normal, therefore was discharged from the ED with an ED - LOS of less than 3 hours. We presume this patient must have died due to oldage and natural causes.
+A chi-square test was performed to investigate the association between type of injury and age with confidence interval of 95%. The proportion of patients having different injury types differed by age (p<.001).Patients in the age group of 24-44 constituted approximately 50% of all injuries.
+
+_Patient Outcomes_
+
+Follow up at 30 days was successful for `r p_followup`% patients, of which two patients, aged 80 years old, and one patient aged 60 years old were reported dead. 
+
+First patient (aged 80) arrived in the ED 7 days after injury due to fall on the same level from slipping, tripping or stumbling (W01). The patient was inaccurately triaged green as she had a GCS of 7 (2 - EGCS, 2 - VGCS, 3 - MGCS) on arrival and was admitted in the ICU with an ED - LOS of 30 minutes. Documented injury of the patient was an old contused lacerated wound (CLW) on the forehead and abrasion on arm. The patient died within 36 hours of admission. 
+
+Another patient (aged 60) was inaccurately triaged as he had a GCS of 8 (2 - EGCS, 4 - VGCS, 2 - MGCS). The patient arrived at the ED within 45 mins of injury due to fall  from, out of or through building or structure (W13). The patient was transferred to a higher centre with a ED-LOS of 1 hour 50 minutes. The patient was alive at 24hrs follow-up but was reported dead at 30days follow-up. The cause of death can not be deduced with the available data. 
+
+The third patient arrived in the ED within an hour following injury due to fall (W18) with a complaint of pain in the hip. On arrival, the patient had a GCS of 15 and oxygen saturation of 98. The radiological findings (X-Ray Chest and X-Ray Pelvis and both hips (PBH)) were normal, therefore he was discharged from the ED with an ED - LOS of less than 3 hours. We were unable to ascertain the cause of death and presumed this patient must to have died due to old age and natural causes. 
 
 ```{r}
 #Factor labels
