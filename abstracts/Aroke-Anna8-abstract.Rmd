@@ -332,6 +332,8 @@ dt$inj_arr <- ifelse(injar.time<2,"0-1",">1")
 
 ##TEWS
 
+
+
 rr<-  as.numeric(dt$rr)
 
 dt$rrt <- if_else(rr >= 30,"3",
@@ -363,7 +365,7 @@ dt$avput <- if_else(avpu == 0, "3",
 tews <- round(as.numeric(dt$avput)+
                   as.numeric(dt$rrt)+
                   as.numeric(dt$sbpt)+
-                  as.numeric(dt$hrt), 0)
+                  as.numeric(dt$hrt)+ 1, 0)  #Trauma
 
 
 #TEWS cts
