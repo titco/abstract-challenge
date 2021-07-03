@@ -17,3 +17,15 @@ Submit your abstract as a R markdown file in a pull request to this repository.
 2. Fork this repository
 3. Upload your abstract to abstracts/ in your fork
 4. Create a pull request
+
+### Week 4
+Revise according to the comments. Specifically:
+
+1. Make sure you import the raw data. Do not manipulate the data outside of R, just import the original file.
+2. Use inline `R`, avoid copying and pasting results into your abstract. See [@Aroke-Anna8 abstract](https://github.com/titco/abstract-challenge/blob/2f4f63c807a87b16a9fbe2f8f184548e22b539a1/abstracts/Aroke-Anna8-abstract.Rmd#L262).
+
+### Week 5
+Pull the changes to this repository using Rstudio. Then revise according to the changes, push to your fork and finally submit a pull request. Do not upload a new file using GitHub's upload file feature.
+
+### Week 6
+See Week 5. Some of you are getting close to finalising the abstract and start writing up the full paper. However, first you need to add a table of sample characteristics. Hint: have a look at the `tableone` package.

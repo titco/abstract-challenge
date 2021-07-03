@@ -1,0 +1,38 @@
+---
+title: "ABDOMINAL TRAUMA AND SURVIVAL"
+author: "KUNAL NATH"
+date: "June 2, 2020"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+Abdominal injuries are common, costly, deadly, and a source of considerable uncerinitainty common in adult trauma<!-- Uncertainty with regards to what? Specify. Uncertainty regarding outcomes? -->. In some circumstances, laparoscopy offers a diagnostic and therapeutic alternative with less morbidity than standard exploration, but in some specific cases morbidity is high<!-- How come you jump directly to laprascopy? Is your project specifically about laprascopy in abdominal trauma? If so you will need to revise your title and aim --> .
+ 
+# Aim
+
+To check the survival rate of abdominal trauma cases<!-- This does not correspond well with your introduction, where you write about laprascopy. I suggest you revise the last part of your introduction-->.
+
+# Design
+<!-- Here you should state the study design. I would assume that you're doing a retrospective analysis of a prospective cohort of trauma patients -->
+Most of the paitent with polytrauma less chance of having abdominal trauma.
+
+1.so selection is very much requered.
+
+2.finding proper history
+
+3.specify injury from medical record
+
+ 
+# Methods
+<!-- I see that you have a lot do to here so I won't comment further -->
+Most of the abdominal trauma paitent having polytrauma.
+paitent inclution critriea 18 to 100 (age) so adult paitent only involve in this study.
+
+Selection by mechanism of injuri.with medical record
