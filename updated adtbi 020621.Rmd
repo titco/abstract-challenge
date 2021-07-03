@@ -1,0 +1,778 @@
+---
+title: "Comparision of different trauma scoring system in adult tbi patients"
+author: "Debojit Basak"
+date: "02/06/2021"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+# Abstract
+Trauma is one of the leading causes of death in India. Road traffic accidents cause about 60% of all traumatic brain injuries (TBI) in India. About 50% of trauma deaths In India are caused by TBI. The aim of this study is to compare GCS with other trauma scoring systemsin TBI patients.
+## Method
+Analysis of the Towards Improved Trauma Care Outcomes (TITCO)cohort in India was done. This data was collected from four tertiary care hospitals in India between June 2013 and March 2015. All patients who were 18 years or older and admitted from the emergency department (ER) withTBI were included. The data was analysed to measure the usefulness of each score and also compare the usefulness of the different scoring systems. The area under the Receiver Operating Characteristic (ROC) curve analysis was done for discrimination of the scoring systems.
+
+
+```{r setup, include=FALSE}
+## Load packages
+library(rio)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(tableone)
+library(pROC)
+library(lubridate)
+library(DiagrammeR)
+library(gtsummary)
+
+```
+
+```{r , adding variables and others}
+## Loading the csv file
+url <- "https://raw.githubusercontent.com/titco/titco-I/master/titco-I-full-dataset-v1.csv"
+titco <- import(url) %>% as_tibble()
+nrow(titco)
+## Apply filter to find all TBI patients in dataset using ICD 10 codes
+icd.codes <- c("s02.0", "s02.1", "s02.8", "s02.9", 
+               "s06.0", "s06.1", "s06.2", "s06.3", "s06.4", "s07.1",
+               "s06.5", "s06.6", "s06.7", "s06.8", "s06.9", "s08.8",
+               "s09.0", "s09.7", "s09.9", "s03.5")
+pattern <- str_c(icd.codes, collapse = "|")
+titco <- unite(titco, allinj, contains("_icd"), sep = ",", remove = FALSE)
+
+## Filter adult tbi patients
+titcotbi <- filter(titco, str_detect(allinj, pattern))
+nrow(titcotbi)
+## Creating new data set by filtering adults
+titcotbi$age <- as.numeric(titcotbi$age)
+ptbi <- filter(titcotbi, age < 18 )
+nrow(ptbi)
+adtbi1 <- filter(titcotbi, age > 17)
+#sample size
+nrow(adtbi1)
+
+# removing data with incomplete data
+adtbi2 <- adtbi1[!is.na(adtbi1$sbp_1),]
+adtbi3 <- adtbi2[!is.na(adtbi2$rr_1),]
+adtbi4 <- adtbi3[!is.na(adtbi3$gcs_t_1),]
+adtbi5 <- adtbi4[!is.na(adtbi4$ti),]
+
+
+## Trauma scoring system
+## Removing NA's for ROC curve of GCS
+## You shouldn't remove values in individual variables because that
+## will mess up the ordering
+## MGAP score
+## Type of injury
+ti.mgap  <- with(adtbi5, ifelse(ti == "Blunt", 5,
+                         ifelse(ti == "Penetrating", 0, NA)))
+ti.mgap <- as.numeric(ti.mgap)
+summary(ti.mgap)
+## Age
+age.mgap <- with(adtbi5, ifelse(age >= 60, 0,
+                        ifelse(age < 60, 5, NA)))
+## Systolic BP
+sbp.mgap <- with(adtbi5,
+                 ifelse(sbp_1 >= 120, 5,
+                 ifelse(sbp_1 >= 60 & sbp_1 < 120, 3,
+                 ifelse(sbp_1 < 60,0 ,NA))))
+## GCS
+gcs.mgap <- adtbi5$gcs_t_1
+## Create mgap
+adtbi5["mgap"]<- mgap <- ti.mgap + gcs.mgap + age.mgap + sbp.mgap
+
+
+## GAP Score
+## age
+age.gap <- with(adtbi5, ifelse(age >= 60, 0,
+                       ifelse(age < 60,3, NA)))
+## Systolic BP
+sbp.gap <- with(adtbi5, ifelse(sbp_1 >= 120, 6,
+                       ifelse(sbp_1 >= 60 & sbp_1 < 120, 4,
+                       ifelse(sbp_1 < 60, 0, NA))))
+## GCS 
+gcs.gap <- adtbi5$gcs_t_1
+## Create GAP
+adtbi5["gap"] <- gap <-  gcs.gap + age.gap  + sbp.gap
+summary(gap)
+## RTS
+# GCS
+gcs.rts <- with(adtbi5, ifelse(gcs_t_1 >= 13, 4,
+                       ifelse(gcs_t_1 >= 9 & gcs_t_1 < 13, 3,
+                       ifelse(gcs_t_1 >= 6 & gcs_t_1 < 9, 2,
+                       ifelse(gcs_t_1 >= 4 & gcs_t_1 < 6,1,
+                       ifelse(gcs_t_1 < 4, 0, NA))))))
+## RR
+rr.rts <- with(adtbi5, ifelse(rr_1 >= 10 & rr_1 <= 29, 4,
+                      ifelse(rr_1 > 29, 3,
+                      ifelse(rr_1 >= 6 & rr_1 <= 9, 2,
+                      ifelse(rr_1 >= 1 & rr_1 <= 5,1,
+                      ifelse(rr_1 == 0, 0, NA))))))
+## SBP
+sbp.rts <- with(adtbi5, ifelse(sbp_1 > 89, 4,
+                       ifelse(sbp_1 >=76 & sbp_1 <= 89, 3,
+                       ifelse(sbp_1 >= 50 & sbp_1 <= 75, 2,
+                       ifelse(sbp_1 >= 1 & sbp_1 <= 49,1,
+                       ifelse(sbp_1 == 0, 0, NA))))))
+## Calculate RTS
+rts  <-adtbi5["rts"] <- 0.9368 * gcs.rts + 0.7326 * sbp.rts + 0.2908 * rr.rts
+rts <- rts[!is.na(rts)]
+summary(rts)
+## KTS
+## Age
+age.kts  <- with(adtbi5, ifelse(age <= 55, 2,
+                        ifelse(age > 55, 1, NA)))
+## sbp
+sbp.kts <- with(adtbi5, ifelse(sbp_1 > 89, 4,
+                       ifelse(sbp_1 >=50 & sbp_1 <= 89, 3,
+                       ifelse(sbp_1 >= 1 & sbp_1 <= 49, 2,
+                       ifelse(sbp_1 == 0, 1, NA)))))
+## RR
+rr.kts <- with(adtbi5, ifelse(rr_1 >= 10 & rr_1 <= 29 , 3,
+                      ifelse(rr_1 >= 30, 2,
+                      ifelse(rr_1 <= 9, 1, NA))))
+## AVPU
+avpu.kts <- adtbi5["AVPU"]<- with(adtbi5, ifelse(gcs_e_1 == 4, 4,
+                                        ifelse(gcs_e_1 == 3,3,
+                                        ifelse(gcs_e_1 == 2,2,
+                                        ifelse(gcs_e_1== 1,1 , NA)))))
+## No of serious injuries (nsi)
+ais <- select(adtbi5, head_and_neck, face, chest, abdomen_and_pelvic_contents, extremities, external)
+## The function below takes as input one ais column and splits each
+## row into a vector (this is what strsplit does). The split happens
+## where there is a comma. It then calculates the number of elements
+## in that vector that are equal to or greater than 3.
+get_number_serious_injuries <- function(body.region.column) {
+    sapply(strsplit(body.region.column, ","), function(x) sum(x >= 3))
+}
+ais.nsi <- do.call(cbind, lapply(ais, get_number_serious_injuries))
+total.nsi <- rowSums(ais.nsi, na.rm = TRUE)
+adtbi5["noofseriousinjury"] <- ais["noofseriousinjuries"] <-  total.nsi
+nsi.kts <- ifelse(total.nsi == 0, 3,
+           ifelse(total.nsi == 1 , 2,
+           ifelse(total.nsi >= 2, 1, NA)))
+## Calculate KTS
+kts <- adtbi5["kts"] <- age.kts + sbp.kts + rr.kts + avpu.kts + nsi.kts
+
+## creating a column for isolated tbi = 0 and tbi with polytrauma >0
+ais1 <-select(adtbi5, pid,head_and_neck, face, chest, abdomen_and_pelvic_contents, extremities, external)
+# separating contents of a column into different columns
+ais1<- ais1 %>% separate(head_and_neck, c("a1"))
+ais1<- ais1 %>% separate(face, c("b1"))
+ais1<- ais1 %>% separate(chest, c("c1"))
+ais1<- ais1 %>% separate(abdomen_and_pelvic_contents, c("d1"))
+ais1<- ais1 %>% separate(extremities, c("e1"))
+ais1<- ais1 %>% separate(external, c("f1","f2"))
+ais1 <- ais1 %>% mutate_all(funs(replace_na(.,0)))
+#View(ais1)
+## polytrauma >= 1 and isolated tbi = 0 
+poly1 <- ais1["p1"] <- with(ais1, ifelse(a1 >= 2 & b1 >= 1,1,0))
+poly2<- ais1["p2"]<- with(ais1, ifelse(a1 >= 2 & c1 >= 1,1,0))
+poly3 <- ais1["p3"] <- with(ais1,ifelse(a1 >= 2 & d1 >= 1,1,0))
+poly4 <- ais1["p4"] <- with(ais1,ifelse(a1>= 2 & e1 >= 1, 1,0 ))                      
+poly5 <-adtbi5["polytraumaorislotedtbi"] <-  ais1["polytraumaorislotedtbi"] <- rowSums(ais1[,c("p1","p2","p3","p4")], na.rm = T)
+
+poly6 <- ais1["polytraumaorislotedtbi"] <-ifelse(ais1$a1 >= 1 & ais1$polytraumaorislotedtbi == 0 , "TBI",
+                               ifelse(ais1$a1 >= 1 & ais1$polytraumaorislotedtbi >= 1 , "Polytrauma", NA))
+
+adtbi5["TBI"] <- poly6
+
+
+## performing complete case analysis to remove NA from the complete dataset of selected variables needed for analysis
+tbi_241 <- adtbi5
+tbi_242 <- tbi_241[!is.na(tbi_241$died),]
+tbi_243 <- tbi_242[!is.na(tbi_242$gcs_t_1),]
+tbi_244 <- tbi_243[!is.na(tbi_243$mgap),]
+tbi_245 <- tbi_244[!is.na(tbi_244$gap),]
+tbi_246 <- tbi_245[!is.na(tbi_245$rts),]
+tbi_247 <- tbi_246[!is.na(tbi_246$kts),]
+tbi_248 <- tbi_247[!is.na(tbi_247$TBI),]
+adtbi <- tbi_248[!is.na(tbi_248$tran),]
+
+nrow(adtbi)
+
+patient.excluded <- nrow(adtbi1)-nrow(adtbi)
+
+## Find no and % of males and females
+m <- adtbi$sex == "Male"
+n.male <- sum(m)
+p.male <- round(mean(m) * 100)
+f <- adtbi$sex == "Female"
+n.f <- sum(f)
+## Summarize age 
+ages  <- adtbi$age
+ages <- as.numeric(ages)
+m.ages <- median(ages)
+q1.ages <- quantile(ages,0.25)
+q3.ages <- quantile (ages,0.75)
+range.ages <- range(ages)
+## Break age into groups
+adtbi["agegroup"] <- agegroup <- cut(ages,
+                                     breaks = c(17, 25, 45, 65, 85),
+                                     labels =  c("18-24", "25-44", "45-64", "65+"))
+table1 <- table(agegroup)
+## Find percentage transferred
+t <- adtbi$tran == "Yes"
+n.t <- sum(t,na.rm=T)
+p.t <- round(mean(t,na.rm=T)*100)
+## Find mode of transport 
+am <- adtbi$mot == "Ambulance"
+n.am <- sum(am,na.rm=T)
+p.am <- round(mean(am,na.rm=T)*100)
+## Find percentage of Type of injury
+ti <- adtbi$ti == "Blunt"
+n.ti <- sum(ti,na.rm=T)
+p.ti <- round(mean(ti,na.rm=T)*100)
+## Create GCS group
+a.gcs <- adtbi$gcs_t_1
+## Break GCS into groups
+adtbi["gcsgroup"] <- gcsgroup <- cut(a.gcs,
+                                     breaks = c(2, 8, 13, 15),
+                                     labels = c( "3-8", "9-13", "14-15"))
+
+## Find number of surgery done
+tos <- adtbi$tos 
+surg1<- ifelse(tos == 0, 0,
+              ifelse(tos == 999, 0, 1))
+surgery1 <- adtbi["Surgery"] <- surg1 == 1
+n.s <- sum(surgery1, na.rm = TRUE)
+p.s <- round(mean(surgery1, na.rm = TRUE)*100)
+## Find number of RTA and percentage of RTA
+moi <- adtbi$moi
+moi[grep("Road traffic injury", moi)] <- "Road traffic injury"
+adtbi$moi <- moi
+rta <- moi == "Road traffic injury"
+n.rta <- sum(rta, na.rm = TRUE)
+p.rta <- round(mean(rta, na.rm = TRUE) * 100)
+## Percentage of fall
+fall <- adtbi$moi == "Fall"
+n.fall <- sum(fall,na.rm = TRUE)
+p.fall <- round(mean(fall, na.rm = TRUE) * 100)
+## Find mortality
+died <- adtbi$died == "Yes"
+n.died <- sum(died, na.rm = TRUE)
+p.died <- round(mean(died, na.rm = TRUE) * 100)
+
+## to find mortality at 24 hours
+s24h <- adtbi$s24h == "Yes"
+n.s24h <- sum(s24h, na.rm = T)
+p.s24h <- round(mean(s24h, na.rm = TRUE) * 100)
+
+## to find mortality at 30 days
+s30d <- adtbi$s30d == "Yes"
+n.s30d <- sum(s30d, na.rm = T)
+p.s30d <- round(mean(s30d, na.rm = TRUE) * 100)
+
+## Find discharged against medical advice
+dama <- adtbi$dama == "Yes"
+n.dama <- sum(dama,na.rm = T)
+p.dama <- round(mean(dama,na.rm = T)*100)
+
+## median & IQR
+# GCS
+
+gcs <- adtbi$gcs_t_1
+m.gcs <- median(gcs)
+q1.gcs <- quantile(gcs,0.25)
+q3.gcs <- quantile (gcs,0.75)
+range.gcs <- range(gcs)
+
+
+# MGAP
+mgap1 <- adtbi$mgap
+m.mgap <- median(mgap1)
+q1.mgap <- quantile(mgap1,0.25)
+q3.mgap <- quantile (mgap1,0.75)
+range.mgap <- range(mgap1)
+
+# GAP
+gap1 <- adtbi$gap
+m.gap <- median(gap1)
+q1.gap <- quantile(gap1,0.25)
+q3.gap <- quantile (gap1,0.75)
+range.gap <- range(gap1)
+
+# RTS
+rts1 <- adtbi$rts
+m.rts <- median(rts1)
+q1.rts <- quantile(rts1,0.25)
+q3.rts <- quantile (rts1,0.75)
+range.rts <- range(rts1)
+
+#kts
+kts1 <- adtbi$kts
+m.kts <- median(kts1)
+q1.kts <- quantile(kts1,0.25)
+q3.kts <- quantile (kts1,0.75)
+range.kts <- range(kts1)
+
+
+
+
+
+## Creating Table for TBI patients demography using table one
+table1.data <- with(adtbi,
+                    data.frame("Age" = age,
+                               "Age group" = agegroup,
+                               "Gender" = sex,
+                               "Mechanism of injury" = moi,
+                               "Type of injury" = ti,
+                              "Transferred" = ifelse(tran == "Yes", "Transferred", "Direct"),
+                              "Systolic blood pressure" = sbp_1,
+                              "Heart rate" = hr_1,
+                              "Saturation" = spo2_1,
+                              "Respiratory rate" = rr_1,
+                              "Glasgow coma scale" = gcsgroup,
+                              "Surgery" = ifelse(tos == "0", "Conservative", "Operative"),
+                             "Mortality" = ifelse(died == "Yes", "Died", "Survived"),
+                              check.names = FALSE
+                              ))
+
+x1 <- c("Age","Systolic blood pressure","Heart rate","Saturation","Respiratory rate")
+a.table3 <- CreateTableOne(data=table1.data)
+a.table4 <- knitr::kable(print(a.table3, nonnormal = x1, caption = "Table 1. Characteristics of TBI Patients", showAllLevels = TRUE, printToggle = FALSE))
+
+
+
+## Analysis
+## Length of hospital stay
+doar.toar <- as_datetime(paste(adtbi$doar, adtbi$toar), format = "%Y-%m-%d %H:%M")
+dodd.todd <- as_datetime(paste(adtbi$dodd, adtbi$todd), format = "%Y-%m-%d %H:%M")
+loh <- adtbi["loh"] <- as.numeric(difftime(dodd.todd, doar.toar, units = "hours"))
+summary(loh)
+m.loh <- median(loh)
+q1.loh <- quantile(loh,0.25, na.rm = TRUE)
+q3.loh <- quantile(loh,0.75, na.rm = TRUE)
+range.loh <- range(loh, na.rm = TRUE)
+
+## Create status at 24 hours
+died <- adtbi$died
+## adtbi <- adtbi %>% filter_at(vars(65),any_vars(!is.na(.)))
+ad.s24h <- adtbi["s24h"]<- ifelse(adtbi$loh  <= 24 & adtbi$died == "Yes", "Yes", "No")
+dd <- adtbi$s24h == "Yes"
+n.dd <- sum(dd, na.rm = TRUE)
+p.dd <- round(mean(dd,na.rm = TRUE) * 100)
+## Create status at 30 days 
+ad.s30d <- adtbi["s30d"] <- ifelse(adtbi$loh <= 24*30 & adtbi$died == "Yes", "Yes", "No")
+dd3 <- adtbi$s30d == "Yes"
+n.dd3 <- sum(dd3, na.rm = T)
+p.dd3 <- round(mean(dd3,na.rm=T)*100)
+
+##creating 24hrs in hospital mortality dataset 
+tbi_24 <- select(adtbi,s24h, gcs_t_1, mgap,gap,rts,kts, tran, ti,TBI)
+
+
+## creating 30days in-hospital mortality dataset
+ tbi_30 <- select(adtbi,s30d,gcs_t_1, mgap,gap,rts,kts)
+
+## Creating ROC curve  for in hospital mortality
+
+
+### Added two functions, ROC.func and ROC.score for Plots and AUC calculations:
+ROC.func <- function(x, y, z) {
+  input <- select(z,x,y)
+  input <- input[complete.cases(input),]   
+  input[, x, drop = TRUE] <- as.factor(input[, x, drop = TRUE])
+  input[, y, drop = TRUE] <- as.factor(input[, y, drop = TRUE])
+  GLM <- glm(input[, x, drop = TRUE] ~ input[, y, drop = TRUE], family = binomial)
+  par(pty= "s")
+  return(roc(input[, x, drop = TRUE],GLM$fitted.values, plot = TRUE, legacy.axes= TRUE))
+}
+
+## ROC analysis for 30 days mortality
+
+## ROC Curve for gcs
+
+rocgcs30 <- ROC.func("s30d","gcs_t_1",tbi_30)
+ci.auc(rocgcs30)
+## ROC Curve for mgap
+rocmgap30 <- ROC.func("s30d","mgap", tbi_30)
+ci.auc(rocmgap30)
+## ROC curve GAP
+rocgap30 <- ROC.func("s30d","gap", tbi_30)
+ci.auc(rocgap30)
+## ROC curve RTS s24hrs
+rocrts30 <- ROC.func("s30d","rts", tbi_30)
+ci.auc(rocrts30)
+## Roc KTS
+rockts30 <- ROC.func("s30d","kts", tbi_30)
+ci.auc(rockts30)
+## creating a combine plot for all 5 roc curve s30d
+par(pty= "s")
+plot(rocgcs30, col = 3, lty = 5, main = "ROC", legacy.axes= TRUE)## green
+plot(rocmgap30, col = 4, lty = 3, add = TRUE) ## blue
+plot(rocgap30, col = 6, lty = 4, add = TRUE) ## pink
+plot(rocrts30, col = 7, lty = 5, add = TRUE) ## yellow
+plot(rockts30,col = 9 , lty= 9, add = TRUE)
+## P value for different ROC curve
+# comparing ROC curve among s30d
+r30days1 <- roc.test(rocgcs30,rocmgap30)
+r30days2 <- roc.test(rocgcs30,rocgap30)
+r30days3 <- roc.test(rocgcs30,rocrts30)
+r30days4<- roc.test(rocgcs30,rockts30)
+
+
+
+## ALL ROC curve analysis done below is for 24 hrs mortality
+
+## ROC Curve for gcs
+
+rocgcs3 <- ROC.func("s24h","gcs_t_1",tbi_24)
+ci.auc(rocgcs3)
+## ROC Curve for mgap
+rocmgap <- ROC.func("s24h","mgap", tbi_24)
+ci.auc(rocmgap)
+## ROC curve GAP
+rocgap <- ROC.func("s24h","gap", tbi_24)
+ci.auc(rocgap)
+## ROC curve RTS s24hrs
+rocrts <- ROC.func("s24h","rts", tbi_24)
+ci.auc(rocrts)
+## Roc KTS
+rockts24 <- ROC.func("s24h","kts", tbi_24)
+ci.auc(rockts24)
+## creating a combine plot for all 5 roc curve
+par(pty= "s")
+plot(rocgcs3, col = 3, lty = 5, main = "ROC", legacy.axes= TRUE)## green
+plot(rocmgap, col = 4, lty = 3, add = TRUE) ## blue
+plot(rocgap, col = 6, lty = 4, add = TRUE) ## pink
+plot(rocrts, col = 7, lty = 5, add = TRUE) ## yellow
+plot(rockts24,col = 9 , lty= 9, add = TRUE)
+## P value for different ROC curve
+# comparing ROC curve among s24h
+r1 <- roc.test(rocgcs3,rocmgap)
+r2 <- roc.test(rocgcs3,rocgap)
+r3 <- roc.test(rocgcs3,rocrts)
+rkts1 <- roc.test(rocgcs3,rockts24)
+
+## Subgroup analysis as suggested on thursday presentation
+## subgroup analysis - transfer status
+
+# creating a dataset with directly admitted patients
+addirect <- filter(tbi_24, tran == "No")
+nrow(addirect)
+
+
+# creating a dataset with transferred patients
+adtrans <- filter(tbi_24, tran == "Yes")
+nrow(adtrans)
+
+
+# roc curve gcs direct patients for 24hrs 
+
+
+roc9 <- ROC.func("s24h","gcs_t_1", addirect)
+ci.auc(roc9)
+# roc curve mgap direct patients
+
+roc10 <- ROC.func("s24h","mgap", addirect)
+ci.auc(roc10)
+# roc curve gap direct patients
+
+roc11 <- ROC.func("s24h","gap", addirect)
+ci.auc(roc11)
+# roc curve rts direct patients
+
+roc12 <- ROC.func("s24h","rts", addirect)
+ci.auc(roc12)
+## roc for KTS and directly admitted patients
+
+rocktsd <- ROC.func("s24h","kts", addirect)
+ci.auc(rocktsd)
+
+## creating a combine plot for all 4 roc curve for directly admitted patients
+par(pty= "s")
+plot(roc9, col = 3, lty = 5, main = "Direct admission", legacy.axes= TRUE)## green
+plot(roc10, col = 4, lty = 3, add = TRUE) ## blue
+plot(roc11, col = 6, lty = 4, add = TRUE) ## pink
+plot(roc12, col = 7, lty = 5, add = TRUE) ## yellow
+plot(rocktsd, col = 9, lty = 9, add = TRUE)
+
+## plotting roc curve and calculating auc for transferred patients
+
+
+roc13 <- ROC.func("s24h","gcs_t_1", adtrans)
+ci.auc(roc13)
+# roc curve mgap transferred patients
+
+roc14 <- ROC.func("s24h","mgap", adtrans)
+ci.auc(roc14)
+# roc curve gap transferred patients
+
+roc15 <- ROC.func("s24h","gap", adtrans)
+ci.auc(roc15)
+# roc curve rts
+
+roc16 <- ROC.func("s24h","rts", adtrans)
+ci.auc(roc16)
+# roc kts and transferred
+
+rocktst <- ROC.func("s24h","kts", adtrans)
+ci.auc(rocktst)
+## creating a combine plot for all 4 roc curve
+par(pty= "s")
+plot(roc13, col = 3, lty = 5, main = "Transferred admission", legacy.axes= TRUE)## green
+plot(roc14, col = 4, lty = 3, add = TRUE) ## blue
+plot(roc15, col = 6, lty = 4, add = TRUE) ## pink
+plot(roc16, col = 7, lty = 5, add = TRUE) ## yellow
+plot(rocktst, col = 9, lty = 9, add = TRUE)
+
+# comparing ROC curve for directly admitted patients
+r7 <- roc.test(roc9,roc10)
+r8 <- roc.test(roc9,roc11)
+r9 <- roc.test(roc9,roc12)
+rktsd <- roc.test(roc9,rocktsd)
+# comparing ROC curve for transferred patients
+r10 <- roc.test(roc13,roc14)
+r11 <- roc.test(roc13,roc15)
+r12 <- roc.test(roc13,roc16)
+rktst <- roc.test(roc13, rocktst)
+
+
+## subgroup polytrauma and isolated TBI
+
+## creating dataset for polytrauma patients
+polytrauma <- filter(tbi_24, TBI == "Polytrauma" )
+nrow(polytrauma)
+
+## plotting roc curve and calculating auc for polytrauma patients patients
+
+roc30 <- ROC.func("s24h","gcs_t_1", polytrauma)
+ci.auc(roc30)
+## roc curve mgap polytrauma
+
+roc31 <- ROC.func("s24h","mgap", polytrauma)
+ci.auc(roc31)
+# roc curve gap polytrauma patients
+
+roc32 <- ROC.func("s24h","gap", polytrauma)
+ci.auc(roc32)
+# roc curve rts polytrauma patients
+
+roc33 <- ROC.func("s24h","rts", polytrauma)
+ci.auc(roc33)
+# roc kts and polytrauma patients
+
+roc34 <- ROC.func("s24h","kts", polytrauma)
+ci.auc(roc34)
+
+## creating a combine plot for all 4 roc curve for polytrauma patients
+par(pty= "s")
+plot(roc30, col = 3, lty = 5, main = "Ploytrauma (Including TBI)", legacy.axes= TRUE)## green
+plot(roc31, col = 4, lty = 3, add = TRUE) ## blue
+plot(roc32, col = 6, lty = 4, add = TRUE) ## pink
+plot(roc33, col = 7, lty = 5, add = TRUE) ## yellow
+plot(roc34, col = 9, lty = 9, add = TRUE)
+
+# comparing ROC curve for polytrauma patients
+r19 <- roc.test(roc30,roc31)
+r20 <- roc.test(roc30,roc32)
+r21 <- roc.test(roc30,roc33)
+r22 <- roc.test(roc30, roc34)
+
+## creating dataset for isolated TBI
+isolated <- filter(tbi_24, TBI == "TBI" )
+nrow(isolated)
+
+## plotting roc curve and calculating auc for isolated TBI patients
+
+roc35 <- ROC.func("s24h","gcs_t_1", isolated)
+ci.auc(roc35)
+## roc curve mgap polytrauma
+
+roc36 <- ROC.func("s24h","mgap", isolated)
+ci.auc(roc36)
+# roc curve gap polytrauma patients
+
+roc37 <- ROC.func("s24h","gap", isolated)
+ci.auc(roc37)
+# roc curve rts polytrauma patients
+
+roc38 <- ROC.func("s24h","rts", isolated)
+ci.auc(roc38)
+# roc kts and polytrauma patients
+
+roc39 <- ROC.func("s24h","kts", isolated)
+ci.auc(roc39)
+
+## creating a combine plot for all 4 roc curve for isolated TBI patients
+par(pty= "s")
+plot(roc35, col = 3, lty = 5, main = "Isolated TBI", legacy.axes= TRUE)## green
+plot(roc36, col = 4, lty = 3, add = TRUE) ## blue
+plot(roc37, col = 6, lty = 4, add = TRUE) ## pink
+plot(roc38, col = 7, lty = 5, add = TRUE) ## yellow
+plot(roc39, col = 9, lty = 9, add = TRUE)
+
+# comparing ROC curve for polytrauma patients
+r23 <- roc.test(roc35,roc36)
+r24 <- roc.test(roc35,roc37)
+r25 <- roc.test(roc35,roc38)
+r26 <- roc.test(roc35, roc39)
+
+
+
+
+
+ 
+ ## creating flow chart of sample size
+ 
+Flow.chart <-  grViz("digraph {
+      graph[layout = dot, rankdir = RR]
+      node [fontname = Flowchart, shape = rectangle]        
+      tab1 [label = '@@1']
+      tab2 [label = '@@2']
+      tab3 [label = '@@3']
+      tab4 [label = '@@4']
+      tab5 [label = '@@5']
+      tab6 [label = '@@6']
+
+      # edge definitions with the node IDs
+      tab1 -> tab2;
+      tab2 -> tab3;
+      tab2 -> tab4;
+      tab4 -> tab5;
+      tab4 -> tab6
+      }
+
+      [1]: 'TITCO Dataset n= 16000'
+      [2]: 'All patients with Traumatic brain injury n= 9268 '
+      [3]: 'patients with age < 18 was excluded n= 2024'
+      [4]: 'Patients with age greater than or equal to 18 was included n= 7244'
+      [5]: 'Incomplete Data were excluded n= 3938'
+      [6]: 'Study sample n=3306'
+      ")
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+```
+
+##Results
+A total of `r nrow(adtbi)` TBI patients were included for our study. `r n.male` (`r p.male`%) were male. Median age of patients was `r m.ages` (quantile range: `r q1.ages` to `r q3.ages` & range: `r range.ages`).   Majority of the patients were within the GCS range 14-15 (Table 1). Surgery was performed in `r n.s` (`r p.s`%) patients. Road traffic injuries (RTA) accounted for the majority of TBI `r n.rta`(`r p.rta`%) followed by falls `r n.fall`(`r p.fall`%). Mortality was `r n.died`(`r p.died`%) among these patients.GCS discriminated significantly better than KTS, there were no significant differences in discrimination comparing GCS with MGAP, RTS but GAP score discriminated better than GCS.  
+## Conclusion
+GCS was comparable to other scores in discrimination of in-hospital mortality.
+
+##Introduction
+Traumatic Brain Injury (TBI) is defined as “A disruption or alteration of brain function due external forces”.(1) Globally, there was a 3.6% increase in age standardised incidence rates among TBI patients when compared between 1990 and 2016.(2) In India, approximately 10 million people suffer from moderate to severe TBI each year.(3) Rapid urbanization and an increase in the number of motor vehicles are important causes of the increase in incidence of TBI among the adult population in India.(4) Road traffic injuries are the commonest mechanism of injury among these patients.(4) 
+There are different types of trauma scoring systems, keeping anatomical, physiological and combined systems into consideration. (5) They are used widely for describing injury severity, prognosis of the patients, triage, research and registry. (6) GCS is the most commonly used scoring system used in TBI and is a good predictor of outcome among TBI patients. (7,10,11,12) GCS is easy to use by members of health care team (8) and provides a mechanism to quickly evaluate the severity of TBI.(9) GCS can also be used to see changes in the level of consciousness at different period of time.(8) 
+GCS alone is a very robust scoring system. But it has been included as an integral component in some other trauma scoring systems like MGAP and GAP. The acronym MGAP stands for Mechanism (of injury),GCS, Age, (systolic blood) Pressure. GAP is different from MGAP, in that it excludes mechanism of injury. Whether these newer scores outperform GCS alone is unclear.Thus the purpose of this study is to compare GCS alone with other trauma scoring systems viz. MGAP, GAP, Revised Trauma Score (RTS) and Kampala Trauma Score (KTS)in adult TBI patients.
+
+
+##Method:
+
+#Setting:
+The study was an analysis of prospectively collected data from the “Towards improvement of trauma care outcomes in India” (TITCO) Cohort. This data was collected between2013 to 2015 at four urban tertiary care referralcentres spread across India. Of the 4 centres,  All India Institute of Medical Science (AIIMS), New Delhi, King Edward Memorial Hospital and Seth Gordhandas Sunderdas Medical College (KEM), Mumbai, Lokmanya Tilak Municipal General Hospital and Medical College (Sion hospital) had a dedicated trauma care facility, while  Seth Sukhlal Karnani Memorial Hospital/Institute of Post Graduate Medical Education & Research, Kolkata, though a tertiary referral centre, didn’t have  a dedicated trauma care facility during the study period
+One project officer per hospital was appointed to collect data prospectively in 3 eight hour shifts in the emergency room. In-order to minimise bias and maintain consistency in data collection, weekly telephonic meetings were held where problems were discussed and regular quality control checks done.
+
+#Inclusion criteria:
+Patients with age of 18 years and above with the history of TBI admitted to the hospital.
+#Exclusion criteria
+Patient with incomplete data and who were lost to follow-up was removed from the study.
+#Variables:
+Inthis study five trauma scoring systems were compared - GCS, MGAP, GAP, RTS and KTS. All these scores have been published in English literatureand validated (13, 14, 15, 16). All values were calculated as per published formulae. Vitals such as systolic blood pressure, respiratory rate, GCS were measured on arrival atthe hospital. Demographic variables such as age, gender, mechanism of injury, type of injurywas collected from the patients’ records. For calculation of KTS,AVPU score was calculated by extrapolating the GCS score (GCS 14–15 = ‘‘alert’’, GCS 10–13 = ‘‘responds to voice’’, GCS 5–9 = ‘‘responds to pain’’, GCS 3–4 = ‘‘unresponsive’’). (17) Number of serious injuries wascalculated from the patient’s records.
+#Outcome:
+Primary outcome of this study is 24 hours in-hospital mortality. Secondary outcome of this study is 30 days in- hospital mortality.
+#StatisticalAnalysis:
+Data was analysed using R version 4.0.2(18). Median (IQR) was used to describe quantitative variables, while count and percentage were used for qualitative variables.If any data for any of the 5 scores was missing, that patient was excluded from the analysis. Area under the receiver operating characteristics (ROC) curve was used to compare the performance of the different trauma scoring system. A p-value of less than 0.05 was determined to be statistically significant.
+
+
+
+
+#Results
+A total of `r nrow(titco)` patients were included during the study period. Of these, `r nrow(titcotbi)` patients were admitted with traumatic brain injury (TBI). From this, `r nrow(adtbi1)` patients were above the age of 17 and was eligible for our study.Furthermore, we had to exclude `r patient.excluded` patients as they had missing data for systolic blood pressure, respiratory rate,GCS, mechanism of injury. The final sample size for the study was `r nrow(adtbi)`.  (Fig 1) 
+
+```{r Flow.chart, fig.align = 'center', out.width = "100%", fig.cap = "Flow chart showing inclusion and exclusion criteria and sample size", echo = FALSE}
+
+```
+
+
+The median age was `r m.ages` (quantile range: `r q1.ages` to `r q3.ages` & range: `r range.ages`) and the majority of them were male `r n.male` (`r p.male`%). Most of the patients were admitted with road traffic injuries `r n.rta`(`r p.rta`%) followed by falls `r n.fall`(`r p.fall`%). A total of `r n.t`(`r p.t`%) patients were transferred from other hospitals and `r n.s` (`r p.s`%) patients had operative intervention.In hospital 24 hours and 30 days mortality was `r n.s24h`(`r p.s24h`) and  `r n.s30d`(`r p.s30d`) respectively. Out of all patients with TBI `r n.died`(`r p.died`%) died. (Table1) The median, interquartile range (IQR), range of GCS, MGAP, GAP, RTS and KTS are shown in Table 2.
+
+```{r a.table4, echo = FALSE}
+ kableone(a.table4,caption = "Characteristics of patients with Traumatic brain injury included in this study", label = "table1")
+```
+
+ROC analysis was performed to compare the discrimination of GCS, MGAP, GAP, RTS and KTS with regards to 24 hrs in-hospital mortality and 30 days in-hospital mortality.In-case of 24 hours mortality, GCS discriminated significantly better compared with KTS (p= `r rkts1[["p.value"]]`) but there were no significant differences in the discrimination of GCS when compared with MGAP (p= `r r1[["p.value"]]`) and rts (p= `r r3[["p.value"]]`). GAP discriminated better when compared with GCS (p= `r r2[["p.value"]]`). For 30 days mortality, GCS discriminated significantly better compared with KTS (p= `r r30days4[["p.value"]]`) but there were no significant differences in the discrimination of GCS when compared with MGAP (p= `r r30days1[["p.value"]]`) and GAP (p= `r r30days2[["p.value"]]`). RTS discriminated better when compared with GCS (p= `r r30days4[["p.value"]]`). (Table 2, Fig 2)
+
+In 24 hours mortality, we also compared isolated TBI with polytrauma (including TBI) and transferred patients with directly admitted patients.In both cases, GCS discriminated significantly better than KTS. No significant difference in the discrimination was seen when compared to MGAP, GAP, RTS scores. (Fig 3)
+
+Table 2: 
+|           |                                           |           24 hours Mortality                         |                 30 days Mortality                    |
+|           |                                           |--------------------------|---------------------------|------------------------------------------------------|
+|           |Median (IQR)                               | 95% Confidence interval  | Area under the curve(AUC) | 95% Confidence interval  | Area under the curve(AUC) | 
+|-----------|-------------------------------------------|--------------------------|---------------------------|--------------------------|---------------------------|
+| GCS       | `r m.gcs`(`r q1.gcs`-`r q3.gcs`)          | `r ci.auc(rocgcs3)`      |  `r rocgcs3[["auc"]]`     | `r ci.auc(rocgcs30)`     |  `r rocgcs30[["auc"]]`     |
+| MGAP      | `r m.mgap`(`r q1.mgap`-`r q3.mgap`)       | `r ci.auc(rocmgap)`      |  `r rocmgap[["auc"]]`     | `r ci.auc(rocmgap30)`    |  `r rocmgap30[["auc"]]`    |
+| GAP       | `r m.gap`(`r q1.gap`-`r q3.gap`)          | `r ci.auc(rocgap)`       |  `r rocgap[["auc"]]`      | `r ci.auc(rocgap30)`     |  `r rocgap30[["auc"]]`     |
+| RTS       | `r m.rts`(`r q1.rts`-`r q3.rts`)          | `r ci.auc(rocrts)`       |  `r rocrts[["auc"]]`      | `r ci.auc(rocrts30)`     |  `r rocrts30[["auc"]]`     |
+| KTS       | `r m.kts`(`r q1.kts`-`r q3.kts`)          | `r ci.auc(rockts24)`     |  `r rockts24[["auc"]]`    | `r ci.auc(rockts30)`     |  `r rockts30[["auc"]]`     |
+
+
+
+
+Table 3:
+
+
+|           |           Isolated TBI                               |                 Poly-trauma (including TBI)          |
+|           |--------------------------|---------------------------|------------------------------------------------------|
+|           | 95% Confidence interval  | Area under the curve(AUC) | 95% Confidence interval  | Area under the curve(AUC) | 
+|-----------|--------------------------|---------------------------|--------------------------|---------------------------|
+| GCS       | `r ci.auc(roc35)`        |  `r rocgcs3[["auc"]]`     | `r ci.auc(roc30)`        |  `r rocgcs30[["auc"]]`    |
+| MGAP      | `r ci.auc(roc36)`        |  `r rocmgap[["auc"]]`     | `r ci.auc(roc31)`        |  `r rocmgap30[["auc"]]`   |
+| GAP       | `r ci.auc(roc37)`        |  `r rocgap[["auc"]]`      | `r ci.auc(roc32)`        |  `r rocgap30[["auc"]]`    |
+| RTS       | `r ci.auc(roc38)`        |  `r rocrts[["auc"]]`      | `r ci.auc(roc33)`        |  `r rocrts30[["auc"]]`    |
+| KTS       | `r ci.auc(roc39)`        |  `r rockts24[["auc"]]`    | `r ci.auc(roc34)`        |  `r rockts30[["auc"]]`    |
+
+
+
+Table 4:
+
+|           |           Directly admitted Patients                 |                 Transferred Patients                 |
+|           |--------------------------|---------------------------|------------------------------------------------------|
+|           | 95% Confidence interval  | Area under the curve(AUC) | 95% Confidence interval  | Area under the curve(AUC) | 
+|-----------|--------------------------|---------------------------|--------------------------|---------------------------|
+| GCS       | `r ci.auc(roc9)`         |  `r rocgcs3[["auc"]]`     | `r ci.auc(rocgcs13)`     |  `r rocgcs30[["auc"]]`    |
+| MGAP      | `r ci.auc(roc10)`        |  `r rocmgap[["auc"]]`     | `r ci.auc(rocmgap14)`    |  `r rocmgap30[["auc"]]`   |
+| GAP       | `r ci.auc(roc11)`        |  `r rocgap[["auc"]]`      | `r ci.auc(rocgap15)`     |  `r rocgap30[["auc"]]`    |
+| RTS       | `r ci.auc(roc12)`        |  `r rocrts[["auc"]]`      | `r ci.auc(rocrts16)`     |  `r rocrts30[["auc"]]`    |
+| KTS       | `r ci.auc(rocktsd)`      |  `r rockts24[["auc"]]`    | `r ci.auc(rocktst)`      |  `r rockts30[["auc"]]`    |
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
