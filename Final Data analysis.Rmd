@@ -1,0 +1,407 @@
+---
+title: Profile of patients triaged green in the Emergency Department (ED) of a secondary care hospital in Mumbai
+author: "Anna"
+date: "12/05/2020"
+csl: american-medical-association.csl
+link-citations: yes
+output:
+  bookdown::word_document2: default
+  bookdown::html_document2:
+    number_sections: false
+  bookdown::pdf_document2:
+    number_sections: false
+    toc: false
+    keep_tex: yes
+bibliography: abstract.bib
+---
+
+```{r setup, include=FALSE, results='asis', message=FALSE}
+library(knitr)
+library(dplyr)
+library(psych)
+library(data.table) 
+library(tableone)
+library(epiDisplay)
+library(tigerstats)
+library(splitstackshape)
+library(tidyverse)
+library(tidyr)
+library(assertthat)
+library(rlist)
+library(labelled)
+library(corrplot)
+library(DiagrammeR) #For the flowchart
+library(DiagrammeRsvg) #Exporting the flowchart as svg
+library(magrittr) #Exporting the flowchart as svg
+library(rsvg) #Exporting the flowchart as svg
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r Data_cleaning_manipulation, warning=FALSE, results='hide'}
+
+# Get data directory
+data.dir <- getOption("data.dir")
+
+options(data.dir = "C:/Users/annan/OneDrive/Documents/Projects/PGTP")
+
+if (is.null(data.dir))
+    stop ("Please set the directory where the data is kept using options(data.dir = \"<path to data directory>\")")
+
+## datatable with ISS
+g <- data.table::fread(file.path(data.dir,"ttris-dataset-with-iss-8317-20190708120045.csv"))
+g1 <- g %>% dplyr::select(pid,X0:iss)
+
+## datatable without ISS
+h <- data.table::fread(file.path(data.dir, "TTRIS.csv"))
+
+## Merged the two datatables
+h$pid <- as.integer(h$pid)
+dt <- merge(g1, h, by = "pid")
+
+## Rearranging columns
+dt <- dt %>% dplyr::select(centre,pid,cr,qcrec:vsqs,ic:toa,egcs:rr,nsi,tc,dvsr:tvsr,dus:testvar,locked,X0:iss,doi_toi:valid)
+
+#dplyr::all_equal(g,dt) ##To compare the two dataframes
+
+# Creating age groups
+agebreaks <- c(17,25,45,65,98)
+agelabels <- c("18-24","25-44","45-64","65+")
+dt$agegrp <-cut(dt$age,
+                breaks = agebreaks,
+                right = FALSE,
+                labels = agelabels)
+
+# Mechanism of Injury
+moi.collapsed <- moi <- as.character(dt$moi)
+get_icd_range <- function(first.char, start.number, end.number) {
+    icd.range <- paste0(
+        paste0(
+            "^",
+            first.char,
+            stringr::str_pad(start.number:end.number, 2, pad = "0"),
+            "[0-9]?$"),
+        collapse = "|")
+    return (icd.range)
+}
+icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
+                   c("Fall" = get_icd_range("W", 0, 19)),
+                   c("Animal bite" = get_icd_range("W", 50, 64)),
+                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
+for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
+moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
+dt$moi.collapsed <- as.factor(moi.collapsed)
+
+# Correcting ISS
+dt <- as_tibble(dt)
+ais <- dt %>% dplyr:: select(starts_with("clean_"))
+ais.list <- lapply(names(ais), function(x) cSplit(ais[, x], x, sep = ","))
+row_max <- function(x, na.rm = FALSE) {
+    if (all(is.na(x)))
+        return (NA)
+    max(x, na.rm = na.rm)
+}
+ais.max <- lapply(ais.list, function(x) apply(x, 1, row_max, na.rm = TRUE))
+get_top_3 <- function(x) {
+    x <- sort(x, decreasing = TRUE, na.last = TRUE)
+    i <- min(c(3, length(x)))
+    x[seq_len(i)]
+}
+calculate_iss <- function(x) {
+    top3 <- get_top_3(x)
+    iss <- sum(top3[1]^2, top3[2]^2, top3[3]^2, na.rm = TRUE)
+    if (all(is.na(top3)))
+        iss <- NA
+    iss
+}
+iss <- apply(do.call(cbind, ais.max), 1, calculate_iss)
+iss[is.na(iss)] <- "0"
+
+dt$iss <- as.numeric(iss)
+
+issbreaks <- c(0,1,9,16,25,109)
+isslabels <- c("No defined injury","Mild","Moderate","Severe","Profound")
+dt$isspv <-cut(dt$iss,
+                breaks = issbreaks,
+                right = FALSE,
+                labels = isslabels)
+
+# Append a new variable 'GCS' to the dataset
+gcs <- with(dt, egcs + vgcs + mgcs)
+dt$gcs <- gcs <- replace(gcs, gcs > 15, NA)
+dt$gcs.cat <- gcs
+dt$gcs.cat[gcs >= 13] <- "Mild"
+dt$gcs.cat[gcs >= 9 & gcs < 13] <- "Moderate"
+dt$gcs.cat[gcs >= 3 & gcs < 9] <- "Severe"
+
+##Assigning parameter value for calculating RTS. 
+gcspv <- gcs
+gcspv[gcs >= 13] <- 4
+gcspv[gcs >= 9 & gcs < 13] <- 3
+gcspv[gcs >= 6 & gcs < 9] <- 2
+gcspv[gcs >= 4 & gcs < 6] <- 1
+gcspv[gcs < 4] <- 0
+
+## RR parameter value for calculating RTS
+rr <- with(dt,replace(rr, rr == 999, NA))
+rrpv <- rr
+rrpv[rr >= 10 & rr <= 29] = 4
+rrpv[rr > 29] = 3
+rrpv[rr >= 6 & rr <= 9] = 2
+rrpv[rr >= 1 & rr <= 5] = 1
+rrpv[rr == 0] = 0
+
+## SBP parameter value for calculating RTS
+sbp <- with(dt,replace(sbp, sbp == 999, NA))
+sbppv <- sbp
+sbppv[sbp > 89] <- 4
+sbppv[sbp >=76 & sbp <= 89] <- 3
+sbppv[sbp >= 50 & sbp <= 75] <- 2
+sbppv[sbp >= 1 & sbp <= 49] <- 1
+sbppv[sbp == 0] <- 0
+
+## Formula for calculating RTS
+dt$rts = round(0.9368*as.numeric(gcspv) + 
+               0.7326*as.numeric(sbppv) + 
+               0.2908*as.numeric(rrpv), digits = 0)
+
+# Complete case analysis
+dt$s24h <- replace(dt$s24h, dt$s24h == 999, 888) ##Loss of follow up 
+dt$s30d <- replace(dt$s30d, dt$s30d == 999, 888)
+dt$s6m <- replace(dt$s6m, dt$s6m == 999, 888)
+dt$s <- replace(dt$s, dt$s == 999, 888)
+
+## Converting all Injury 999 to Not Defined
+inj_cols <- dt[,grep("inj", colnames(dt))]
+inj_cols <- inj_cols %>% 
+    mutate_all(funs(str_replace(., "999", "ND")))
+dt[,grep("inj", colnames(dt))] <- inj_cols
+
+## Converting NA to ND in max cols
+#dt %>% dplyr:: select(starts_with("max_")) %>% 
+#    mutate_all(funs(str_replace(., "NA", "ND")))
+
+## Dropping unwanted columns
+drop.cols2 <- dt %>% dplyr:: select(starts_with("clean_"), starts_with("max_"), qcrec, vsqs, testvar, locked, X0)
+drop.cols2 <- colnames(drop.cols2)
+dt <- dt[, !(colnames(dt) %in% c(drop.cols2))]
+
+## Converting rest of the 999s to NA
+dt[] <- dt[] %>% 
+    mutate_all(funs(na_if(.,"999")))
+missing.data.list <- lapply(dt, function(column) {
+    n.na <- sum(is.na(column))
+    p.na <- round((n.na/length(column)) * 100)
+    missing <- data.frame("Count" = n.na, "Percentage" = p.na)
+    return (missing)
+})
+
+missing.data <- do.call(rbind, missing.data.list)
+maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data$Count)]
+complete.index <- complete.cases(dt)
+n.incomplete <- sum(!complete.index)
+p.incomplete <- round((n.incomplete/nrow(dt)) * 100,1)
+
+dt <- dt[complete.index, ]
+
+n_nic <- nrow(subset(x=dt, subset = dt$ic == 0))
+
+dt <- subset(x=dt,subset = dt$ic == 1)
+
+# Grouping patients wrt to injury
+#if (substr(kbbh$einj1icd,start=3, stop=3) == 1) {"Open Wound"}
+
+dt <- suppressWarnings(suppressMessages(unite(dt, allinj, contains("icd"), sep = ",", remove = FALSE)))
+
+crush_inj <- str_c(c("S07","S070","S071","S078","S079","S17","S170","S178","S179","S280","S380","S381","T041","S47","S57","S570","S578","S579","S67","S670","S678","T042","S770","S771","S772","S87","S870","S878","S97","S970","S971","S978","T043","T048","T049"),collapse = "|")
+
+internal_inj <- str_c(c("S06","S060","S061","S062","S063","S064","S065","S066","S067","S068","S069","T905","S140","S141","S240","S241","S340","S341","S343","T093","T913","S142","S260","S270","S271","S272","S273","S274","S275","S276","S278","S279","T914","S36","S360","S361","S362","S363","S364","S365","S366","S367","S368","S369","S37","S370","S371","S372","S373","S374","S375","S376","S377","S378","S379","S396","S397","T065","T915"),collapse = "|")
+
+bv_inj <- str_c(c("S090","S150","S512","S153","S154","S155","S156","S157","S158","S159","S151","S25","S250","S251","S252","S253","S254","S255","S257","S258","S259","S350","S351","S352","S353","S354","S355","S357","S358","S359","S45","S450","S451","S452","S453","S457","S458","S459","S55","S550","S551","S552","S557","S558","S559","S65","S650","S651","S652","S653","S654","S655","S657","S658","S659","T114","S75","S750","S751","S752","S757","S758","S759","S85","S850","S851","S852","S853","S854","S855","S857","S858","S859","S95","S950","S951","S952","S957","S958","S959","T134","T063","T145"),collapse = "|")
+
+amp_inj <- str_c(c("S08","S081","S082","S083","S084","S085","S086","S087","S088","S089","S18","S281","S382","S383","T096","S48","S480","S481","S489","S58","S580","S581","S589","S68","S680","S681","S682","S683","S684","S688","S689","T050","T052","T116","S780","S781","S782","S783","S784","S785","S786","S787","S788","S789","S88","S880","S881","S889","S98","S980","S981","S982","S983","S984","S780","T053","T055","T136","T058","T059"),collapse = "|")
+
+frac_inj <- str_c(c("S02","S020","S021","S023","S027","S029","T902","S022","S024","S025","S026","S12","S128","S129","S120","S121","S122","S123","S124","S125","S126","S127","S22","S220","S221","S32","S320","S321","S322","T08","T911","S222","S223","S224","S225","S226","S227","S228","S229","S323","S324","S325","S326","S327","S328","T021","T912","S42","S420","S421","S422","S423","S424","S427","S428","S429","S52","S520","S521","S522","S523","S524","S525","S526","S527","S528","S529","S62","S620","S621","S622","S623","S624","S625","S626","S627","S628","T022","T024","T10","T921","T922","S72","S720","S721","S722","S723","S724","S725","S726","S727","S728","S729","S82","S820","S821","S822","S823","S824","S825","S826","S827","S828","S829","S92","S920","S921","S922","S923","S924","S925","S927","S929","T023","T025","T12","T931","T932","T028","T029","T142"),collapse = "|")
+
+disl_inj <- str_c(c("S030","S031","S032","S033","S130","S131","S132","S133","S230","S231","S330","S331","S332","S232","S333","S334","S430","S431","S432","S433","S530","S531","S630","S631","S632","S730","S830","S831","S93","S930","S931","S933"),collapse = "|")
+
+burn_inj <- str_c(c("T26","T260","T261","T262","T263","T264","T265","T266","T267","T268","T269","T270","T274","T20","T200","T201","T202","T203","T204","T205","T206","T207","T280","T285","T950","T281","T286","T283","T288","T21","T211","T212","T213","T214","T215","T216","T217","T272","T273","T276","T277","T282","T287","T951","T22","T220","T221","T222","T223","T224","T225","T226","T227","T23","T230","T231","T232","T233","T234","T235","T236","T237","T952","T24","T240","T241","T242","T243","T244","T245","T246","T247","T25","T250","T251","T252","T253","T254","T255","T256","T257","T271","T275","T289","T284","T29","T290","T291","T292","T293","T294","T295","T296","T297","T30","T300","T301","T302","T303","T304","T305","T306","T307","T32","T320","T321","T322","T323","T324","T325","T326","T327","T328","T329","T954","T958","T959"),collapse = "|")
+
+multiple_inj <- str_c(c("S097","S197","S277","S297","T031","T092","S497","S597","S697","T032","T112","T923","T926","S797","S897","S997","T033","T132","T933","T936","T038","T039","T910","T143","T147"),collapse = "|")
+
+unspe_inj <- str_c(c("S099","T909","S059","S199","S269","S299","S399","T099","S499","S599","S699","T119","T929","S799","S837","S899","S999","T139","T939","T07","T919","T940","T148","T149","T941","T981"),collapse = "|")
+
+open_inj <- str_c(c("S01","S010","S011","S012","S013","S014","S015","S017","S018","S019","T901","S052","S053","S054","S055","S056","S057","S080","S092","S11","S110","S111","S112","S117","S118","S119","S21","S210","S211","S212","S217","S218","S219","S311","S318","S310","S312","S313","S314","S315","S317","T091","S41","S410","S411","S417","S418","S51","S510","S517","S518","S519","S61","S610","S611","S617","S618","S619","T012","T111","T920","S710","S711","S712","S713","S714","S715","S716","S717","S718","S81","S810","S817","S818","S819","S91","S910","S911","S912","S913","S917","T013","T131","T930","T019","T141"),collapse = "|")
+
+supf_inj <- str_c(c("S00","S000","S001","S002","S003","S004","S005","S007","S008","S009","S050","S051","T900","S10","S100","S101","S107","S108","S109","S20","S200","S201","S202","S203","S204","S207","S208","S301","S300","S302","S307","S308","S309","T090","S40","S400","S407","S408","S409","S50","S500","S501","S507","S508","S509","S60","S600","S601","S602","S607","S608","S609","T002","T110","S70","S700","S701","S702","S703","S704","S705","S706","S707","S708","S709","S80","S800","S801","S807","S808","S809","S90","S900","S901","S902","S903","S907","S908","S909","T003","T130","T008","T009","T140","T150"),collapse = "|")
+
+dt$inj.type <- ifelse(str_detect(dt$allinj, crush_inj),"Crush injury",
+       ifelse(str_detect(dt$allinj, internal_inj),"Internal injury",
+              ifelse(str_detect(dt$allinj, bv_inj),"Blood Vessel",
+                     ifelse(str_detect(dt$allinj, amp_inj),"Amputation",
+                            ifelse(str_detect(dt$allinj, frac_inj),"Fracture",
+                                   ifelse(str_detect(dt$allinj, disl_inj),"Dislocation",
+                                          ifelse(str_detect(dt$allinj, burn_inj),"Burn",
+                                                 ifelse(str_detect(dt$allinj, multiple_inj),"Multiple injury",
+                                                        ifelse(str_detect(dt$allinj, unspe_inj),"Unspecified injury",
+                                                               ifelse(str_detect(dt$allinj, open_inj),"Open wound",
+                                                                      ifelse(str_detect(dt$allinj, supf_inj),"Superficial injury","No defined injury")))))))))))
+
+dt$inj_type <- ifelse(dt$inj.type=="Superficial injury","Superficial injury",
+                      ifelse(dt$inj.type=="Open wound","Open wound",
+                             ifelse(dt$inj.type=="No defined injury","No defined injury",
+                                    ifelse(dt$inj.type=="Fracture","Fracture/Dislocation",
+                                           ifelse(dt$inj.type=="Dislocation","Fracture/Dislocation",
+                                                  ifelse(dt$inj.type=="Crush injury","Crush injury/Amputation",
+                                                         ifelse(dt$inj.type=="Amputation","Crush injury/Amputation",
+                                                                "Others")))))))
+
+# Time spent in ED
+
+dt$doa <- ifelse(dt$doa==0,dt$daicu,dt$doa)
+
+dt$admits <- ifelse(dt$doa==0,"Not admitted","Admitted")
+
+nap <- subset(dt,dt$admits=="Not admitted")
+end.time <- paste(nap$dodd, nap$todd)
+start.time <- paste(nap$doar, nap$toar)
+
+nap$edlos <- difftime(end.time, start.time, units = "hours")
+
+nnap <- subset(dt,dt$admits=="Admitted")
+end.time1 <- paste(nnap$doa, nnap$toa)
+start.time1 <- paste(nnap$doar, nnap$toar)
+
+nnap$edlos <- difftime(end.time1, start.time1, units = "hours")
+
+dt <- suppressWarnings(suppressMessages(rbind(nap,nnap)))
+
+#Calculation of CTS
+
+##TEWS
+rr<-  as.numeric(dt$rr)
+
+table(rr)
+
+dt$rrt <- if_else(rr >= 30,"3",
+               if_else(rr>=21 & rr <= 29,"2",
+                       if_else(rr<=8,"2",
+                               if_else(rr>=15 & rr <= 20,"1","0"))))
+
+table(dt$rrt)
+
+sbp <- as.numeric(dt$sbp)
+
+table(sbp)
+table(dt$sbpt)
+
+dt$sbpt <- if_else(sbp <= 70, "3",
+                if_else(sbp>=200,"2",
+                        if_else(sbp>=71 & sbp<=80,"2",
+                                if_else(sbp >= 81 & sbp <= 100,"1","0"))))
+
+
+hr <- dt$hr
+dt$hrt <- if_else(hr >= 130, "3",
+               if_else(hr >= 111 & hr <= 129, "2",
+                       if_else(hr <= 40,"2",
+                               if_else(hr >= 101 & hr <=110,"1",
+                                       if_else(hr>=41 &hr <=50,"1","0")))))
+
+table(hr)
+table(dt$hrt)
+
+avpu <- dt$avpu
+dt$avput <- if_else(avpu == 0, "3",
+                    if_else(avpu == 1, "2",
+                            if_else(avpu == 2, "1","0")))
+table(dt$avpu)
+table(dt$avput)
+
+tews <- round(as.numeric(dt$avput)+
+                  as.numeric(dt$rrt)+
+                  as.numeric(dt$sbpt)+
+                  as.numeric(dt$hrt)+ 1, 0)  #Trauma
+
+table(tews)
+#TEWS cts
+
+dt$tews_cts <- tews_cts <- tews
+tews_cts[tews >=0 & tews <=2] <- "Green"
+tews_cts[tews >=3 & tews <=4] <- "Yellow"
+tews_cts[tews >=5 & tews <=6] <- "Orange"
+tews_cts[tews >=7] <- "Red"
+
+table(tews_cts)
+
+dt$tews_cts <- tews_cts
+
+#Burn CTS
+
+allinj <- dt$allinj
+
+burn_internal_inj <- str_c(c("T26","T260","T261","T262","T263","T264","T265","T266","T267","T268","T269","T27","T270","T271","T272","T273","T274","T275","T276","T277","T28","T280","T281","T282","T283","T284","T285","T286","T287","T288","T289","T203","T207","T213","T217","T223","T227","T233","T237","T243","T247","T253","T257","T293","T297","T303","T307","T312","T313","T314","T315","T316","T317","T318","T319","T322","T323","T324","T325","T326","T327"),collapse = "|")
+
+burn_face <- str_c(c("T20","T200","T201","T202","T204","T205","T206"),collapse="|")
+
+burn_rest <- str_c(c("T21","T210","T211","T212","T214","T215","T216","T22","T220","T221","T222","T224","T225","T226","T23","T230","T231","T232","T234","T235","T236","T24","T240","T241","T242","T244","T245","T246","T25","T250","T251","T252","T254","T255","T256","T29","T290","T291","T292","T294","T295","T296","T30","T300","T301","T302","T304","T305","T306","T31","T310","T311","T32","T320","T321","T95","T950","T951","T952","T953","T954","T958","T959"),collapse = "|")
+
+dt$burn_cts <- if_else(str_detect(allinj,burn_face),"Red",
+                    if_else(str_detect(allinj,burn_internal_inj),"Orange",   if_else(str_detect(allinj,burn_rest),"Yellow","Green")))
+
+table(dt$tews_cts)
+table(dt$burn_cts)
+
+# Injury
+
+injury_type <- dt$inj.type
+
+dt$injury_cts <- if_else(injury_type == "Dislocation","Orange",
+                    if_else(injury_type == "Fracture","Yellow",
+                            if_else(injury_type == "Crush Injury","Yellow",
+                                    if_else(injury_type=="Amputation","Yellow","Green"))))
+
+table(dt$injury_cts)
+
+# uniting all cts
+
+dt <- suppressWarnings(suppressMessages(unite(dt, allcts, contains("cts"), sep = ",", remove = FALSE)))
+
+allcts <- dt$allcts
+
+table(allcts)
+
+dt$triage <- if_else(str_detect(allcts,"Red"),"Red",
+                     if_else(str_detect(allcts,"Orange"),"Orange",
+                             if_else(str_detect(allcts,"Yellow"),"Yellow",
+                                     "Green")))
+
+table(dt$triage)
+
+dt$out <- ifelse(dt$admits == "Admitted", "Admitted in the hospital",
+                 ifelse(dt$hd == "3", "Abscond/ LAMA",
+                        ifelse(dt$hd == "2","Referred to higher center","Discharged from ED")))
+
+table(dt$out)
+
+kbbh <- subset(x=dt,subset = dt$tc == 0)
+
+table(kbbh$triage)
+
+forlos <- subset(kbbh,kbbh$admits=="Admitted")
+end.time2 <- paste(forlos$dodd, forlos$dodd)
+start.time2 <- paste(forlos$doa, forlos$toa)
+
+forlos$los <- round(difftime(end.time2, start.time2, units = "days"),0)
+
+median(forlos$los)
+IQR(forlos$los)
+
+end.time3 <- paste(kbbh$doar, kbbh$toar)
+start.time3 <- paste(kbbh$doi, kbbh$toi)
+kbbh$inj_arr <- difftime(end.time3, start.time3, units = "hours")
+
+subset(x=kbbh, subset = kbbh$s6m == "1")
+
+
+```
+
