@@ -1,0 +1,116 @@
+---
+title: "Geriatric Paper"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyr) # function unite 
+library(rio) # function import
+library(tableone) # function CreateTableOne
+
+```
+
+```{r pressure, echo=FALSE}
+
+# TITCO dataset
+url <- "https://raw.githubusercontent.com/titco/titco-I/master/titco-I-full-dataset-v1.csv"
+titco <-  import(url) %>% as_tibble()
+
+titco$age <- as.numeric(titco$age)
+
+# Cohort
+h <- subset(titco, titco$age > 49)
+
+# Adding variables
+
+## All injury column - ICD codes
+h <- suppressWarnings(suppressMessages(unite(h, allinj, contains("icd"), sep = ",", remove = FALSE)))
+
+# Selecting variables for analysis
+dt <- h  %>% dplyr::select(pid, age:ti, sbp_1, gcs_t_1, tos, losu, ct, fast, xray, dama, dodd, todd, iss, niss, died, allinj)
+
+#Complete case analysis
+complete.index <- complete.cases(dt)
+#n.incomplete <- sum(!complete.index)
+#p.incomplete <- round((n.incomplete/nrow(dt)) * 100,1)
+dt <- dt[complete.index, ]
+
+#Variables
+
+## Grouping age
+agebreaks <- c(49,65,98)
+agelabels <- c("50-64","65+")
+#dt$age <- as.numeric(dt$age)
+#summary(dt$age) #8 missing introduced due to coercion
+dt$agegrp <-cut(dt$age,
+                breaks = agebreaks,
+                right = FALSE,
+                labels = agelabels)
+
+#table(dt$agegrp)
+
+## GCS
+gcsbreaks <- c(2,9,13,16)
+gcslabels <- c("Severe","Moderate","Mild")
+dt$gcs_cat <-cut(dt$gcs_t_1,
+                breaks = gcsbreaks,
+                right = FALSE,
+                labels = gcslabels)
+
+#table(dt$gcs_cat)
+
+## Goruping ISS 
+issbreaks <- c(1,9,16,25,109)
+isslabels <- c("Mild","Moderate","Severe","Profound")
+dt$iss_cat <-cut(dt$iss,
+                breaks = issbreaks,
+                right = FALSE,
+                labels = isslabels)
+
+#Surgery
+dt$surg <- ifelse(dt$tos == 0, "Yes","No")
+
+Bone_fixation <- c("fixation","k wire","k-wire")
+Burr <- c("burr","bore")
+craniectomy <- c("cranectomy","craniectomy")
+
+dt$surgery_type <- ifelse(grepl(0, dt$tos)==TRUE, "No Surgery",
+                          ifelse(grepl(paste(Burr, collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Burr Hole",
+                                 ifelse(grepl("craniotomy", dt$tos, ignore.case = TRUE)==TRUE,"Carniotomy",
+                                        ifelse(grepl(paste(craniectomy, collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Craniectomy",
+                                               ifelse(grepl("amputation", dt$tos, ignore.case = TRUE)==TRUE, "Amputation",
+                                                      ifelse(grepl(paste(Bone_fixation,collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Bone Fixation",
+                                                             ifelse(grepl("laproscopy", dt$tos, ignore.case = TRUE)==TRUE, "Laproscopy",
+                                                                    ifelse(grepl("laprotomy", dt$tos, ignore.case = TRUE)==TRUE,"Laprotomy","Others"))))))))
+                            
+  
+  
+  
+table(dt$surgery_type)
+
+table(dt$tos, dt$surgery_type)
+
+dt$tos
+
+#--------------------------------------Outcomes---------------------------------------
+
+# Hospital disposition
+dt$hd <- ifelse(dt$dama == "Yes", "DAMA",
+                 ifelse(dt$died=="Yes","Died","Discharged"))
+
+#--------------------------------------Tables---------------------------------------
+
+## Demographics
+
+myvars <- c("sex", "tran", "moi", "mot", "ti", "sbp_1", "gcs_t_1" , "gcs_cat" ,  "ct", "fast", "xray", "iss" , "iss_cat ", "surg", "tos", "hd")
+catvars <- c("sex", "tran", "moi", "mot", "ti", "gcs_cat", "ct", "fast", "xray", "iss_cat" , "tos", "surg", "hd")
+
+Table1 <- CreateTableOne(vars = myvars, data=dt,strata = "agegrp", factorVars = catvars)
+knitr::kable(print(Table1,
+                   caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+
+```
+
