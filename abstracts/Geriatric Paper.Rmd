@@ -143,25 +143,19 @@ dt$iss_cat <-cut(dt$iss,
 #Surgery
 dt$surg <- ifelse(dt$tos == 0, "Yes","No")
 
-Bone_fixation <- c("fixation","k wire","k-wire")
-Burr <- c("burr","bore")
-craniectomy <- c("cranectomy","craniectomy")
+craniotomy <- c("burr","bore","cranectomy","craniectomy","craniatomy","craniotomy","CRANIOTOMY")
 
-dt$surgery_type <- ifelse(grepl(0, dt$tos)==TRUE, "No Surgery",
-                          ifelse(grepl(paste(Burr, collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Burr Hole",
-                                 ifelse(grepl("craniotomy", dt$tos, ignore.case = TRUE)==TRUE,"Carniotomy",
-                                        ifelse(grepl(paste(craniectomy, collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Craniectomy",
-                                               ifelse(grepl("amputation", dt$tos, ignore.case = TRUE)==TRUE, "Amputation",
-                                                      ifelse(grepl(paste(Bone_fixation,collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Bone Fixation",
-                                                             ifelse(grepl("laproscopy", dt$tos, ignore.case = TRUE)==TRUE, "Laproscopy",
-                                                                    ifelse(grepl("laprotomy", dt$tos, ignore.case = TRUE)==TRUE,"Laprotomy","Others"))))))))
+dt$surgery_type <- ifelse(dt$tos==0, "No Surgery",
+                          ifelse(grepl(paste(craniotomy, collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Craniotomy",
+                                 ifelse(grepl("amputation", dt$tos, ignore.case = TRUE)==TRUE, "Amputation",
+                                        ifelse(grepl(paste(Bone_fixation,collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Bone Fixation",
+                                               ifelse(grepl("laproscopy", dt$tos, ignore.case = TRUE)==TRUE, "Laproscopy",
+                                                      ifelse(grepl("laprotomy", dt$tos, ignore.case = TRUE)==TRUE,"Laprotomy","Others"))))))
                             
-  
-  
-  
 table(dt$surgery_type)
 
-table(dt$tos, dt$surgery_type)
+View(table(dt$tos,dt$surgery_type))
+View(table(dt$surgery_type,dt$tos))
 
 
 
@@ -175,16 +169,15 @@ dt$hd <- ifelse(dt$dama == "Yes", "DAMA",
 
 ## Demographics
 
-myvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "sbp_1", "gcs_t_1" , "gcs_cat" ,  "ct", "fast", "xray", "iss" , "iss_cat", "surg", "surgery_type", "hd")
-catvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "gcs_cat", "ct", "fast", "xray", "iss_cat" , "surgery_type", "surg", "hd")
+myvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "sbp_1", "gcs_t_1" , "gcs_cat" ,  "ct", "fast", "xray","tbi3", "iss" , "iss_cat", "surg", "surgery_type", "hd")
+catvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "gcs_cat", "ct", "fast", "xray","tbi3", "iss_cat" , "surgery_type", "surg", "hd")
 
 Table1 <- CreateTableOne(vars = myvars, data=dt ,strata = "agegrp", factorVars = catvars)
 knitr::kable(print(Table1,
                    caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 
-Table2 <- CreateTableOne(vars = "iss_cat", data=dt ,strata = c("agegrp","moi_collapsed"), factorVars = "iss_cat")
-knitr::kable(print(Table2,
-                   caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+#Table2 <- CreateTableOne(vars = "iss_cat", data=dt ,strata = c("agegrp","moi_collapsed"), factorVars = "iss_cat")
+#knitr::kable(print(Table2,caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 
 
 ```
