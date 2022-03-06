@@ -24,12 +24,9 @@ library(tidyr)
 library(dplyr)
 library(stringr)
 
-<<<<<<< HEAD
-=======
 ## Loading the csv file
 options(data.dir = "C:/Users/Debojit/Desktop/corsera/")
 
->>>>>>> 6fcd1c7... Clean files, remove old versions
 data.dir <- getOption("data.dir")
 if (is.null(data.dir))
     stop ("Please set the data directory using options(data.dir = \"<path to data>\").")
@@ -49,11 +46,7 @@ pattern <- str_c(icd.codes, collapse = "|")
 a <- unite(a, allinj, contains("icd"), sep = ",", remove = FALSE)
 tbi <- filter(a, str_detect(allinj, pattern))
 
-<<<<<<< HEAD
-## Sample size
-=======
 #sample size
->>>>>>> 6fcd1c7... Clean files, remove old versions
 nrow(tbi)
 
 ## To find no of male female and there percentage
@@ -61,27 +54,14 @@ males <- tbi$sex == 1
 n.male <- sum(males)
 p.male <- round(mean(males) * 100)
 
-<<<<<<< HEAD
-## Summary of age 
-age <- as.numeric(as.character(tbi$age))
-=======
 #summary of age 
 
 age <- as.numeric(as.character(tbi$age))
 
->>>>>>> 6fcd1c7... Clean files, remove old versions
 m.age <- median(age)
 q1.age <- quantile(age,0.25)
 q3.age <- quantile (age,0.75)
 range.age <- range(age)
-<<<<<<< HEAD
-
-## Breaking age into groups
-age_groups <- cut(age, breaks = c(17,25,45,65,85), labels =  c("18-24","25-44","45-64","65+"))  
-table1 <- table(age_groups)
-
-## To find percentage transferred
-=======
 
 #breaking age into groups
 
@@ -92,32 +72,10 @@ table1 <- table(age_groups)
 
 ##to find percentage transferred
 
->>>>>>> 6fcd1c7... Clean files, remove old versions
 transferred <- tbi$tran == 1
 n.tran <- sum(transferred)
 p.tran <- round(mean(transferred)*100)
 
-<<<<<<< HEAD
-## To find mode of transport 
-ambulance <- tbi$mot == 0
-n.ambulance <- sum(ambulance)
-p.ambulance <- round(mean(ambulance)*100)
-
-## To find average delay in arrival to the hospital
-col2 <- c("doi","toi")
-y <- tbi$date_time_injury <- apply (tbi[,col2],1, paste,collapse ="")
-date.time.injury <- as.POSIXct(y)
-
-col3 <- c("doar","toar")
-x <- tbi$date_time_arrival <- apply (tbi[,col3],1,paste,collapse ="")
-date.time.arrival <- as.POSIXct(x)
-
-delay_hours <-as.numeric(difftime(date.time.arrival, date.time.injury, units = "hours"))
-
-m.delay <- median(delay_hours)
-q1.delay <- quantile(delay_hours,0.25)
-q3.delay <- quantile(delay_hours,0.75)
-=======
 ##to find mode of transport 
 
 ambulance <- tbi$mot == 0
@@ -146,19 +104,15 @@ q1.delay <- quantile(delay_hours,0.25)
 q3.delay <- quantile(delay_hours,0.75)
 
 range.delay <- range(delay_hours)
->>>>>>> 6fcd1c7... Clean files, remove old versions
 
-range.delay <- range(delay_hours)
+##to find mean arterial pressure 
 
-## To find mean arterial pressure 
 sbp_avg <- tbi["sbpfinal"] <- (tbi$sbp1+tbi$sbp2)/2
 dbp_avg <- tbi["dbpfinal"] <- (tbi$dbp1+tbi$dbp2)/2
 
 bp1 <- tbi["map1"] <- sbp_avg + dbp_avg
 bp2 <- tbi["map2"] <- bp1 + dbp_avg
 mean_arterial_pressure <- tbi["mapfinal"] <- bp2/3
-<<<<<<< HEAD
-=======
 
 
 summary (mean_arterial_pressure) 
@@ -166,96 +120,15 @@ m.ap <- median(mean_arterial_pressure)
 q1.ap <- quantile(mean_arterial_pressure,0.25)
 q3.ap <- quantile(mean_arterial_pressure,0.75)
 range.ap <- range(mean_arterial_pressure)
->>>>>>> 6fcd1c7... Clean files, remove old versions
 
-summary (mean_arterial_pressure) 
-m.ap <- median(mean_arterial_pressure)
-q1.ap <- quantile(mean_arterial_pressure,0.25)
-q3.ap <- quantile(mean_arterial_pressure,0.75)
-range.ap <- range(mean_arterial_pressure)
+##creating a new column with colname GCS which will contain total gcs
 
-## Creating a new column with colname GCS which will contain total gcs
 G <- tbi["GCS"] <- tbi$egcs+tbi$vgcs+tbi$mgcs
 gcs <- replace(G,G > 15 ,NA)
 
-## Breaking gcs into groups
+#breaking gcs into groups
+
 gcs_groups <- cut(gcs, breaks = c(2,8,13,15), labels = c( "3-8","9-13","14-15"))
-<<<<<<< HEAD
-
-## Creating table of GCS distribution
-table2 <-table(gcs_groups)
-
-## To find no of patients alert 
-alert <- tbi$avpu == 3
-n.alert <- sum(alert)
-p.alert <- round(mean(alert)*100)
-
-## To find number of ot done
-s <- tbi$s 
-surg<- ifelse(s == 0, 0,
-              ifelse(s == 999, 0, 1)
-              )
-surgery <- surg == 1
-n.surg <- sum(surgery)
-p.surg <- round(mean(surgery)*100)
-
-# Mechanism of Injury
-dm <- as.numeric(nrow(tbi))
-moi.collapsed <- moi <- as.character(tbi$moi)
-get_icd_range <- function(first.char, start.number, end.number) {
-  icd.range <- paste0(
-    paste0(
-      "^",
-      first.char,
-      stringr::str_pad(start.number:end.number, 2, pad = "0"),
-      "[0-9]?$"),
-    collapse = "|")
-  return (icd.range)
-}
-icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
-                   c("Fall" = get_icd_range("W", 0, 19)),
-                   c("others" = get_icd_range("W", 20, 64)),
-                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
-for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
-moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
-
-## To find number of rta and percentage
-tbi$moi.collapsed <- as.factor(moi.collapsed)
-moi.transport <- dplyr::filter(tbi, tbi$moi.collapsed == "Transport accident")
-nm.moi.transport <- nrow(moi.transport)
-moi_transport <- round((nm.moi.transport/ dm) * 100,2)
-
-
-## To find number of fall and percentage
-moi.fall <- dplyr::filter(tbi, tbi$moi.collapsed == "Fall")
-nm.moi.fall <- nrow(moi.fall)
-moi_fall <- round((nm.moi.fall/ dm) * 100,2)
-
-## to find prevelance of two wheeler accidents in RTA
-
-## I suggest you don't do this twice, change the code above instead to
-## have multiple categories of Transport accidents
-icd.ranges <- list(c("Transport accident" = get_icd_range("V", 0, 99)),
-                   c("Two wheeler accident" = get_icd_range("V", 20, 29)),
-                   c("Fall" = get_icd_range("W", 0, 19)),
-                   c("others" = get_icd_range("W", 20, 64)),
-                   c("Assault" = paste0(get_icd_range("X", 85, 99), "|", get_icd_range("Y", 0, 9))))
-for(icd.range in icd.ranges) moi.collapsed[grep(icd.range, moi)] <- names(icd.range)
-moi.collapsed[!(moi.collapsed %in% sapply(icd.ranges, attr, "names"))] <- "Other"
-
-## To find number of rta and percentage
-tbi$moi.collapsed <- as.factor(moi.collapsed)
-moi.twowheelers <- dplyr::filter(tbi, tbi$moi.collapsed == "Two wheeler accident")
-nm.moi.twowheelers <- nrow(moi.twowheelers)
-moi_twowheelers <- round((nm.moi.twowheelers/ dm) * 100,2)
-
-## To find % mortality
-death <- tbi$hd == 1
-n.death <- sum(death)
-p.death <- round(mean(death)*100)
-
-```
-=======
 
 #creating table of GCS distribution
 table2 <-table(gcs_groups)
@@ -268,12 +141,8 @@ n.alert <- sum(alert)
 p.alert <- round(mean(alert)*100)
 
 #to find number of ot done
->>>>>>> 6fcd1c7... Clean files, remove old versions
 
-A total of `r nrow(tbi)` TBI patients were admitted during the period of our study. `r n.male` (`r p.male`%) were male. Median age of patients was `r m.age` (quantile range: `r q1.age` to `r q3.age` & range: `r range.age`).Majority of the patients were within the age group 25-44 (Table no.1: `r table1`).Of all the TBI patients `r n.tran`(`r p.tran`%) were transferred from other hospitals. `r n.ambulance`(`r p.ambulance`%) patients were brought to SSKM via ambulance. There was median delay of `r m.delay`hrs (quantile range: `r q1.delay` to `r q3.delay`hrs, range: `r range.delay`hrs) from time of injury to arrival in hospital. Mean arterial pressure among TBI patients were `r m.ap` (quantile range: `r q1.ap` to `r q3.ap`; range: `r range.ap`).  Majority of the patients were within the GCS range 14-15 (Table no.2 : `r table2`) . A total of `r n.alert`(`r p.alert`%) were alert on presentation. Among the TBI patients admitted, `r n.surg` (`r p.surg`%) operative intervention was needed. Road traffic accident (RTA) accounts for majority of TBIs `r nm.moi.transport`(`r moi_transport`%) followed by fall `r nm.moi.fall`( `r moi_fall`%). Of all the RTA’s, two wheeler accident consist of `r nm.moi.twowheelers`(`r moi_twowheelers`%). Mortality was `r n.death`(`r p.death`%) among these patients.  
 
-<<<<<<< HEAD
-=======
 s <- tbi$s 
 surg<- ifelse(s == 0, 0,
               ifelse(s == 999, 0, 1)
@@ -354,7 +223,6 @@ p.death <- round(mean(death)*100)
 
 A total of `r nrow(tbi)` TBI patients were admitted during the period of our study. `r n.male` (`r p.male`%) were male. Median age of patients was `r m.age` (quantile range: `r q1.age` to `r q3.age` & range: `r range.age`).Majority of the patients were within the age group 25-44 (Table no.1: `r table1`).Of all the TBI patients `r n.tran`(`r p.tran`%) were transferred from other hospitals. `r n.ambulance`(`r p.ambulance`%) patients were brought to SSKM via ambulance. There was median delay of `r m.delay`hrs (quantile range: `r q1.delay` to `r q3.delay`hrs, range: `r range.delay`hrs) from time of injury to arrival in hospital. Mean arterial pressure among TBI patients were `r m.ap` (quantile range: `r q1.ap` to `r q3.ap`; range: `r range.ap`).  Majority of the patients were within the GCS range 14-15 (Table no.2 : `r table2`) . A total of `r n.alert`(`r p.alert`%) were alert on presentation. Among the TBI patients admitted, `r n.surg` (`r p.surg`%) operative intervention was needed. Road traffic accident (RTA) accounts for majority of TBIs `r nm.moi.transport`(`r moi_transport`%) followed by fall `r nm.moi.fall`( `r moi_fall`%). Of all the RTA’s, two wheeler accident consist of `r nm.moi.twowheelers`(`r moi_twowheelers`%). Mortality was `r n.death`(`r p.death`%) among these patients.  
 
->>>>>>> 6fcd1c7... Clean files, remove old versions
 ## Conclusion
 Road traffic accidents (RTA) is one of the main cause of TBI. Amoung RTA, two wheeler accidents (`r moi_twowheelers`%) were predominant. Majority of TBI patients were male (`r p.male`%). As SSKM is a tertiary care hospital majority of the patients were transferred (`r p.tran`%) from other hospitals.Therefore, median delay in arrival to the hospital is also high (`r m.delay`hrs).  Although `r p.alert`% were alert on presentation at the emergency department `r p.surg`% required operative intervention. Moratlity among the TBI patients was `r p.death`%. 
 
@@ -365,9 +233,6 @@ Road traffic accidents (RTA) is one of the main cause of TBI. Amoung RTA, two wh
 
 
 # Analysis
-```{r}
-## Not sure what's going on down here but. If you want to keep it then
-## I suggest you incorporate it into the code above
 
 ##crosstabulating map and mortality
 map_table <- table(map_group, mortality1)
@@ -423,7 +288,3 @@ round(prop.table(trans_mortality,1),2)*100
 surgery_mortality <- table(surgery,mortality1)
 #calculating row% to calculate mortality among intervention and conservative managements
 round(prop.table(surgery_mortality,1),2)*100
-<<<<<<< HEAD
-```
-=======
->>>>>>> 6fcd1c7... Clean files, remove old versions
