@@ -122,6 +122,9 @@ dt$moi_collapsed <- ifelse(grepl("road", dt$moi, ignore.case = TRUE)==TRUE,"Road
 
 table(dt$moi_collapsed)
 
+##SBP
+dt$sbp_cat <- ifelse(dt$sbp_1 <90, "<90", ">=90")
+
 ## GCS
 gcsbreaks <- c(2,9,13,16)
 gcslabels <- c("Severe","Moderate","Mild")
@@ -169,8 +172,8 @@ dt$hd <- ifelse(dt$dama == "Yes", "DAMA",
 
 ## Demographics
 
-myvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "sbp_1", "gcs_t_1" , "gcs_cat" ,  "ct", "fast", "xray","tbi3", "iss" , "iss_cat", "surg", "surgery_type", "hd")
-catvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "gcs_cat", "ct", "fast", "xray","tbi3", "iss_cat" , "surgery_type", "surg", "hd")
+myvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "sbp_1","sbp_cat", "gcs_t_1" , "gcs_cat" ,  "ct", "fast", "xray","tbi3", "iss" , "iss_cat", "surg", "surgery_type", "hd")
+catvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "sbp_cat", "gcs_cat", "ct", "fast", "xray","tbi3", "iss_cat" , "surgery_type", "surg", "hd")
 
 Table1 <- CreateTableOne(vars = myvars, data=dt ,strata = "agegrp", factorVars = catvars)
 knitr::kable(print(Table1,
