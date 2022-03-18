@@ -9,10 +9,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyr) # function unite 
 library(rio) # function import
 library(tableone) # function CreateTableOne
+library(gtsummary) # For summarizing regression analysis in tables
+library(jtools) # For summary of regression analysis
 
 ```
 
 ```{r pressure, echo=FALSE}
+
+set.seed(185)
 
 # TITCO dataset
 url <- "https://raw.githubusercontent.com/titco/titco-I/master/titco-I-full-dataset-v1.csv"
@@ -117,13 +121,21 @@ dt$agegrp <-cut(dt$age,
 
 #table(dt$agegrp)
 
+##Mode of transport
+
+dt$mot <- as.character(dt$mot)
+
+d<- c("man","Other")
+
+dt$mot_collapsed <- ifelse(grepl(paste(d, collapse = "|"), dt$mot, ignore.case = TRUE)==TRUE,"Other", dt$mot)
+
 ##Mechanism of Injury
 dt$moi_collapsed <- ifelse(grepl("road", dt$moi, ignore.case = TRUE)==TRUE,"Road Traffic Accident", dt$moi)
 
 table(dt$moi_collapsed)
 
 ##SBP
-dt$sbp_cat <- ifelse(dt$sbp_1 <90, "<90", ">=90")
+dt$sbp_cat <- as.factor(ifelse(dt$sbp_1 <90, "<90", ">=90"))
 
 ## GCS
 gcsbreaks <- c(2,9,13,16)
@@ -157,23 +169,21 @@ dt$surgery_type <- ifelse(dt$tos==0, "No Surgery",
                             
 table(dt$surgery_type)
 
-View(table(dt$tos,dt$surgery_type))
-View(table(dt$surgery_type,dt$tos))
-
-
-
 #--------------------------------------Outcomes---------------------------------------
+
+#Mortality
+dt$died <- ifelse(dt$died == "Yes",1,0)
 
 # Hospital disposition
 dt$hd <- ifelse(dt$dama == "Yes", "DAMA",
-                 ifelse(dt$died=="Yes","Died","Discharged"))
+                 ifelse(dt$died==1,"Died","Discharged"))
 
 #--------------------------------------Tables---------------------------------------
 
 ## Demographics
 
-myvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "sbp_1","sbp_cat", "gcs_t_1" , "gcs_cat" ,  "ct", "fast", "xray","tbi3", "iss" , "iss_cat", "surg", "surgery_type", "hd")
-catvars <- c("sex", "tran", "moi", "moi_collapsed","mot", "ti", "sbp_cat", "gcs_cat", "ct", "fast", "xray","tbi3", "iss_cat" , "surgery_type", "surg", "hd")
+myvars <- c("sex", "tran", "moi", "moi_collapsed","mot","mot_collapsed", "ti", "sbp_1","sbp_cat", "gcs_t_1" , "gcs_cat" ,  "ct", "fast", "xray","tbi3", "iss" , "iss_cat", "surg", "surgery_type", "hd")
+catvars <- c("sex", "tran", "moi", "moi_collapsed","mot","mot_collapsed", "ti", "sbp_cat", "gcs_cat", "ct", "fast", "xray","tbi3", "iss_cat" , "surgery_type", "surg", "hd")
 
 Table1 <- CreateTableOne(vars = myvars, data=dt ,strata = "agegrp", factorVars = catvars)
 knitr::kable(print(Table1,
@@ -181,6 +191,42 @@ knitr::kable(print(Table1,
 
 #Table2 <- CreateTableOne(vars = "iss_cat", data=dt ,strata = c("agegrp","moi_collapsed"), factorVars = "iss_cat")
 #knitr::kable(print(Table2,caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+#-------------------------------Logistic Regression-----------------------------------
+
+dt$sbp_cat <- relevel(dt$sbp_cat, ref = ">=90")
+
+m1 <- glm(died~agegrp+sex+moi_collapsed+mot_collapsed+sbp_cat+tbi3+iss_cat, data = dt,  family = binomial(link = "logit"))
+summ(m1, exp = T)
+tbl_regression(m1, exponentiate = TRUE)
+
+u <- glm(died~agegrp, data = dt,  family = binomial(link = "logit"))
+summ(u, exp = T)
+tbl_regression(u, exponentiate = TRUE)
+
+u1 <- glm(died~sex, data = dt,  family = binomial(link = "logit"))
+summ(u1, exp = T)
+tbl_regression(u1, exponentiate = TRUE)
+
+u2 <- glm(died~moi_collapsed, data = dt,  family = binomial(link = "logit"))
+summ(u2, exp = T)
+tbl_regression(u2, exponentiate = TRUE)
+
+u3 <- glm(died~mot_collapsed, data = dt,  family = binomial(link = "logit"))
+summ(u3, exp = T)
+tbl_regression(u3, exponentiate = TRUE)
+
+u4 <- glm(died~sbp_cat, data = dt,  family = binomial(link = "logit"))
+summ(u4, exp = T)
+tbl_regression(u4, exponentiate = TRUE)
+
+u5 <- glm(died~tbi3, data = dt,  family = binomial(link = "logit"))
+summ(u5, exp = T)
+tbl_regression(u5, exponentiate = TRUE)
+
+u6 <- glm(died~iss_cat, data = dt,  family = binomial(link = "logit"))
+summ(u6, exp = T)
+tbl_regression(u6, exponentiate = TRUE)
 
 
 ```
