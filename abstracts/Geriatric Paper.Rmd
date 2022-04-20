@@ -200,6 +200,10 @@ m1 <- glm(died~agegrp+sex+moi_collapsed+mot_collapsed+sbp_cat+tbi3+iss_cat, data
 summ(m1, exp = T)
 tbl_regression(m1, exponentiate = TRUE)
 
+m2 <- glm(died~agegrp+sex+moi_collapsed+mot_collapsed+sbp_cat+gcs_cat+tbi3+iss_cat, data = dt,  family = binomial(link = "logit"))
+summ(m2, exp = T)
+tbl_regression(m2, exponentiate = TRUE)
+
 u <- glm(died~agegrp, data = dt,  family = binomial(link = "logit"))
 summ(u, exp = T)
 tbl_regression(u, exponentiate = TRUE)
@@ -228,6 +232,11 @@ u6 <- glm(died~iss_cat, data = dt,  family = binomial(link = "logit"))
 summ(u6, exp = T)
 tbl_regression(u6, exponentiate = TRUE)
 
+dt$gcs_cat <- relevel(dt$gcs_cat, ref = "Mild")
+
+u7 <- glm(died~gcs_cat, data = dt,  family = binomial(link = "logit"))
+summ(u7, exp = T)
+tbl_regression(u7, exponentiate = TRUE)
 
 ```
 
