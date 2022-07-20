@@ -25,7 +25,7 @@ titco <-  import(url) %>% as_tibble()
 titco$age <- as.numeric(titco$age)
 
 # Cohort
-n <- subset(titco, titco$age > 49)
+h <- subset(titco, titco$age > 49)
 
 # Adding variables
 
@@ -99,13 +99,27 @@ p8 <- n["tbi3"]<-  ais4["tbi3"] <-ifelse(ais4$tbi == 1, "Isolated Head Injury",
                                                                                                                       ))))))))))))))))))))))
 
 # Selecting variables for analysis
-dt <- n  %>% dplyr::select(pid, age:ti, sbp_1, gcs_t_1, tos, losu, ct, fast, xray, dama, dodd, todd, iss, niss, died, allinj, tbi3)
+dtt <- n  %>% dplyr::select(pid, age:ti, sbp_1, gcs_t_1, tos, losu, ct, fast, xray, dama, dodd, todd, iss, niss, died, allinj, tbi3)
+
+sapply(dtt, function(x) sum(is.na(x)))
 
 #Complete case analysis
-complete.index <- complete.cases(dt)
-#n.incomplete <- sum(!complete.index)
-#p.incomplete <- round((n.incomplete/nrow(dt)) * 100,1)
-dt <- dt[complete.index, ]
+dtt$complete.cases <- complete.index <- complete.cases(dtt)
+
+n.incomplete <- sum(!complete.index)
+p.incomplete <- round((n.incomplete/nrow(dtt)) * 100,1)
+dt <- dtt[complete.index, ]
+
+#Missing values comparison table -----------------------
+
+myvars <- c("age","sex", "tran", "moi", "mot", "ti", "sbp_1", "gcs_t_1" , "losu", "ct", "dama",  "iss", "niss", "tbi3","complete.cases")
+catvars <- c("sex", "tran", "moi","mot", "ti", "ct", "dama","tbi3")
+
+Table0 <- CreateTableOne(vars = myvars, data=dtt ,strata = "complete.cases", factorVars = catvars)
+knitr::kable(print(Table0,
+                   caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+
 
 #Variables
 
@@ -238,5 +252,11 @@ u7 <- glm(died~gcs_cat, data = dt,  family = binomial(link = "logit"))
 summ(u7, exp = T)
 tbl_regression(u7, exponentiate = TRUE)
 
-```
+u8 <- glm(died~age, data = dt,  family = binomial(link = "logit"))
+summ(u8, exp = T)
+tbl_regression(u8, exponentiate = TRUE)
 
+table(dt$sex, dt$moi_collapsed)
+
+
+```
