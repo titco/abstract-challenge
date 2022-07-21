@@ -110,16 +110,15 @@ n.incomplete <- sum(!complete.index)
 p.incomplete <- round((n.incomplete/nrow(dtt)) * 100,1)
 dt <- dtt[complete.index, ]
 
-#Missing values comparison table -----------------------
+#----------------- Missing values comparison table -----------------------
 
 myvars <- c("age","sex", "tran", "moi", "mot", "ti", "sbp_1", "gcs_t_1" , "losu", "ct", "dama",  "iss", "niss", "tbi3","complete.cases")
 catvars <- c("sex", "tran", "moi","mot", "ti", "ct", "dama","tbi3")
 
 Table0 <- CreateTableOne(vars = myvars, data=dtt ,strata = "complete.cases", factorVars = catvars)
-knitr::kable(print(Table0,
-                   caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+knitr::kable(print(Table0, nonnormal = TRUE, showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, formatOptions = list(big.mark = ",")))
 
-
+variable_median <- c("sbp_1", "gcs_t_1",  "iss")
 
 #Variables
 
