@@ -25,16 +25,11 @@ titco <-  import(url) %>% as_tibble()
 titco$age <- as.numeric(titco$age)
 
 # Cohort
-h <- subset(titco, titco$age > 49)
+n <- subset(titco, titco$age > 49)
 
 # Adding variables
 
-## All injury column - ICD codes
-n <- suppressWarnings(suppressMessages(unite(h, allinj, contains("icd"), sep = ",", remove = FALSE)))
-
 ## Injuries
-
-#Adding columns
 
 ## Done by Debojit,
 ## Chategories of body regions of injury 
@@ -98,8 +93,11 @@ p8 <- n["tbi3"]<-  ais4["tbi3"] <-ifelse(ais4$tbi == 1, "Isolated Head Injury",
                                                                                                                                                                 ifelse(ais4$tbi == 225, "Head and others", NA )))))))
                                                                                                                       ))))))))))))))))))))))
 
+
+colnames(n)
+
 # Selecting variables for analysis
-dtt <- n  %>% dplyr::select(pid, age:ti, sbp_1, gcs_t_1, tos, losu, ct, fast, xray, dama, dodd, todd, iss, niss, died, allinj, tbi3)
+dtt <- n  %>% dplyr::select(pid, age:tran, moi:ti, sbp_1, gcs_t_1, tos, ct, fast, xray, dama, iss, niss, died, tbi3)
 
 sapply(dtt, function(x) sum(is.na(x)))
 
@@ -112,15 +110,13 @@ dt <- dtt[complete.index, ]
 
 #----------------- Missing values comparison table -----------------------
 
-myvars <- c("age","sex", "tran", "moi", "mot", "ti", "sbp_1", "gcs_t_1" , "losu", "ct", "dama",  "iss", "niss", "tbi3","complete.cases")
-catvars <- c("sex", "tran", "moi","mot", "ti", "ct", "dama","tbi3")
+myvars <- c("age","sex","sbp_1", "gcs_t_1" , "iss", "niss", "tbi3")
+catvars <- c("sex", "tbi3")
 
 Table0 <- CreateTableOne(vars = myvars, data=dtt ,strata = "complete.cases", factorVars = catvars)
 knitr::kable(print(Table0, nonnormal = TRUE, showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, formatOptions = list(big.mark = ",")))
 
-variable_median <- c("sbp_1", "gcs_t_1",  "iss")
-
-#Variables
+#----------------------------Variables------------------------------------
 
 ## Grouping age
 agebreaks <- c(49,65,98)
@@ -172,6 +168,8 @@ dt$iss_cat <-cut(dt$iss,
 dt$surg <- ifelse(dt$tos == 0, "Yes","No")
 
 craniotomy <- c("burr","bore","cranectomy","craniectomy","craniatomy","craniotomy","CRANIOTOMY")
+
+Bone_fixation <- c("fixation","k wire","k-wire")
 
 dt$surgery_type <- ifelse(dt$tos==0, "No Surgery",
                           ifelse(grepl(paste(craniotomy, collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Craniotomy",
