@@ -192,6 +192,7 @@ knitr::kable(print(Table1,
 knitr::kable(print(Table1,
                    caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, nonnormal= biomarkers))
 
+#++++++++++++++++++++++++++++++++++++ ISS 9 ++++++++++++++++++++++++++++++++++++
 
 iss_9 <- subset(dt, dt$iss == 9)
 
@@ -202,41 +203,76 @@ knitr::kable(print(Table3,
 knitr::kable(print(Table3,
                    caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, nonnormal= biomarkers))
 
-#--------------------------- UV logistic regression -----------------------------
+##--------------------------- UV logistic regression -----------------------------
   
 iss_9$died <- ifelse(iss_9$died=="Yes",1,0)
 
-lapply(c("age","sex","moi_collapsed","prehop_delay","rr_1","sbp_1","gcs_t_1","surg","lohps","licu","tbi"),
+lapply(c("age","sex","moi_collapsed","prehop_delay","rr_1","sbp_1","gcs_t_1","surg","tbi"),
        function(var) {
          formula    <- as.formula(paste("died ~", var))
          res.logist <- glm(formula, data = iss_9, family = binomial)
          summ(res.logist, exp = T)
          })
-#--------------------------- MV logistic regression -----------------------------
+##--------------------------- MV logistic regression -----------------------------
 
-m1 <- glm(died~age+sex+moi_collapsed+prehop_delay+rr_1+sbp_1+gcs_t_1+lohps+surg+licu+tbi, data = iss_9,  family = binomial(link = "logit"))
+m1 <- glm(died~age+sex+moi_collapsed+prehop_delay+rr_1+sbp_1+gcs_t_1+surg+tbi, data = iss_9,  family = binomial(link = "logit"))
 summ(m1, exp = T)
 tbl_regression(m1, exponentiate = TRUE)
 
+
+#++++++++++++++++++++++++++++++++++++ ISS 16 +++++++++++++++++++++++++++++++++++++
+
 iss_16 <- subset(dt, dt$iss == 16)
 
-Table3 <- CreateTableOne(vars = myvars, strata = "tbi", data= iss_16, factorVars = catvars)
-knitr::kable(print(Table3,
+Table4 <- CreateTableOne(vars = myvars, strata = "tbi", data= iss_16, factorVars = catvars)
+knitr::kable(print(Table4,
                    caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 
-knitr::kable(print(Table3,
+knitr::kable(print(Table4,
                    caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, nonnormal= biomarkers))
 
+##--------------------------- UV logistic regression -----------------------------
+  
+iss_16$died <- ifelse(iss_16$died=="Yes",1,0)
 
+lapply(c("age","sex","moi_collapsed","prehop_delay","rr_1","sbp_1","gcs_t_1","surg","tbi"),
+       function(var) {
+         formula    <- as.formula(paste("died ~", var))
+         res.logist <- glm(formula, data = iss_16, family = binomial)
+         summ(res.logist, exp = T)
+         })
+##--------------------------- MV logistic regression -----------------------------
+
+m1 <- glm(died~age+sex+moi_collapsed+prehop_delay+rr_1+sbp_1+gcs_t_1+surg+tbi, data = iss_16,  family = binomial(link = "logit"))
+summ(m1, exp = T)
+tbl_regression(m1, exponentiate = TRUE)
+
+#++++++++++++++++++++++++++++++++++++++ ISS 25 +++++++++++++++++++++++++++++++++++++++
 
 iss_25 <- subset(dt, dt$iss == 25)
 
-Table3 <- CreateTableOne(vars = myvars, strata = "tbi", data= iss_25, factorVars = catvars)
-knitr::kable(print(Table3,
+Table5 <- CreateTableOne(vars = myvars, strata = "tbi", data= iss_25, factorVars = catvars)
+knitr::kable(print(Table5,
                    caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
 
-knitr::kable(print(Table3,
+knitr::kable(print(Table5,
                    caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, nonnormal= biomarkers))
+
+##--------------------------- UV logistic regression -----------------------------
+  
+iss_25$died <- ifelse(iss_25$died=="Yes",1,0)
+
+lapply(c("age","sex","moi_collapsed","prehop_delay","rr_1","sbp_1","gcs_t_1","surg","tbi"),
+       function(var) {
+         formula    <- as.formula(paste("died ~", var))
+         res.logist <- glm(formula, data = iss_25, family = binomial)
+         summ(res.logist, exp = T)
+         })
+##--------------------------- MV logistic regression -----------------------------
+
+m1 <- glm(died~age+sex+moi_collapsed+prehop_delay+rr_1+sbp_1+gcs_t_1+surg+tbi, data = iss_25,  family = binomial(link = "logit"))
+summ(m1, exp = T)
+tbl_regression(m1, exponentiate = TRUE)
 
 ```
 
