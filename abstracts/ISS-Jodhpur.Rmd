@@ -1,0 +1,242 @@
+---
+title: "ISS-Jodhpur"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyr) # function unite 
+library(rio) # function import
+library(tableone) # function CreateTableOne
+library(gtsummary) # For summarizing regression analysis in tables
+library(jtools) # For summary of regression analysis
+library(stringr) # For function str_detect
+library(dplyr) # For filter function
+
+```
+```{r}
+# TITCO dataset
+url <- "https://raw.githubusercontent.com/titco/titco-I/master/titco-I-full-dataset-v1.csv"
+titco <-  import(url) %>% as_tibble()
+
+table(titco$iss)
+nrow(titco)
+
+# Subset ISS 9,16,25
+n <- subset(titco, titco$iss == 9 | titco$iss == 16 | titco$iss==25)
+
+table(n$iss)
+nrow(n)
+
+# Subset isolated injuries
+
+n<- n %>% separate(head_and_neck, c("a1"))
+n<- n %>% separate(face, c("b1"))
+n<- n %>% separate(chest, c("c1"))
+n<- n %>% separate(abdomen_and_pelvic_contents, c("d1"))
+n<- n %>% separate(extremities, c("e1"))
+n<- n %>% separate(external, c("f1","f2"))
+#n <- n %>% mutate_all(funs(replace_na(.,0)))
+
+n$a1 <- replace(n$a1,n$a1 >= 1,1)
+n$b1 <- replace(n$b1,n$b1 >= 1, 8)
+n$c1 <- replace(n$c1,n$c1 >= 1,27)
+n$d1 <- replace(n$d1,n$d1 >= 1,64)
+n$e1<- replace(n$e1, n$e1 >= 1, 125)
+
+ais4 <-select(n, pid,a1, b1, c1, d1, e1, f1,f2,died)
+
+ais4$died <- as.factor(ais4$died)
+ais4$a1 <- as.numeric(ais4$a1)
+ais4$b1 <- as.numeric(ais4$b1)
+ais4$c1 <- as.numeric(ais4$c1)
+ais4$d1 <- as.numeric(ais4$d1)
+ais4$e1 <- as.numeric(ais4$e1)
+
+#View(titcofall)
+
+## polytrauma >= 1 and isolated injury = 0
+  
+p5 <- ais4["tbi"] <- rowSums(ais4[,c("a1","b1","c1","d1","e1")], na.rm = T)
+
+## Intricate catogorizing
+p6 <- n["tbi"]<-  ifelse(ais4$tbi == 1, "Isolated Head/Face Injury",
+                           ifelse(ais4$tbi == 8, "Isolated Head/Face Injury",
+                                  ifelse(ais4$tbi == 27, "Isolated chest Injury",
+                                         ifelse(ais4$tbi == 64, "Isolated Abdomen injury",
+                                                ifelse(ais4$tbi == 125,"Isolated Limb injury",
+                                                       ifelse(ais4$tbi == 9, "Head and Face injury",
+                                                              ifelse(ais4$tbi == 28, "Head and chest injury",
+                                                                     ifelse(ais4$tbi == 65, "Head and abdomen injury",
+                                                                            ifelse(ais4$tbi == 126, "Head and limb injury",
+                                                                                   ifelse(ais4$tbi == 35, " Face and Chest Injury",
+                                                                                          ifelse(ais4$tbi == 72, "Face and Abdomen Injury",
+                                                                                                 ifelse(ais4$tbi == 91, "chest and Abdomen injury",
+                                                                                                        ifelse(ais4$tbi == 133, "Face and Limb Injury",
+                                                                                                               ifelse(ais4$tbi == 152 , "Chest and Limb Injury",
+                                                                                                                      ifelse(ais4$tbi == 189, "Abdomen and Limb Injury",
+                                                                                        
+                                                                                          ifelse(ais4$tbi == 36, "Head, Face and Chest injury",
+                                                                                                 ifelse(ais4$tbi == 92, "Head, Chest and Abdomen injury",
+                                                                                                        ifelse(ais4$tbi == 190, "Head, Abdomen and Limb Injury",
+                                                                                                        ifelse(ais4$tbi == 99, "Face, Chest and Abdomen injury",
+                                                                                                               ifelse(ais4$tbi == 197, "Face, Abdomen and Limb Injury",
+                                                                                                               ifelse(ais4$tbi == 134, " Head, Face and Limb Injury",
+                                                                                                                      ifelse(ais4$tbi == 153, "Head, Chest and limb injury",
+                                                                                                                             ifelse(ais4$tbi == 216, "Chest, Abdomen and Limb Injury",
+                                                                                                                             ifelse(ais4$tbi== 160, "Face, Chest and Limb Injury",
+                                                                                                                                    ifelse(ais4$tbi == 161, " Head, Face, Chest and Limb Injury",
+                                                                                                                                           ifelse(ais4$tbi == 198, "Head,Face,Abdomen, limb Injury",
+                                                                                                                                                  ifelse(ais4$tbi ==217, "Head, Chest, Abdomen, limb Injury",
+                                                                                                                                                         ifelse(ais4$tbi== 224, "Face, chest, Abdomen, Limb Injury",
+                                                                                                                                                                ifelse(ais4$tbi == 225, "Head,Face,Chest,Abdomen,Limb injury", NA )))))))
+                                                                                                                      ))))))))))))))))))))))
+
+
+table(n$tbi)
+
+# Dataset with missing variables
+
+dt <- n %>% filter(str_detect(tbi, "Isolated"))
+
+nrow(dt)
+
+## -------------------------Adding variables------------------------------
+
+#-----------------------Mechanism of Injury-------------------------------
+
+dt$moi_collapsed <- ifelse(grepl("road", dt$moi, ignore.case = TRUE)==TRUE,"Road Traffic Accident", dt$moi)
+
+dt$moi_collapsed <- if_else(grepl("burn", dt$moi_collapsed, ignore.case = TRUE)==TRUE,"Other", dt$moi_collapsed)
+
+table(dt$moi_collapsed)
+
+#---------------------------- Surgical intervention done --------------------
+
+dt$surg <- ifelse(dt$tos == "0", "Yes","No")
+
+#---------------------------- pre-hospital delay------------ --------------------
+
+start <- strptime(paste(dt$doi,dt$toi),"%Y-%m-%d %H:%M")
+end <- strptime(paste(dt$doar,dt$toar),"%Y-%m-%d %H:%M")
+
+dt$prehop_delay <- round(as.numeric(difftime(end, start), units = "days", ignore.na = TRUE),0) 
+table(dt$prehop_delay)
+
+#---------------------------- airway ------------ --------------------
+
+dt$airway <- ifelse(dt$saw_1 == "No", "No", "Yes")
+
+#---------------------------- length of hospital stay ------------ --------------------
+
+start <- strptime(paste(dt$doar,dt$toar),"%Y-%m-%d %H:%M")
+end <- strptime(paste(dt$dodd,dt$todd),"%Y-%m-%d %H:%M")
+
+dt$lohps <- round(as.numeric(difftime(end, start), units = "days", ignore.na = TRUE),0) 
+table(dt$lohps)
+
+# ----------------------------Finding MISSINGNESS in the dataset-------------------------------
+
+# Selecting variables for analysis
+dtt <- dt  %>% dplyr::select(pid, age, sex, moi_collapsed, prehop_delay, airway, rr_1, sbp_1, gcs_t_1, iss, niss, surg, lohps, died, licu, tbi)
+
+sapply(dt, function(x) sum(is.na(x)))
+
+dt$complete.cases <- complete.index <- complete.cases(dtt)
+
+myvars <- c("age","sex","sbp_1", "gcs_t_1" , "iss", "niss", "tbi3")
+catvars <- c("sex", "tbi")
+
+Table0 <- CreateTableOne(vars = myvars, data=dt ,strata = "complete.cases", factorVars = catvars)
+knitr::kable(print(Table0, nonnormal = TRUE, showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, formatOptions = list(big.mark = ",")))
+
+#Identify missing values in each variable
+
+explanatory = c("age", "sex", "moi", "prehop_delay", "airway", "surg", "lohps", "licu", "tbi", "rr_1", "gcs_t_1","sbp_1", "iss", "niss")
+dependent = "died"
+
+#dt %>% missing_plot(dependent, explanatory)
+
+# ------------------------------Performing Complete case analysis -------------------------------
+
+missing.data.list <- lapply(dtt, function(column) {
+    n.na <- sum(is.na(column))
+    p.na <- round((n.na/length(column)) * 100)
+    missing <- data.frame("Count" = n.na, "Percentage" = p.na)
+    return (missing)
+})
+
+missing.data <- do.call(rbind, missing.data.list)
+maximum.missing <- rownames(missing.data)[missing.data$Count == max(missing.data$Count)]
+complete.index <- complete.cases(dtt)
+n.incomplete <- sum(!complete.index)
+p.incomplete <- round((n.incomplete/nrow(dt)) * 100,1)
+dt <- dtt[complete.index, ]
+
+## ------------------------------ Categorising ISS -------------------------------
+
+dt$isspv <- as.factor(dt$iss)
+
+# ------------------------------ Table 1 -------------------------------
+
+dt$age <- as.numeric(dt$age)
+
+myvars <- c("age","sex", "moi_collapsed", "prehop_delay", "airway", "rr_1", "sbp_1", "gcs_t_1", "iss", "isspv", "niss", "surg", "lohps", "died", "licu")
+biomarkers <- c("prehop_delay", "rr_1", "sbp_1", "gcs_t_1", "iss", "niss","lohps","licu")
+catvars <- c("sex", "moi_collapsed", "airway", "surg", "isspv","died")
+Table1 <- CreateTableOne(vars = myvars, strata = "tbi", data= dt, factorVars = catvars)
+knitr::kable(print(Table1,
+                   caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+knitr::kable(print(Table1,
+                   caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, nonnormal= biomarkers))
+
+
+iss_9 <- subset(dt, dt$iss == 9)
+
+Table3 <- CreateTableOne(vars = myvars, strata = "tbi", data= iss_9, factorVars = catvars)
+knitr::kable(print(Table3,
+                   caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+knitr::kable(print(Table3,
+                   caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, nonnormal= biomarkers))
+
+#--------------------------- UV logistic regression -----------------------------
+  
+iss_9$died <- ifelse(iss_9$died=="Yes",1,0)
+
+lapply(c("age","sex","moi_collapsed","prehop_delay","rr_1","sbp_1","gcs_t_1","surg","lohps","licu","tbi"),
+       function(var) {
+         formula    <- as.formula(paste("died ~", var))
+         res.logist <- glm(formula, data = iss_9, family = binomial)
+         summ(res.logist, exp = T)
+         })
+#--------------------------- MV logistic regression -----------------------------
+
+m1 <- glm(died~age+sex+moi_collapsed+prehop_delay+rr_1+sbp_1+gcs_t_1+lohps+surg+licu+tbi, data = iss_9,  family = binomial(link = "logit"))
+summ(m1, exp = T)
+tbl_regression(m1, exponentiate = TRUE)
+
+iss_16 <- subset(dt, dt$iss == 16)
+
+Table3 <- CreateTableOne(vars = myvars, strata = "tbi", data= iss_16, factorVars = catvars)
+knitr::kable(print(Table3,
+                   caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+knitr::kable(print(Table3,
+                   caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, nonnormal= biomarkers))
+
+
+
+iss_25 <- subset(dt, dt$iss == 25)
+
+Table3 <- CreateTableOne(vars = myvars, strata = "tbi", data= iss_25, factorVars = catvars)
+knitr::kable(print(Table3,
+                   caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+knitr::kable(print(Table3,
+                   caption = "Table 3. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, nonnormal= biomarkers))
+
+```
+
