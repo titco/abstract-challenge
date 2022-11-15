@@ -1,0 +1,259 @@
+---
+title: "Geriatric Paper"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyr) # function unite 
+library(rio) # function import
+library(tableone) # function CreateTableOne
+library(gtsummary) # For summarizing regression analysis in tables
+library(jtools) # For summary of regression analysis
+
+```
+
+```{r pressure, echo=FALSE}
+
+set.seed(185)
+
+# TITCO dataset
+url <- "https://raw.githubusercontent.com/titco/titco-I/master/titco-I-full-dataset-v1.csv"
+titco <-  import(url) %>% as_tibble()
+
+titco$age <- as.numeric(titco$age)
+
+# Cohort
+n <- subset(titco, titco$age > 49)
+
+# Adding variables
+
+## Injuries
+
+## Done by Debojit,
+## Chategories of body regions of injury 
+## divided as per AIS codes
+## separating contents of a column into different columns
+
+n<- n %>% separate(head_and_neck, c("a1"))
+n<- n %>% separate(face, c("b1"))
+n<- n %>% separate(chest, c("c1"))
+n<- n %>% separate(abdomen_and_pelvic_contents, c("d1"))
+n<- n %>% separate(extremities, c("e1"))
+n<- n %>% separate(external, c("f1","f2"))
+#n <- n %>% dbplyr::mutate_all(funs(replace_na(.,0)))
+
+n$a1 <- replace(n$a1,n$a1 >= 1,1)
+n$b1 <- replace(n$b1,n$b1 >= 1, 8)
+n$c1 <- replace(n$c1,n$c1 >= 1,27)
+n$d1 <- replace(n$d1,n$d1 >= 1,64)
+n$e1<- replace(n$e1, n$e1 >= 1, 125)
+
+ais4 <-dplyr::select(n, pid,a1, b1, c1, d1, e1, f1,f2,died)
+
+ais4$died <- as.factor(ais4$died)
+ais4$a1 <- as.numeric(ais4$a1)
+ais4$b1 <- as.numeric(ais4$b1)
+ais4$c1 <- as.numeric(ais4$c1)
+ais4$d1 <- as.numeric(ais4$d1)
+ais4$e1 <- as.numeric(ais4$e1)
+
+p5 <- ais4["tbi"] <- rowSums(ais4[,c("a1","b1","c1","d1","e1")], na.rm = T)
+
+p8 <- n["tbi3"]<-  ais4["tbi3"] <-ifelse(ais4$tbi == 1, "Isolated Head Injury",
+                           ifelse(ais4$tbi == 8, "others",
+                                  ifelse(ais4$tbi == 27, "others",
+                                         ifelse(ais4$tbi == 64, "others",
+                                                ifelse(ais4$tbi == 125,"others",
+                                                       ifelse(ais4$tbi == 9, "Head and others",
+                                                              ifelse(ais4$tbi == 28, "Head and others",
+                                                                     ifelse(ais4$tbi == 65, "Head and others",
+                                                                            ifelse(ais4$tbi == 126, "Head and others",
+                                                                                   ifelse(ais4$tbi == 35, "others",
+                                                                                          ifelse(ais4$tbi == 72, "others",
+                                                                                                 ifelse(ais4$tbi == 91, "others",
+                                                                                                        ifelse(ais4$tbi == 133, "others",
+                                                                                                               ifelse(ais4$tbi == 152 , "others",
+                                                                                                                      ifelse(ais4$tbi == 189, "others",
+                                                                                        
+                                                                                          ifelse(ais4$tbi == 36, "Head and others",
+                                                                                                 ifelse(ais4$tbi == 92, "Head and others",
+                                                                                                        ifelse(ais4$tbi == 190, "Head and others",
+                                                                                                        ifelse(ais4$tbi == 99, "others",
+                                                                                                               ifelse(ais4$tbi == 197, "others",
+                                                                                                               ifelse(ais4$tbi == 134, "Head and others",
+                                                                                                                      ifelse(ais4$tbi == 153, "Head and others",
+                                                                                                                             ifelse(ais4$tbi == 216, "others",
+                                                                                                                             ifelse(ais4$tbi== 160, "others",
+                                                                                                                                    ifelse(ais4$tbi == 161, "Head and others",
+                                                                                                                                           ifelse(ais4$tbi == 198, "Head and others",
+                                                                                                                                                  ifelse(ais4$tbi ==217, "Head and others",
+                                                                                                                                                         ifelse(ais4$tbi== 224, "others",
+                                                                                                                                                                ifelse(ais4$tbi == 225, "Head and others", NA )))))))
+                                                                                                                      ))))))))))))))))))))))
+
+
+colnames(n)
+
+# Selecting variables for analysis
+dtt <- n  %>% dplyr::select(pid, age:tran, moi:ti, sbp_1, gcs_t_1, tos, ct, fast, xray, dama, iss, niss, died, tbi3)
+
+sapply(dtt, function(x) sum(is.na(x)))
+
+#Complete case analysis
+dtt$complete.cases <- complete.index <- complete.cases(dtt)
+
+n.incomplete <- sum(!complete.index)
+p.incomplete <- round((n.incomplete/nrow(dtt)) * 100,1)
+dt <- dtt[complete.index, ]
+
+#----------------- Missing values comparison table -----------------------
+
+myvars <- c("age","sex","sbp_1", "gcs_t_1" , "iss", "niss", "tbi3")
+catvars <- c("sex", "tbi3")
+
+Table0 <- CreateTableOne(vars = myvars, data=dtt ,strata = "complete.cases", factorVars = catvars)
+knitr::kable(print(Table0, nonnormal = TRUE, showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE, formatOptions = list(big.mark = ",")))
+
+#----------------------------Variables------------------------------------
+
+## Grouping age
+agebreaks <- c(49,65,98)
+agelabels <- c("50-64","65+")
+#dt$age <- as.numeric(dt$age)
+#summary(dt$age) #8 missing introduced due to coercion
+dt$agegrp <-cut(dt$age,
+                breaks = agebreaks,
+                right = FALSE,
+                labels = agelabels)
+
+#table(dt$agegrp)
+
+##Mode of transport
+
+dt$mot <- as.character(dt$mot)
+
+d<- c("man","Other")
+
+dt$mot_collapsed <- ifelse(grepl(paste(d, collapse = "|"), dt$mot, ignore.case = TRUE)==TRUE,"Other", dt$mot)
+
+##Mechanism of Injury
+dt$moi_collapsed <- ifelse(grepl("road", dt$moi, ignore.case = TRUE)==TRUE,"Road Traffic Accident", dt$moi)
+
+table(dt$moi_collapsed)
+
+##SBP
+dt$sbp_cat <- as.factor(ifelse(dt$sbp_1 <90, "<90", ">=90"))
+
+## GCS
+gcsbreaks <- c(2,9,13,16)
+gcslabels <- c("Severe","Moderate","Mild")
+dt$gcs_cat <-cut(dt$gcs_t_1,
+                breaks = gcsbreaks,
+                right = FALSE,
+                labels = gcslabels)
+
+#table(dt$gcs_cat)
+
+## Goruping ISS 
+issbreaks <- c(1,9,16,25,109)
+isslabels <- c("Mild","Moderate","Severe","Profound")
+dt$iss_cat <-cut(dt$iss,
+                breaks = issbreaks,
+                right = FALSE,
+                labels = isslabels)
+
+#Surgery
+dt$surg <- ifelse(dt$tos == 0, "Yes","No")
+
+craniotomy <- c("burr","bore","cranectomy","craniectomy","craniatomy","craniotomy","CRANIOTOMY")
+
+Bone_fixation <- c("fixation","k wire","k-wire")
+
+dt$surgery_type <- ifelse(dt$tos==0, "No Surgery",
+                          ifelse(grepl(paste(craniotomy, collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Craniotomy",
+                                 ifelse(grepl("amputation", dt$tos, ignore.case = TRUE)==TRUE, "Amputation",
+                                        ifelse(grepl(paste(Bone_fixation,collapse = "|"), dt$tos, ignore.case = TRUE)==TRUE, "Bone Fixation",
+                                               ifelse(grepl("laproscopy", dt$tos, ignore.case = TRUE)==TRUE, "Laproscopy",
+                                                      ifelse(grepl("laprotomy", dt$tos, ignore.case = TRUE)==TRUE,"Laprotomy","Others"))))))
+                            
+table(dt$surgery_type)
+
+#--------------------------------------Outcomes---------------------------------------
+
+#Mortality
+dt$died <- ifelse(dt$died == "Yes",1,0)
+
+# Hospital disposition
+dt$hd <- ifelse(dt$dama == "Yes", "DAMA",
+                 ifelse(dt$died==1,"Died","Discharged"))
+
+#--------------------------------------Tables---------------------------------------
+
+## Demographics
+
+myvars <- c("sex", "tran", "moi", "moi_collapsed","mot","mot_collapsed", "ti", "sbp_1","sbp_cat", "gcs_t_1" , "gcs_cat" ,  "ct", "fast", "xray","tbi3", "iss" , "iss_cat", "surg", "surgery_type", "hd")
+catvars <- c("sex", "tran", "moi", "moi_collapsed","mot","mot_collapsed", "ti", "sbp_cat", "gcs_cat", "ct", "fast", "xray","tbi3", "iss_cat" , "surgery_type", "surg", "hd")
+
+Table1 <- CreateTableOne(vars = myvars, data=dt ,strata = "agegrp", factorVars = catvars)
+knitr::kable(print(Table1,
+                   caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+#Table2 <- CreateTableOne(vars = "iss_cat", data=dt ,strata = c("agegrp","moi_collapsed"), factorVars = "iss_cat")
+#knitr::kable(print(Table2,caption = "Table 1. Demographic, Physiological parameters, Injury Characteristics", showAllLevels = TRUE, printToggle = FALSE, varLabels = TRUE))
+
+#-------------------------------Logistic Regression-----------------------------------
+
+dt$sbp_cat <- relevel(dt$sbp_cat, ref = ">=90")
+
+m1 <- glm(died~agegrp+sex+moi_collapsed+mot_collapsed+sbp_cat+tbi3+iss_cat, data = dt,  family = binomial(link = "logit"))
+summ(m1, exp = T)
+tbl_regression(m1, exponentiate = TRUE)
+
+m2 <- glm(died~agegrp+sex+moi_collapsed+mot_collapsed+sbp_cat+gcs_cat+tbi3+iss_cat, data = dt,  family = binomial(link = "logit"))
+summ(m2, exp = T)
+tbl_regression(m2, exponentiate = TRUE)
+
+u <- glm(died~agegrp, data = dt,  family = binomial(link = "logit"))
+summ(u, exp = T)
+tbl_regression(u, exponentiate = TRUE)
+
+u1 <- glm(died~sex, data = dt,  family = binomial(link = "logit"))
+summ(u1, exp = T)
+tbl_regression(u1, exponentiate = TRUE)
+
+u2 <- glm(died~moi_collapsed, data = dt,  family = binomial(link = "logit"))
+summ(u2, exp = T)
+tbl_regression(u2, exponentiate = TRUE)
+
+u3 <- glm(died~mot_collapsed, data = dt,  family = binomial(link = "logit"))
+summ(u3, exp = T)
+tbl_regression(u3, exponentiate = TRUE)
+
+u4 <- glm(died~sbp_cat, data = dt,  family = binomial(link = "logit"))
+summ(u4, exp = T)
+tbl_regression(u4, exponentiate = TRUE)
+
+u5 <- glm(died~tbi3, data = dt,  family = binomial(link = "logit"))
+summ(u5, exp = T)
+tbl_regression(u5, exponentiate = TRUE)
+
+u6 <- glm(died~iss_cat, data = dt,  family = binomial(link = "logit"))
+summ(u6, exp = T)
+tbl_regression(u6, exponentiate = TRUE)
+
+dt$gcs_cat <- relevel(dt$gcs_cat, ref = "Mild")
+
+u7 <- glm(died~gcs_cat, data = dt,  family = binomial(link = "logit"))
+summ(u7, exp = T)
+tbl_regression(u7, exponentiate = TRUE)
+
+u8 <- glm(died~age, data = dt,  family = binomial(link = "logit"))
+summ(u8, exp = T)
+tbl_regression(u8, exponentiate = TRUE)
+
+table(dt$sex, dt$moi_collapsed)
+
+
+```
